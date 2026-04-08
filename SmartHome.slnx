@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/SmartHome.Api/SmartHome.Api.csproj" />
+    <Project Path="backend/src/SmartHome.Domain/SmartHome.Domain.csproj" />
+    <Project Path="backend/src/SmartHome.Infrastructure/SmartHome.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmartHome.Api.Tests/SmartHome.Api.Tests.csproj" />
+    <Project Path="tests/SmartHome.Domain.Tests/SmartHome.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
