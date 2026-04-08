@@ -116,6 +116,33 @@ git push -u origin feature/your-feature-name
 - `chore:` setup/config
 - `test:` adding tests
 
+## Kanban Workflow
+
+We use a GitHub Projects Sprint Board to track all work.
+Find it under the Projects tab in this repo.
+
+**Column definitions:**
+| Column | Meaning |
+|---|---|
+| **Backlog** | Everything that needs to be done. Defined but not yet scheduled. |
+| **Todo** | Picked up and ready to start this week. |
+| **In Progress** | Actively being worked on. Should have an assignee. |
+| **In Review** | PR is open and waiting for review. Don't start anything new until this is cleared. |
+| **Done** | Merged to dev. Verified working. |
+
+**The flow:**
+1. Pick a card from **Todo** and assign yourself
+2. Move it to **In Progress** and create your feature branch
+3. When your PR is open, move the card to **In Review**
+4. Other person reviews and approves the PR
+5. Merge into `dev` and move the card to **Done**
+
+**Rules:**
+- Every piece of work gets a card before anyone starts it
+- Cards in **In Progress** must have an assignee
+- Don't leave cards in **In Review** -- reviewing open PRs is the highest priority
+- Only move to **Done** after the PR is merged to `dev`, not just approved
+
 ------
 
 ## Device Types
