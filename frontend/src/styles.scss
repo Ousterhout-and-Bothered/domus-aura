@@ -1,8 +1,19 @@
-//PrimeNG core styles
-@import "primeng/resources/primeng.css";
+// PrimeIcons
 @import "primeicons/primeicons.css";
 
-//PrimeFlex
-@import "primeflex/primeflex.scss";
+// PrimeFlex
+@use "primeflex/primeflex.scss";
 
+// Global styles
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--p-font-family), sans-serif;
+  background-color: var(--p-surface-ground);
+  color: var(--p-text-color);
+}
 
