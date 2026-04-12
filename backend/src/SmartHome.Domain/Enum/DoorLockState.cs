@@ -1,4 +1,4 @@
-namespace SmartHome.Domian.Enum;
+namespace SmartHome.Domain.Enum;
 
 public enum DoorLockState
 {

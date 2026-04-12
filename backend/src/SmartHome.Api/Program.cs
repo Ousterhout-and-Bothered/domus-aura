@@ -1,12 +1,25 @@
+using Microsoft.EntityFrameworkCore;
+using SmartHome.Infrastructure.Persistence;
+using SmartHome.Infrastructure.Persistence.Seed;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Build absolute path to repo-level /data folder
+var dataDirectory = Path.GetFullPath(
+    Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "data"));
+
+Directory.CreateDirectory(dataDirectory);
+
+var databasePath = Path.Combine(dataDirectory, "smarthome.db");
+
+// Register DbContext
+builder.Services.AddDbContext<SmartHomeDbContext>(options =>
+    options.UseSqlite($"Data Source={databasePath}"));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -14,28 +27,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// Debug output to confirm path
+Console.WriteLine($"DB Path: {databasePath}");
 
-app.MapGet("/weatherforecast", () =>
+// Apply migrations + seed data
+using (var scope = app.Services.CreateScope())
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var dbContext = scope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
+
+    // Apply migrations automatically
+    await dbContext.Database.MigrateAsync();
+
+    // Seed initial data (idempotent)
+    var seeder = new SmartHomeDbSeeder(dbContext);
+    await seeder.SeedAsync();
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

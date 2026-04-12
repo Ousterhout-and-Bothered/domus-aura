@@ -2,7 +2,7 @@ namespace SmartHome.Domain.Enum;
 
 public enum DeviceType
 {
-    Doorlock,
+    DoorLock,
     Fan,
     Light,
     Thermostat

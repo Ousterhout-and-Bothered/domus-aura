@@ -1,6 +1,6 @@
 using SmartHome.Domain.Enum;
 
-namespace Smarthome.Domain.Device;
+namespace SmartHome.Domain.Device;
 
 public sealed class Fan : PoweredDevice
 {

@@ -1,6 +1,6 @@
 namespace SmartHome.Domain.Enum;
 
-public enum ThermostateState
+public enum ThermostatState
 {
     Off,
     Idle,
