@@ -1,12 +1,36 @@
 using SmartHome.Domain.Enum;
+using SmartHome.Domain.Device.Interface;
 
 namespace SmartHome.Domain.Device;
 
+
+/// <summary>
+/// Represents a smart thermostat that monitors and controls the ambient temperature
+/// of a location. Supports heating, cooling, and auto modes.
+/// Transitions between Off, Idle, Heating, and Cooling states based on the
+/// relationship between ambient and desired temperature.
+/// </summary>
 public sealed class Thermostat : Device
 {
+    
+    /// <summary>
+    /// The current state of the thermostat.
+    /// </summary>
     public ThermostatState State { get; private set; }
+    
+    /// <summary>
+    /// The current mode controlling heating/cooling behavior.
+    /// </summary>
     public ThermostatMode Mode { get; private set; }
+    
+    /// <summary>
+    /// The target temperature in Fahrenheit. Clamped to 60–80°F.
+    /// </summary>
     public int DesiredTemperature { get; private set; }
+    
+    /// <summary>
+    /// The current ambient temperature of the location in Fahrenheit.
+    /// </summary>
     public int AmbientTemperature { get; private set; }
     
     private const int DefaultTemperature = 72;
@@ -31,7 +55,11 @@ public sealed class Thermostat : Device
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
     }
-
+    
+    /// <summary>
+    /// Powers the thermostat on, transitioning to Idle and immediately
+    /// evaluating whether heating or cooling should begin.
+    /// </summary>
     public void TurnOn()
     {
         if (State == ThermostatState.Off)
@@ -41,12 +69,20 @@ public sealed class Thermostat : Device
         }
     }
 
+    
+    /// <summary>
+    /// Powers the thermostat off from any active state.
+    /// </summary>
     public void TurnOff()
     {
         if (State != ThermostatState.Off)
             State = ThermostatState.Off;
     }
 
+    
+    /// <summary>
+    /// Sets the operating mode and immediately re-evaluates state.
+    /// </summary>
     public void SetMode(ThermostatMode mode)
     {
         Mode = mode;
@@ -55,6 +91,12 @@ public sealed class Thermostat : Device
             EvaluateState();
     }
 
+    
+    /// <summary>
+    /// Sets the desired temperature in Fahrenheit.
+    /// Clamp rather than reject. Thermostat silently enforces its own operating limits,
+    /// consistent with how physical thermostats behave at their min/max range.
+    /// </summary>
     public void SetDesiredTemperature(int temperature)
     {
         DesiredTemperature = Math.Clamp(temperature, MinTemperature, MaxTemperature);
@@ -63,6 +105,11 @@ public sealed class Thermostat : Device
             EvaluateState();
     }
 
+    
+    /// <summary>
+    /// Updates the ambient temperature of the location and re-evaluates state.
+    /// Changes are tracked even when the thermostat is off.
+    /// </summary>
     public void SetAmbientTemperature(int temperature)
     {
         AmbientTemperature = temperature;
@@ -71,6 +118,12 @@ public sealed class Thermostat : Device
             EvaluateState();
     }
 
+    
+    /// <summary>
+    /// Advances the simulation by one tick. Adjusts ambient temperature
+    /// by 1°F toward the desired temperature and re-evaluates state.
+    /// Has no effect when Off or Idle.
+    /// </summary>
     public void Tick()
     {
         if (State == ThermostatState.Off || State == ThermostatState.Idle)
@@ -88,6 +141,11 @@ public sealed class Thermostat : Device
         EvaluateState();
     }
 
+    
+    /// <summary>
+    /// Evaluates the current ambient vs desired temperature and transitions
+    /// to the appropriate state based on the active mode.
+    /// </summary>
     private void EvaluateState()
     {
         if (State == ThermostatState.Off)
@@ -124,6 +182,10 @@ public sealed class Thermostat : Device
         }
     }
 
+    
+    /// <summary>
+    /// Returns true only when actively Heating or Cooling.
+    /// </summary>
     public override bool IsOn() =>
         State == ThermostatState.Heating || State == ThermostatState.Cooling;
 }
