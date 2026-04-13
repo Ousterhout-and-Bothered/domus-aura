@@ -1,10 +1,20 @@
 using SmartHome.Domain.Enum;
+using SmartHome.Domain.Device.Interface;
 
 namespace SmartHome.Domain.Device;
 
+
+/// <summary>
+/// Represents a smart fan device that supports power and speed control.
+/// Speed is retained when the fan is powered off and restored when powered back on.
+/// </summary>
 public sealed class Fan : PoweredDevice
 {
     
+    
+    /// <summary>
+    /// The current speed of the fan.
+    /// </summary>
     public FanSpeed Speed { get; private set; }
 
     // Required for EF Core
@@ -19,6 +29,11 @@ public sealed class Fan : PoweredDevice
         Speed = FanSpeed.Medium;
     }
     
+    
+    /// <summary>
+    /// Sets the speed of the fan.
+    /// Throws <see cref="InvalidOperationException"/> if the fan is off.
+    /// </summary>
     public void SetSpeed(FanSpeed speed)
     {
         if (PowerState != PowerState.On)
