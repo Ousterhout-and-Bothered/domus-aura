@@ -34,7 +34,7 @@ public interface IDevice
 
     /// <summary>
     /// Returns true when the device is in an active "on" state.
-    /// DoorLock always return true.
+    /// DoorLock always returns true.
     /// Powered devices return true only when powered on.
     /// </summary>
     bool IsOn();

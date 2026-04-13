@@ -10,7 +10,7 @@ public interface IColorable
     /// <summary>
     /// The current color as a hex string
     /// </summary>
-    string ColorHex  { get; }
+    string ColorHex { get; }
     
     
     /// <summary>
