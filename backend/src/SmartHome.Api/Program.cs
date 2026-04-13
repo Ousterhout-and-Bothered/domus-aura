@@ -27,7 +27,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-Console.WriteLine($"DB Path: {databasePath}");
+app.Logger.LogDebug("DB Path: {DatabasePath}", databasePath);
 
 
 using (var scope = app.Services.CreateScope())
