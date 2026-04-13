@@ -142,7 +142,7 @@ public class FanTests
     }
 
     /// <summary>
-    /// Setting Retnetion test
+    /// Setting Retention test
     /// </summary>
 
     [Fact]
