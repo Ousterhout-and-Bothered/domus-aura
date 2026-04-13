@@ -10,7 +10,7 @@ namespace SmartHome.Domain.Device;
 /// Transitions between Off, Idle, Heating, and Cooling states based on the
 /// relationship between ambient and desired temperature.
 /// </summary>
-public sealed class Thermostat : Device
+public sealed class Thermostat : Device, IThermostatControllable
 {
     
     /// <summary>
