@@ -19,11 +19,11 @@ public sealed class SmartHomeDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Device>()
-            .HasDiscriminator<string>("DeviceType")
-            .HasValue<Light>("Light")
-            .HasValue<Fan>("Fan")
-            .HasValue<Thermostat>("Thermostat")
-            .HasValue<DoorLock>("DoorLock");
+            .HasDiscriminator(device => device.Type)
+            .HasValue<Light>(DeviceType.Light)
+            .HasValue<Fan>(DeviceType.Fan)
+            .HasValue<Thermostat>(DeviceType.Thermostat)
+            .HasValue<DoorLock>(DeviceType.DoorLock);
 
         base.OnModelCreating(modelBuilder);
     }
