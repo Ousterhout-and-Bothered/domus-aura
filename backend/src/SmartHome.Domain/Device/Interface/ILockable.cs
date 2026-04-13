@@ -1,4 +1,6 @@
-﻿namespace SmartHome.Domain.Device.Interface;
+﻿using SmartHome.Domain.Enum;
+
+namespace SmartHome.Domain.Device.Interface;
 
 
 /// <summary>
