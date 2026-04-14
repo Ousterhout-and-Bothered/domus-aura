@@ -407,4 +407,92 @@ public class ThermostatTests
         // Assert
         Assert.Equal(ThermostatState.Off, thermostat.State);
     }
+    
+    // Strategy pattern
+    
+    [Fact]
+    public void SetMode_WhenHeating_SwitchesToCoolMode_TransitionsToCooling()
+    {
+        // Arrange
+        var thermostat = CreateThermostatOn();
+        thermostat.SetMode(ThermostatMode.Heat);
+        thermostat.SetAmbientTemperature(65);
+        thermostat.SetDesiredTemperature(72);
+        // currently Heating
+
+        // Act — switch to Cool while ambient is still below desired
+        thermostat.SetMode(ThermostatMode.Cool);
+
+        // Assert — Cool mode won't heat, so transitions to Idle
+        Assert.Equal(ThermostatState.Idle, thermostat.State);
+    }
+    
+    [Fact]
+    public void SetMode_SwitchToAuto_ImmediatelyEvaluatesState()
+    {
+        // Arrange
+        var thermostat = CreateThermostatOn();
+        thermostat.SetMode(ThermostatMode.Heat);
+        thermostat.SetAmbientTemperature(65);
+        thermostat.SetDesiredTemperature(72);
+        // currently Heating in Heat mode
+
+        // Act — switch to Auto
+        thermostat.SetMode(ThermostatMode.Auto);
+
+        // Assert — Auto still sees ambient < desired, stays Heating
+        Assert.Equal(ThermostatState.Heating, thermostat.State);
+    }
+    
+    [Fact]
+    public void Tick_WhenAmbientEqualsDesired_DoesNotChangeAmbient()
+    {
+        // Arrange
+        var thermostat = CreateThermostatOn();
+        thermostat.SetMode(ThermostatMode.Heat);
+        thermostat.SetDesiredTemperature(72);
+        thermostat.SetAmbientTemperature(72);
+        // Idle — ambient equals desired
+
+        // Act
+        thermostat.Tick();
+
+        // Assert
+        Assert.Equal(72, thermostat.AmbientTemperature);
+    }
+    
+    [Fact]
+    public void TurnOn_AfterAmbientChangedWhileOff_EvaluatesCorrectly()
+    {
+        // Arrange
+        var thermostat = CreateThermostat();
+        thermostat.SetAmbientTemperature(65);
+        thermostat.SetDesiredTemperature(72);
+        // still Off, but ambient is below desired
+
+        // Act
+        thermostat.TurnOn();
+
+        // Assert — should immediately evaluate and start heating
+        Assert.Equal(ThermostatState.Heating, thermostat.State);
+    }
+    
+    [Fact]
+    public void Tick_MultipleTicksReachDesired_TransitionsToIdle()
+    {
+        // Arrange
+        var thermostat = CreateThermostatOn();
+        thermostat.SetMode(ThermostatMode.Heat);
+        thermostat.SetDesiredTemperature(72);
+        thermostat.SetAmbientTemperature(70);
+        // 2 degrees away
+
+        // Act
+        thermostat.Tick();
+        thermostat.Tick();
+
+        // Assert
+        Assert.Equal(ThermostatState.Idle, thermostat.State);
+        Assert.Equal(72, thermostat.AmbientTemperature);
+    }
 }
