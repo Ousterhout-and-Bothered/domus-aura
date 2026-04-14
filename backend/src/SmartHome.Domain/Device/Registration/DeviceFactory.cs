@@ -7,18 +7,30 @@
 /// </summary>
 public sealed class DeviceFactory : IDeviceFactory
 {
-    
+
     /// <summary>
     /// Creates a new device of the specified type, initialized in its default state.
+    /// Name and location must be non-empty. Type must be a supported device type.
+    /// Throws <see cref="ArgumentException"/> if name or location is null or whitespace.
     /// Throws <see cref="ArgumentOutOfRangeException"/> if the type is not supported.
     /// </summary>
-    public Device Create(string name, string location, DeviceType type) => type switch
+    public Device Create(string name, string location, DeviceType type)
     {
-        DeviceType.Light => new Light.Light(name, location),
-        DeviceType.Fan => new Fan.Fan(name, location),
-        DeviceType.Thermostat => new Thermostat.Thermostat(name, location),
-        DeviceType.DoorLock => new DoorLock.DoorLock(name, location),
-        _ => throw new ArgumentOutOfRangeException(nameof(type),
-            $"Unsupported device type: {type}.")
-    };
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(location))
+            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(location));
+        
+        return type switch
+        {
+            DeviceType.Light => new Light.Light(name, location),
+            DeviceType.Fan => new Fan.Fan(name, location),
+            DeviceType.Thermostat => new Thermostat.Thermostat(name, location),
+            DeviceType.DoorLock => new DoorLock.DoorLock(name, location),
+            _ => throw new ArgumentOutOfRangeException(nameof(type),
+                $"Unsupported device type: {type}.")
+        };
+
+    }
 }
