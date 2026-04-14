@@ -15,10 +15,25 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public ThermostatState State { get; private set; }
     
+    private ThermostatMode _mode;
+
     /// <summary>
     /// The current mode controlling heating/cooling behavior.
+    /// When set, automatically updates the active strategy so EF Core
+    /// rehydration always produces a consistent state.
     /// </summary>
-    public ThermostatMode Mode { get; private set; }
+    public ThermostatMode Mode
+    {
+        get => _mode;
+        private set
+        {
+            if (!Enum.IsDefined<ThermostatMode>(value))
+                throw new ArgumentOutOfRangeException(nameof(Mode), 
+                    $"Unsupported thermostat mode: {value}.");
+            _mode = value;
+            _strategy = Strategies[value];
+        }
+    }
     
     /// <summary>
     /// The target temperature in Fahrenheit. Clamped to 60–80°F.
@@ -34,6 +49,18 @@ public sealed class Thermostat : Device, IThermostatControllable
     private const int MinTemperature = 60;
     private const int MaxTemperature = 80;
 
+    private IThermostatModeStrategy _strategy = null!;
+    
+    // To add a new mode: implement IThermostatModeStrategy and add an entry here.
+    // Thermostat's core logic never changes — Open/Closed Principle.
+    private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy>
+            Strategies = new()
+            {
+                { ThermostatMode.Heat, new HeatModeStrategy() },
+                { ThermostatMode.Cool, new CoolModeStrategy() },
+                { ThermostatMode.Auto, new AutoModeStrategy() }
+            };
+    
     // Required for EF Core
     private Thermostat()
     {
@@ -59,11 +86,10 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOn()
     {
-        if (State == ThermostatState.Off)
-        {
-            State = ThermostatState.Idle;
-            EvaluateState();
-        }
+        if (State != ThermostatState.Off)
+            throw new InvalidOperationException("Thermostat is already on.");
+        State = ThermostatState.Idle;
+        EvaluateState();
     }
 
     
@@ -72,8 +98,9 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOff()
     {
-        if (State != ThermostatState.Off)
-            State = ThermostatState.Off;
+        if (State == ThermostatState.Off)
+           throw new InvalidOperationException("Thermostat is already off.");
+        State = ThermostatState.Off;
     }
 
     
@@ -83,7 +110,7 @@ public sealed class Thermostat : Device, IThermostatControllable
     public void SetMode(ThermostatMode mode)
     {
         Mode = mode;
-
+        
         if (State != ThermostatState.Off)
             EvaluateState();
     }
@@ -140,43 +167,12 @@ public sealed class Thermostat : Device, IThermostatControllable
 
     
     /// <summary>
-    /// Evaluates the current ambient vs desired temperature and transitions
-    /// to the appropriate state based on the active mode.
+    /// Delegates evaluation to the active mode strategy.
     /// </summary>
     private void EvaluateState()
     {
-        if (State == ThermostatState.Off)
-            return;
-
-        if (AmbientTemperature == DesiredTemperature)
-        {
-            State = ThermostatState.Idle;
-            return;
-        }
-
-        switch (Mode)
-        {
-            case ThermostatMode.Heat:
-                State = AmbientTemperature < DesiredTemperature
-                    ? ThermostatState.Heating
-                    : ThermostatState.Idle;
-                break;
-
-            case ThermostatMode.Cool:
-                State = AmbientTemperature > DesiredTemperature
-                    ? ThermostatState.Cooling
-                    : ThermostatState.Idle;
-                break;
-
-            case ThermostatMode.Auto:
-                if (AmbientTemperature < DesiredTemperature)
-                    State = ThermostatState.Heating;
-                else if (AmbientTemperature > DesiredTemperature)
-                    State = ThermostatState.Cooling;
-                else
-                    State = ThermostatState.Idle;
-                break;
-        }
+        if (State == ThermostatState.Off) return;
+        State = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);
     }
 
     

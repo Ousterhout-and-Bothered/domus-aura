@@ -1,4 +1,5 @@
 ﻿using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.DoorLock;
 
 namespace SmartHome.Domain.Tests.Device;
 

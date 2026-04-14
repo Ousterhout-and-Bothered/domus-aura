@@ -1,4 +1,5 @@
 ﻿using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.Light;
 
 
 namespace SmartHome.Domain.Tests.Device;
