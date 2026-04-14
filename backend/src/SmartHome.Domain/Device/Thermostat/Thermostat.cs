@@ -48,8 +48,8 @@ public sealed class Thermostat : Device, IThermostatControllable
 
     private IThermostatModeStrategy _strategy = null!;
     
-    // Strategy map — adding a new mode only requires a new class and entry here.
-    // Thermostat.cs never changes — Open/Closed Principle.
+    // To add a new mode: implement IThermostatModeStrategy and add an entry here.
+    // Thermostat's core logic never changes — Open/Closed Principle.
     private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy>
             Strategies = new()
             {

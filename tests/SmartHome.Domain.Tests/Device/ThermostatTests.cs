@@ -411,7 +411,7 @@ public class ThermostatTests
     // Strategy pattern
     
     [Fact]
-    public void SetMode_WhenHeating_SwitchesToCoolMode_TransitionsToCooling()
+    public void SetMode_WhenHeating_SwitchesToCoolMode_TransitionsToIdle()
     {
         // Arrange
         var thermostat = CreateThermostatOn();
