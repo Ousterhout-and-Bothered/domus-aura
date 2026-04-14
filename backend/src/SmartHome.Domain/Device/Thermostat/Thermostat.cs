@@ -34,6 +34,20 @@ public sealed class Thermostat : Device, IThermostatControllable
     private const int MinTemperature = 60;
     private const int MaxTemperature = 80;
 
+    
+    // Strategy map — adding a new mode only requires a new class and entry here.
+    // Thermostat.cs never changes — Open/Closed Principle.
+    private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy>
+        Strategies = new()
+        {
+            { ThermostatMode.Heat, new HeatModeStrategy() },
+            { ThermostatMode.Cool, new CoolModeStrategy() },
+            { ThermostatMode.Auto, new AutoModeStrategy() }
+        };
+    
+    private IThermostatModeStrategy _strategy;
+    
+    
     // Required for EF Core
     private Thermostat()
     {
@@ -42,6 +56,7 @@ public sealed class Thermostat : Device, IThermostatControllable
         Mode = ThermostatMode.Auto;
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
+        _strategy = Strategies[Mode];
     }
 
     public Thermostat(string name, string location)
@@ -51,6 +66,7 @@ public sealed class Thermostat : Device, IThermostatControllable
         Mode = ThermostatMode.Auto;
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
+        _strategy = Strategies[Mode];
     }
     
     /// <summary>
@@ -59,11 +75,10 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOn()
     {
-        if (State == ThermostatState.Off)
-        {
-            State = ThermostatState.Idle;
-            EvaluateState();
-        }
+        if (State != ThermostatState.Off)
+            throw new InvalidOperationException("Thermostat is already on.");
+        State = ThermostatState.Idle;
+        EvaluateState();
     }
 
     
@@ -72,8 +87,9 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOff()
     {
-        if (State != ThermostatState.Off)
-            State = ThermostatState.Off;
+        if (State == ThermostatState.Off)
+           throw new InvalidOperationException("Thermostat is already off.");
+        State = ThermostatState.Off;
     }
 
     
@@ -83,7 +99,8 @@ public sealed class Thermostat : Device, IThermostatControllable
     public void SetMode(ThermostatMode mode)
     {
         Mode = mode;
-
+        _strategy = Strategies[mode];
+        
         if (State != ThermostatState.Off)
             EvaluateState();
     }
@@ -140,43 +157,12 @@ public sealed class Thermostat : Device, IThermostatControllable
 
     
     /// <summary>
-    /// Evaluates the current ambient vs desired temperature and transitions
-    /// to the appropriate state based on the active mode.
+    /// Delegates evaluation to the active mode strategy.
     /// </summary>
     private void EvaluateState()
     {
-        if (State == ThermostatState.Off)
-            return;
-
-        if (AmbientTemperature == DesiredTemperature)
-        {
-            State = ThermostatState.Idle;
-            return;
-        }
-
-        switch (Mode)
-        {
-            case ThermostatMode.Heat:
-                State = AmbientTemperature < DesiredTemperature
-                    ? ThermostatState.Heating
-                    : ThermostatState.Idle;
-                break;
-
-            case ThermostatMode.Cool:
-                State = AmbientTemperature > DesiredTemperature
-                    ? ThermostatState.Cooling
-                    : ThermostatState.Idle;
-                break;
-
-            case ThermostatMode.Auto:
-                if (AmbientTemperature < DesiredTemperature)
-                    State = ThermostatState.Heating;
-                else if (AmbientTemperature > DesiredTemperature)
-                    State = ThermostatState.Cooling;
-                else
-                    State = ThermostatState.Idle;
-                break;
-        }
+        if (State == ThermostatState.Off) return;
+        State = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);
     }
 
     

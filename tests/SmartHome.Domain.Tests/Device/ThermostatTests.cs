@@ -1,4 +1,5 @@
 ﻿using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.Thermostat;
 
 namespace SmartHome.Domain.Tests.Device;
 
@@ -71,17 +72,25 @@ public class ThermostatTests
     }
 
     [Fact]
-    public void TurnOn_WhenAlreadyOn_DoesNothing()
+    public void TurnOn_WhenAlreadyOn_Throws()
     {
         // Arrange
         var thermostat = CreateThermostatOn();
 
-        // Act
-        thermostat.TurnOn();
-
-        // Assert
-        Assert.Equal(ThermostatState.Idle, thermostat.State);
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => thermostat.TurnOn());
     }
+    
+    [Fact]
+    public void TurnOff_WhenAlreadyOff_Throws()
+    {
+        // Arrange
+        var thermostat = CreateThermostat();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => thermostat.TurnOff());
+    }
+    
 
     [Fact]
     public void TurnOff_WhenOn_TransitionsToOff()
