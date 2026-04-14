@@ -112,17 +112,23 @@ public class DeviceFactoryTests
             Factory.Create("Test", "Room", (DeviceType)99));
     }
 
-    [Fact]
-    public void Create_EmptyName_Throws()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_InvalidName_Throws(string? name)
     {
         Assert.Throws<ArgumentException>(() =>
-            Factory.Create("", "Living Room", DeviceType.Light));
+            Factory.Create(name!, "Living Room", DeviceType.Light));
     }
 
-    [Fact]
-    public void Create_EmptyLocation_Throws()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_InvalidLocation_Throws(string? location)
     {
         Assert.Throws<ArgumentException>(() =>
-            Factory.Create("Test Light", "", DeviceType.Light));
+            Factory.Create("Test Light", location!, DeviceType.Light));
     }
 }
