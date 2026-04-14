@@ -1,5 +1,10 @@
 ﻿namespace SmartHome.Domain.Device.Registration;
 
+using SmartHome.Domain.Device.Light;
+using SmartHome.Domain.Device.Fan;
+using SmartHome.Domain.Device.Thermostat;
+using SmartHome.Domain.Device.DoorLock;
+
 /// <summary>
 /// Creates new smart home devices from a registration request.
 /// To add a new device type, add a case here and implement the device class —
@@ -24,11 +29,11 @@ public sealed class DeviceFactory : IDeviceFactory
         
         return type switch
         {
-            DeviceType.Light => new Light.Light(name, location),
-            DeviceType.Fan => new Fan.Fan(name, location),
-            DeviceType.Thermostat => new Thermostat.Thermostat(name, location),
-            DeviceType.DoorLock => new DoorLock.DoorLock(name, location),
-            _ => throw new ArgumentOutOfRangeException(nameof(type),
+            DeviceType.Light => new Light(name, location),
+            DeviceType.Fan => new Fan(name, location),
+            DeviceType.Thermostat => new Thermostat(name, location),
+            DeviceType.DoorLock => new DoorLock(name, location),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type,
                 $"Unsupported device type: {type}.")
         };
 
