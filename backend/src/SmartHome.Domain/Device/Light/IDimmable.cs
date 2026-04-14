@@ -1,4 +1,4 @@
-﻿namespace SmartHome.Domain.Device.Interface;
+﻿namespace SmartHome.Domain.Device.Light;
 
 
 /// <summary>

@@ -1,8 +1,6 @@
-using SmartHome.Domain.Enum;
-using SmartHome.Domain.Device.Interface;
 using System.Text.RegularExpressions;
 
-namespace SmartHome.Domain.Device;
+namespace SmartHome.Domain.Device.Light;
 
 
 /// <summary>

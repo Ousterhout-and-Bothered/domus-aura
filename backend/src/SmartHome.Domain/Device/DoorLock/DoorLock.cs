@@ -1,7 +1,4 @@
-using SmartHome.Domain.Enum;
-using SmartHome.Domain.Device.Interface;
-
-namespace SmartHome.Domain.Device;
+namespace SmartHome.Domain.Device.DoorLock;
 
 
 /// <summary>
