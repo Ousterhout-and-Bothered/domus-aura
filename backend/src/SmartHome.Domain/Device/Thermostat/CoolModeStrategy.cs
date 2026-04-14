@@ -4,7 +4,7 @@
 /// <summary>
 /// Cooling mode — system may only cool.
 /// Transitions to Cooling when ambient is above desired.
-/// Will never heat even if ambient is lower desired.
+/// Will never heat even if ambient is lower than desired.
 /// </summary>
 public sealed class CoolModeStrategy : IThermostatModeStrategy
 {
