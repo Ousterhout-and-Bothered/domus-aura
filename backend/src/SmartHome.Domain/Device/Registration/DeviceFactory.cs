@@ -15,7 +15,7 @@ public sealed class DeviceFactory : IDeviceFactory
 
     /// Name and location are validated by the device constructors.
     /// Throws <see cref="ArgumentException"/> if name or location is invalid.
-    /// Throws <see cref="ArgumentOutOfRangeException"/> if the type is not 
+    /// Throws <see cref="ArgumentOutOfRangeException"/> if the type is not supported.
     public Device Create(string name, string location, DeviceType type) => type switch
         {
             DeviceType.Light => new Light(name, location),
