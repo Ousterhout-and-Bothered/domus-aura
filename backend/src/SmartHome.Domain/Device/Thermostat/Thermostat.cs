@@ -28,7 +28,7 @@ public sealed class Thermostat : Device, IThermostatControllable
         private set
         {
             if (!Enum.IsDefined<ThermostatMode>(value))
-                throw new ArgumentOutOfRangeException(nameof(value), 
+                throw new ArgumentOutOfRangeException(nameof(Mode), 
                     $"Unsupported thermostat mode: {value}.");
             _mode = value;
             _strategy = Strategies[value];
