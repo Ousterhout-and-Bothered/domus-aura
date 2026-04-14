@@ -13,21 +13,10 @@ using SmartHome.Domain.Device.DoorLock;
 public sealed class DeviceFactory : IDeviceFactory
 {
 
-    /// <summary>
-    /// Creates a new device of the specified type, initialized in its default state.
-    /// Name and location must be non-empty. Type must be a supported device type.
-    /// Throws <see cref="ArgumentException"/> if name or location is null or whitespace.
-    /// Throws <see cref="ArgumentOutOfRangeException"/> if the type is not supported.
-    /// </summary>
-    public Device Create(string name, string location, DeviceType type)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(name));
-
-        if (string.IsNullOrWhiteSpace(location))
-            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(location));
-        
-        return type switch
+    /// Name and location are validated by the device constructors.
+    /// Throws <see cref="ArgumentException"/> if name or location is invalid.
+    /// Throws <see cref="ArgumentOutOfRangeException"/> if the type is not 
+    public Device Create(string name, string location, DeviceType type) => type switch
         {
             DeviceType.Light => new Light(name, location),
             DeviceType.Fan => new Fan(name, location),
@@ -36,6 +25,5 @@ public sealed class DeviceFactory : IDeviceFactory
             _ => throw new ArgumentOutOfRangeException(nameof(type), type,
                 $"Unsupported device type: {type}.")
         };
-
-    }
+    
 }
