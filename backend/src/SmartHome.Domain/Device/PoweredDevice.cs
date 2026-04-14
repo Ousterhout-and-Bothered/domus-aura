@@ -27,11 +27,15 @@ public abstract class PoweredDevice : Device, IPowerable
 
     public virtual void TurnOn()
     {
+        if (PowerState == PowerState.On)
+            throw new InvalidOperationException("Device is already on.");
         PowerState = PowerState.On;
     }
     
     public virtual void TurnOff()
     {
+        if (PowerState == PowerState.Off)
+            throw new InvalidOperationException("Device is already off.");
         PowerState = PowerState.Off;
     }
 

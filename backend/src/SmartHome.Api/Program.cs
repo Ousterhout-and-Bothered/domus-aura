@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHome.Infrastructure.Persistence;
-using SmartHome.Infrastructure.Persistence.Seed;
+// using SmartHome.Infrastructure.Persistence.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
