@@ -6,7 +6,7 @@
 /// Each mode determines when the thermostat should heat, cool, or idle
 /// based on ambient vs desired temperature.
 /// Implement this interface to add a new mode without modifying any existing code
-/// Open/Closed Principle.
+/// (Open/Closed Principle).
 /// </summary>
 public interface IThermostatModeStrategy
 {
