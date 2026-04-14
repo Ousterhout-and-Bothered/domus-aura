@@ -5,7 +5,7 @@ namespace SmartHome.Domain.Device.Fan;
 /// Represents a smart fan device that supports power and speed control.
 /// Speed is retained when the fan is powered off and restored when powered back on.
 /// </summary>
-public sealed class Fan : PoweredDevice
+public sealed class Fan : PoweredDevice, IFanControllable
 {
     
     
@@ -30,11 +30,15 @@ public sealed class Fan : PoweredDevice
     /// <summary>
     /// Sets the speed of the fan.
     /// Throws <see cref="InvalidOperationException"/> if the fan is off.
+	/// Throws <see cref="ArgumentOutOfRangeException"/> is the speed is not defined.
     /// </summary>
     public void SetSpeed(FanSpeed speed)
     {
         if (PowerState != PowerState.On)
             throw new InvalidOperationException("Speed can only be changed while the fan is on.");
+
+		if (!Enum.IsDefined(speed))
+        	throw new ArgumentOutOfRangeException(nameof(speed), $"Unsupported fan speed: {speed}.");
 
         Speed = speed;
     }

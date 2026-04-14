@@ -1,9 +1,11 @@
-﻿namespace SmartHome.Domain.Device.Registration;
-
-using SmartHome.Domain.Device.Light;
+﻿using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Device.DoorLock;
+
+namespace SmartHome.Domain.Device.Registration;
+
+
 
 /// <summary>
 /// Creates new smart home devices from a registration request.
