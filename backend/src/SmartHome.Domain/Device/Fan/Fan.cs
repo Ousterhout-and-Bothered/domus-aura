@@ -1,6 +1,4 @@
-using SmartHome.Domain.Enum;
-
-namespace SmartHome.Domain.Device;
+namespace SmartHome.Domain.Device.Fan;
 
 
 /// <summary>

@@ -1,4 +1,4 @@
-namespace SmartHome.Domain.Enum;
+namespace SmartHome.Domain.Device.Fan;
 
 public enum FanSpeed
 {

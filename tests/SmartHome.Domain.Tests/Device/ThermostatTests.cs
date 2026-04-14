@@ -1,5 +1,4 @@
 ﻿using SmartHome.Domain.Device;
-using SmartHome.Domain.Enum;
 
 namespace SmartHome.Domain.Tests.Device;
 
