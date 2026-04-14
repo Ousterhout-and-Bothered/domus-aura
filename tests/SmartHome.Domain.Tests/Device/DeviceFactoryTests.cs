@@ -5,7 +5,7 @@ using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Device.DoorLock;
 
-namespace SmartHome.Domain.Tests.Device.Registration;
+namespace SmartHome.Domain.Tests.Device;
 
 public class DeviceFactoryTests
 {
