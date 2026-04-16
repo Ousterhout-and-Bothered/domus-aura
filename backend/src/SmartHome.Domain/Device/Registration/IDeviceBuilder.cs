@@ -15,8 +15,8 @@ public interface IDeviceBuilder
 
     /// <summary>
     /// Constructs a new device of the handled type.
-    /// Implementations must generate a new <see cref="DeviceId"/> and place the device
-    /// in its correct initial state.
+    /// Implementations must return a device with a freshly generated ID,
+    /// placed in its correct initial state.
     /// </summary>
     Device Build(string name, string location);
 }
