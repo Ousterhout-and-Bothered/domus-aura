@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace SmartHome.Domain.Device.DoorLock;
 
 
@@ -57,4 +59,11 @@ public sealed class DoorLock : Device, ILockable
     /// Always returns true — latch devices have no power state.
     /// </summary>
     public override bool IsOn() => true;
+    
+    /// <summary>
+    /// Log-friendly representation including lock state.
+    /// </summary>
+    [SuppressMessage("ReSharper", "UseNameOfInsteadOfTypeOf")]
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', LockState={LockState})";
 }

@@ -79,4 +79,27 @@ public abstract class Device : IDevice
     /// Powered devices return true only when powered on.
     /// </summary>
     public abstract bool IsOn();
+    
+    /// <summary>
+    /// Entity equality: two devices are equal if and only if they share the same <see cref="Id"/>.
+    /// Mutable attributes (Name, Location, state) are intentionally excluded. Two references
+    /// to the same device should compare equal even if one was loaded before a rename.
+    /// </summary>
+    public override bool Equals(object? obj) =>
+        obj is Device other && Id.Equals(other.Id);
+    
+    
+    /// <summary>
+    /// Hashed on the immutable <see cref="Id"/> only.
+    /// Safe to use <see cref="Device"/> as a <see cref="HashSet{T}"/> member or <see cref="Dictionary{TKey,TValue}"/> key.
+    /// </summary>
+    public override int GetHashCode() => Id.GetHashCode();
+    
+    /// <summary>
+    /// Produces a log-friendly representation of the device.
+    /// Uses <c>GetType().Name</c> so subclasses (Light, Fan, etc.) are identified correctly
+    /// without each subclass having to override <see cref="ToString"/>.
+    /// </summary>
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}')";
 }

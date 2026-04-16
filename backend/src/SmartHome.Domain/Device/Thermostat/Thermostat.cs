@@ -181,4 +181,11 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public override bool IsOn() =>
         State == ThermostatState.Heating || State == ThermostatState.Cooling;
+    
+    /// <summary>
+    /// Log-friendly representation including operational state, mode, and both temperatures.
+    /// </summary>
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', " +
+        $"State={State}, Mode={Mode}, Ambient={AmbientTemperature}°F, Desired={DesiredTemperature}°F)";
 }
