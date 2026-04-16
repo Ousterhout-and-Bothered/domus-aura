@@ -63,7 +63,7 @@ public sealed class DoorLock : Device, ILockable
     /// <summary>
     /// Log-friendly representation including lock state.
     /// </summary>
-    [SuppressMessage("ReSharper", "UseNameOfInsteadOfTypeOf")]
+    // Uses GetType().Name (not nameof) so subclasses get their true runtime type name in logs.
     public override string ToString() =>
         $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', LockState={LockState})";
 }
