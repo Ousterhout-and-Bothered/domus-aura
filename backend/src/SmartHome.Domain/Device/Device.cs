@@ -82,18 +82,34 @@ public abstract class Device : IDevice
     
     /// <summary>
     /// Entity equality: two devices are equal if and only if they share the same <see cref="Id"/>.
-    /// Mutable attributes (Name, Location, state) are intentionally excluded. Two references
-    /// to the same device should compare equal even if one was loaded before a rename.
+    /// Transient devices (Id = Guid.Empty, not yet persisted or fully rehydrated) compare by
+    /// reference — two separately-constructed transient instances are considered distinct entities
+    /// that will receive distinct IDs once persistence completes.
+    /// Mutable attributes (Name, Location, state) are intentionally excluded from equality.
     /// </summary>
-    public override bool Equals(object? obj) =>
-        obj is Device other && Id.Equals(other.Id);
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Device other) return false;
     
+        // Transient (not-yet-identified) entities use reference equality.
+        // Two separately-constructed transient devices must NOT compare equal just because
+        // both have Guid.Empty — they will become distinct devices once EF populates them.
+        if (Id == Guid.Empty || other.Id == Guid.Empty)
+            return ReferenceEquals(this, other);
+    
+        return Id.Equals(other.Id);
+    }
+
     
     /// <summary>
-    /// Hashed on the immutable <see cref="Id"/> only.
-    /// Safe to use <see cref="Device"/> as a <see cref="HashSet{T}"/> member or <see cref="Dictionary{TKey,TValue}"/> key.
+    /// Hashed on the immutable <see cref="Id"/> once assigned.
+    /// Transient devices fall back to reference-based hashing so separate unidentified
+    /// instances do not collide into the same hash bucket.
     /// </summary>
-    public override int GetHashCode() => Id.GetHashCode();
+    public override int GetHashCode() =>
+        Id == Guid.Empty 
+            ? base.GetHashCode()        // object.GetHashCode() — reference-based
+            : Id.GetHashCode();
     
     /// <summary>
     /// Produces a log-friendly representation of the device.
