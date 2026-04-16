@@ -63,7 +63,7 @@ public sealed class DoorLock : Device, ILockable
     /// <summary>
     /// Log-friendly representation including lock state.
     /// </summary>
-    // Uses GetType().Name (not nameof) so subclasses get their true runtime type name in logs.
+    // DoorLock is sealed, so use the fixed type name directly in logs.
     public override string ToString() =>
-        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', LockState={LockState})";
+        $"{nameof(DoorLock)}(Id={Id}, Name='{Name}', Location='{Location}', LockState={LockState})";
 }
