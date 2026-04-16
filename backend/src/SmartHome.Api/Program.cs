@@ -1,10 +1,3 @@
-using SmartHome.Domain.Device.Registration;
-using SmartHome.Domain.Device.Light;
-using SmartHome.Domain.Device.Fan;
-using SmartHome.Domain.Device.Thermostat;
-using SmartHome.Domain.Device.DoorLock;
-using SmartHome.Domain.Device;
-
 using Microsoft.EntityFrameworkCore;
 using SmartHome.Infrastructure.Persistence;
 // using SmartHome.Infrastructure.Persistence.Seed;
