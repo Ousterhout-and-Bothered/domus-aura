@@ -1,20 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using SmartHome.Domain.Device.Light;
-using SmartHome.Domain.Device.Fan;
-using SmartHome.Domain.Device.Thermostat;
-using SmartHome.Domain.Device.DoorLock;
 using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.DoorLock;
+using SmartHome.Domain.Device.Fan;
+using SmartHome.Domain.Device.Light;
+using SmartHome.Domain.Device.Thermostat;
+using DomainDevice = SmartHome.Domain.Device.Device;
 
 namespace SmartHome.Infrastructure.Persistence;
 
 public sealed class SmartHomeDbContext : DbContext
 {
-    public SmartHomeDbContext(DbContextOptions<SmartHomeDbContext> options)
-        : base(options)
+    public SmartHomeDbContext(DbContextOptions<SmartHomeDbContext> options) : base(options)
     {
     }
 
-    public DbSet<Device> Devices => Set<Device>();
+    public DbSet<DomainDevice> Devices => Set<DomainDevice>();
     public DbSet<Light> Lights => Set<Light>();
     public DbSet<Fan> Fans => Set<Fan>();
     public DbSet<Thermostat> Thermostats => Set<Thermostat>();
@@ -22,7 +22,7 @@ public sealed class SmartHomeDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Device>()
+        modelBuilder.Entity<DomainDevice>()
             .HasDiscriminator(device => device.Type)
             .HasValue<Light>(DeviceType.Light)
             .HasValue<Fan>(DeviceType.Fan)
