@@ -75,4 +75,11 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
 
         ColorHex = colorHex.Trim().ToUpperInvariant();
     }
+    
+    /// <summary>
+    /// Log-friendly representation including power and light-specific attributes.
+    /// </summary>
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', " +
+        $"Power={PowerState}, Brightness={Brightness}%, Color={ColorHex})";
 }

@@ -79,4 +79,43 @@ public abstract class Device : IDevice
     /// Powered devices return true only when powered on.
     /// </summary>
     public abstract bool IsOn();
+    
+    /// <summary>
+    /// Entity equality: two devices are equal if and only if they share the same <see cref="Id"/>.
+    /// Transient devices (Id = Guid.Empty, not yet persisted or fully rehydrated) compare by
+    /// reference — two separately-constructed transient instances are considered distinct entities
+    /// that will receive distinct IDs once persistence completes.
+    /// Mutable attributes (Name, Location, state) are intentionally excluded from equality.
+    /// </summary>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Device other) return false;
+    
+        // Transient (not-yet-identified) entities use reference equality.
+        // Two separately-constructed transient devices must NOT compare equal just because
+        // both have Guid.Empty — they will become distinct devices once EF populates them.
+        if (Id == Guid.Empty || other.Id == Guid.Empty)
+            return ReferenceEquals(this, other);
+    
+        return Id.Equals(other.Id);
+    }
+
+    
+    /// <summary>
+    /// Hashed on the immutable <see cref="Id"/> once assigned.
+    /// Transient devices fall back to reference-based hashing so separate unidentified
+    /// instances do not collide into the same hash bucket.
+    /// </summary>
+    public override int GetHashCode() =>
+        Id == Guid.Empty 
+            ? base.GetHashCode()        // object.GetHashCode() — reference-based
+            : Id.GetHashCode();
+    
+    /// <summary>
+    /// Produces a log-friendly representation of the device.
+    /// Uses <c>GetType().Name</c> so subclasses (Light, Fan, etc.) are identified correctly
+    /// without each subclass having to override <see cref="ToString"/>.
+    /// </summary>
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}')";
 }

@@ -42,4 +42,11 @@ public sealed class Fan : PoweredDevice, IFanControllable
 
         Speed = speed;
     }
+    
+    /// <summary>
+    /// Log-friendly representation including power and speed.
+    /// </summary>
+    public override string ToString() =>
+        $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', " +
+        $"Power={PowerState}, Speed={Speed})";
 }

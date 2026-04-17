@@ -57,4 +57,11 @@ public sealed class DoorLock : Device, ILockable
     /// Always returns true — latch devices have no power state.
     /// </summary>
     public override bool IsOn() => true;
+    
+    /// <summary>
+    /// Log-friendly representation including lock state.
+    /// </summary>
+    // DoorLock is sealed, so use the fixed type name directly in logs.
+    public override string ToString() =>
+        $"{nameof(DoorLock)}(Id={Id}, Name='{Name}', Location='{Location}', LockState={LockState})";
 }
