@@ -77,6 +77,17 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
     }
     
     /// <summary>
+    /// Resets powered device attributes for the light to their default values.
+    /// </summary>
+    protected override void ResetPoweredDefaults()
+    {
+        // Reset brightness to default (100%)
+        Brightness = 100;
+        // Reset color to default (white (#FFFFFF))
+        ColorHex = "#FFFFFF";
+    }
+    
+    /// <summary>
     /// Log-friendly representation including power and light-specific attributes.
     /// </summary>
     public override string ToString() =>

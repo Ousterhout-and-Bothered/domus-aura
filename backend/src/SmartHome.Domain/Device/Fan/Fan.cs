@@ -44,6 +44,15 @@ public sealed class Fan : PoweredDevice, IFanControllable
     }
     
     /// <summary>
+    /// Resets powered device attributes for the fan to their default values.
+    /// </summary>
+    protected override void ResetPoweredDefaults()
+    {
+        // Fans default to Medium when powered on
+        Speed = FanSpeed.Medium;
+    }
+    
+    /// <summary>
     /// Log-friendly representation including power and speed.
     /// </summary>
     public override string ToString() =>

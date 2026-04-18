@@ -38,20 +38,26 @@ public abstract class Device : IDevice
     
     protected Device(string name, string location, DeviceType type)
     {
+        // Generate unique identifier for new device
         Id = Guid.NewGuid();
+
+        // Validate and normalize required fields
         Name = ValidateRequired(name, nameof(name), "Device name is required.");
         Location = ValidateRequired(location, nameof(location), "Device location is required.");
+
+        // Assign device type
         Type = type;
     }
     
     private static string ValidateRequired(string value, string paramName, string message)
     {
+        // Reject null, empty, or whitespace-only values
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException(message, paramName);
 
+        // Remove leading/trailing whitespace
         return value.Trim();
     }
-
     
     /// <summary>
     /// Renames the device.
@@ -118,4 +124,9 @@ public abstract class Device : IDevice
     /// </summary>
     public override string ToString() =>
         $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}')";
+    
+    /// <summary>
+    /// Resets all devices to default settings.
+    /// </summary>
+    public abstract void ResetToDefaults();
 }

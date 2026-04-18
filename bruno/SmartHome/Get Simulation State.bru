@@ -1,0 +1,15 @@
+meta {
+  name: Get Simulation State
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/simulation
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

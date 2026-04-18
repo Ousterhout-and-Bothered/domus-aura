@@ -1,6 +1,5 @@
 namespace SmartHome.Domain.Device.Thermostat;
 
-
 /// <summary>
 /// Represents a smart thermostat that monitors and controls the ambient temperature
 /// of a location. Supports heating, cooling, and auto modes.
@@ -14,53 +13,53 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// The current state of the thermostat.
     /// </summary>
     public ThermostatState State { get; private set; }
-    
-    private ThermostatMode _mode;
 
     /// <summary>
     /// The current mode controlling heating/cooling behavior.
     /// When set, automatically updates the active strategy so EF Core
     /// rehydration always produces a consistent state.
     /// </summary>
+    private ThermostatMode _mode;
+
     public ThermostatMode Mode
     {
         get => _mode;
         private set
         {
             if (!Enum.IsDefined<ThermostatMode>(value))
-                throw new ArgumentOutOfRangeException(nameof(Mode), 
+                throw new ArgumentOutOfRangeException(nameof(value),
                     $"Unsupported thermostat mode: {value}.");
+
             _mode = value;
             _strategy = Strategies[value];
         }
     }
-    
+
     /// <summary>
     /// The target temperature in Fahrenheit. Clamped to 60–80°F.
     /// </summary>
     public int DesiredTemperature { get; private set; }
-    
+
     /// <summary>
     /// The current ambient temperature of the location in Fahrenheit.
     /// </summary>
     public int AmbientTemperature { get; private set; }
-    
+
     private const int DefaultTemperature = 72;
     private const int MinTemperature = 60;
     private const int MaxTemperature = 80;
 
     private IThermostatModeStrategy _strategy = null!;
-    
+
     // To add a new mode: implement IThermostatModeStrategy and add an entry here.
     // Thermostat's core logic never changes — Open/Closed Principle.
-    private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy>
-            Strategies = new()
-            {
-                { ThermostatMode.Heat, new HeatModeStrategy() },
-                { ThermostatMode.Cool, new CoolModeStrategy() },
-                { ThermostatMode.Auto, new AutoModeStrategy() }
-            };
-    
+    private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy> Strategies = new()
+    {
+        { ThermostatMode.Heat, new HeatModeStrategy() },
+        { ThermostatMode.Cool, new CoolModeStrategy() },
+        { ThermostatMode.Auto, new AutoModeStrategy() }
+    };
+
     // Required for EF Core
     private Thermostat()
     {
@@ -79,7 +78,7 @@ public sealed class Thermostat : Device, IThermostatControllable
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
     }
-    
+
     /// <summary>
     /// Powers the thermostat on, transitioning to Idle and immediately
     /// evaluating whether heating or cooling should begin.
@@ -88,21 +87,21 @@ public sealed class Thermostat : Device, IThermostatControllable
     {
         if (State != ThermostatState.Off)
             throw new InvalidOperationException("Thermostat is already on.");
+
         State = ThermostatState.Idle;
         EvaluateState();
     }
 
-    
     /// <summary>
     /// Powers the thermostat off from any active state.
     /// </summary>
     public void TurnOff()
     {
         if (State == ThermostatState.Off)
-           throw new InvalidOperationException("Thermostat is already off.");
+            throw new InvalidOperationException("Thermostat is already off.");
+
         State = ThermostatState.Off;
     }
-
     
     /// <summary>
     /// Sets the operating mode and immediately re-evaluates state.
@@ -110,12 +109,11 @@ public sealed class Thermostat : Device, IThermostatControllable
     public void SetMode(ThermostatMode mode)
     {
         Mode = mode;
-        
+
         if (State != ThermostatState.Off)
             EvaluateState();
     }
 
-    
     /// <summary>
     /// Sets the desired temperature in Fahrenheit.
     /// Clamp rather than reject. Thermostat silently enforces its own operating limits,
@@ -129,7 +127,6 @@ public sealed class Thermostat : Device, IThermostatControllable
             EvaluateState();
     }
 
-    
     /// <summary>
     /// Updates the ambient temperature of the location and re-evaluates state.
     /// Changes are tracked even when the thermostat is off.
@@ -142,7 +139,6 @@ public sealed class Thermostat : Device, IThermostatControllable
             EvaluateState();
     }
 
-    
     /// <summary>
     /// Advances the simulation by one tick. Adjusts ambient temperature
     /// by 1°F toward the desired temperature and re-evaluates state.
@@ -165,22 +161,30 @@ public sealed class Thermostat : Device, IThermostatControllable
         EvaluateState();
     }
 
-    
     /// <summary>
     /// Delegates evaluation to the active mode strategy.
     /// </summary>
     private void EvaluateState()
     {
-        if (State == ThermostatState.Off) return;
+        if (State == ThermostatState.Off)
+            return;
+
         State = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);
     }
 
-    
     /// <summary>
     /// Returns true only when actively Heating or Cooling.
     /// </summary>
     public override bool IsOn() =>
         State == ThermostatState.Heating || State == ThermostatState.Cooling;
+
+    public override void ResetToDefaults()
+    {
+        Mode = ThermostatMode.Auto;
+        DesiredTemperature = DefaultTemperature;
+        AmbientTemperature = DefaultTemperature;
+        State = ThermostatState.Off;
+    }
     
     /// <summary>
     /// Log-friendly representation including operational state, mode, and both temperatures.

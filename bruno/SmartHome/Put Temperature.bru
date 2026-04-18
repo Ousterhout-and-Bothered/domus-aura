@@ -1,0 +1,15 @@
+meta {
+  name: Put Temperature
+  type: http
+  seq: 3
+}
+
+put {
+  url: PUT {{baseUrl}}/api/locations/Living%20Room/ambient-temperature
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
