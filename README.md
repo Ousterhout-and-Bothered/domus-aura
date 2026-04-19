@@ -442,12 +442,7 @@ Request body:
 
 Valid values: `1, 2, 5, 10`
 
-Response `200 OK`:
-
-```json
-{ "multiplier": 5 }
-```
-
+Response `204 No Content`
 #### Reset all devices
 
 ```
