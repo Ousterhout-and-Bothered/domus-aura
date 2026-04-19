@@ -5,9 +5,19 @@ meta {
 }
 
 put {
-  url: PUT {{baseUrl}}/api/locations/Living%20Room/ambient-temperature
-  body: none
+  url: {{baseUrl}}/api/locations/Living%20Room/ambient-temperature
+  body: json
   auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "temperature": 75
+  }
 }
 
 settings {
