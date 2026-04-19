@@ -437,7 +437,7 @@ PUT /api/simulation/speed
 Request body:
 
 ```json
-{ "multiplier": 5 }
+{ "speedMultiplier": 5 }
 ```
 
 Valid values: `1, 2, 5, 10`
