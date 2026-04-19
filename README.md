@@ -202,7 +202,7 @@ All devices have base metadata:
 
 ##  API Endpoints
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:5137/api`
 
 > Here's a rough sketch of what we're going to need to endpoints.
 
