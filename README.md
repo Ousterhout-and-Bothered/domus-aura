@@ -449,14 +449,7 @@ Response `204 No Content`
 POST /api/simulation/reset
 ```
 
-Response `200 OK`:
-
-```json
-{ "message": "All devices reset to factory defaults." }
-```
-
-
-
+Response `204 No Content`
 ## Database
 
 We're using EF Core + SQLite. Database file lives at `data/smarthome.db` (gitignored).
