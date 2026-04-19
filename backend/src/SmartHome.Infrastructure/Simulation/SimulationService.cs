@@ -122,37 +122,8 @@ public sealed class SimulationService : ISimulationService
         var devices = await dbContext.Devices.ToListAsync(cancellationToken);
 
         foreach (var device in devices)
-        {
-            switch (device)
             {
-                case Light light:
-                    // Ensure light is powered off
-                    if (light.PowerState == PowerState.On)
-                        light.TurnOff();
-                    break;
-
-                case Fan fan:
-                    // Ensure fan is powered off
-                    if (fan.PowerState == PowerState.On)
-                        fan.TurnOff();
-                    break;
-
-                case Thermostat thermostat:
-                    // Ensure thermostat is powered off
-                    if (thermostat.State != ThermostatState.Off)
-                        thermostat.TurnOff();
-
-                    // Reset thermostat to default configuration
-                    thermostat.SetMode(ThermostatMode.Auto);
-                    thermostat.SetDesiredTemperature(72);
-                    thermostat.SetAmbientTemperature(72);
-                    break;
-
-                case DoorLock doorLock:
-                    // Reset latch device to default unlocked state
-                    if (doorLock.LockState != DoorLockState.Unlocked)
-                        doorLock.Unlock();
-                    break;
+            device.ResetToDefaults();
             }
         }
 
