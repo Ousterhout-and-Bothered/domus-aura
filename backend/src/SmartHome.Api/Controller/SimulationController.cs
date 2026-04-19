@@ -55,7 +55,7 @@ public sealed class SimulationController : ControllerBase
     [HttpPut("speed")]
     public async Task<IActionResult> SetSpeed([FromBody] SetSimulationSpeedRequest request, CancellationToken cancellationToken)
     {
-        // Delegate to simulation servic
+        // Delegate to simulation service
         // Enforces valid speed values and applies change
         await _simulationService.SetSpeedAsync(request.SpeedMultiplier, cancellationToken);
 
