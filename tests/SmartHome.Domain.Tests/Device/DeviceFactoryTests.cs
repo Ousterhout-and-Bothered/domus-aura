@@ -9,7 +9,13 @@ namespace SmartHome.Domain.Tests.Device;
 
 public class DeviceFactoryTests
 {
-     private static readonly IDeviceFactory Factory = new DeviceFactory();
+     private static readonly IDeviceFactory Factory = new DeviceFactory(new IDeviceBuilder[]
+{
+    new LightBuilder(),
+    new FanBuilder(),
+    new DoorLockBuilder(),
+    new ThermostatBuilder()
+});
 
     /// <summary>
     /// Correct type tests
