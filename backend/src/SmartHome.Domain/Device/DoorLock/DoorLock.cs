@@ -14,12 +14,12 @@ public sealed class DoorLock : Device, ILockable
     private DoorLock()
     {
         Type = DeviceType.DoorLock;
-        LockState = DoorLockState.Locked;
+        LockState = DoorLockState.Unlocked;
     }
 
     public DoorLock(string name, string location) : base(name, location, DeviceType.DoorLock)
     {
-        LockState = DoorLockState.Locked;
+        LockState = DoorLockState.Unlocked;
     }
 
     /// <summary>
