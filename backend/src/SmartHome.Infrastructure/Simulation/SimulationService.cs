@@ -124,6 +124,7 @@ public sealed class SimulationService : ISimulationService
         foreach (var device in devices)
             {
             device.ResetToDefaults();
+            await _deviceRepository.UpdateAsync(device);
             }
         }
 
