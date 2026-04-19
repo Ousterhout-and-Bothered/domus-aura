@@ -18,7 +18,7 @@ public sealed class ThermostatSimulationBackgroundService : BackgroundService
         // Continuously run simulation loop until application shuts down
         while (!stoppingToken.IsCancellationRequested)
         {
-            // AUpdates thermostat states and temperatures
+            // Updates thermostat states and temperatures
             await _simulationService.TickAsync(stoppingToken);
 
             // Calculate delay based on simulation speed multiplier
