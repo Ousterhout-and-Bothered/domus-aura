@@ -6,8 +6,18 @@ meta {
 
 put {
   url: {{baseUrl}}/api/simulation/speed
-  body: none
+  body: json
   auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "speedMultiplier": 2
+  }
 }
 
 settings {
