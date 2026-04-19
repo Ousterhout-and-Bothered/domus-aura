@@ -85,7 +85,7 @@ public sealed class SimulationService : ISimulationService
         lock (_lock)
         {
             // Advance simulation clock based on speed multiplier
-            _simulationClock = _simulationClock.AddSeconds(5.0 / _speedMultiplier);
+            _simulationClock = _simulationClock.AddSeconds(5);
         }
 
         // Persist updated device states
