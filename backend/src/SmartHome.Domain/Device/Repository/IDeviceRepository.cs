@@ -51,4 +51,9 @@ public interface IDeviceRepository
     /// Persists all pending changes to the underlying storage medium.
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Returns true if any device exists in the repository.
+    /// </summary>
+    Task<bool> AnyAsync(CancellationToken cancellationToken = default);
 }

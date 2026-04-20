@@ -13,8 +13,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         // Prevent duplicate seeding
-        var existing = await repository.GetAllAsync(cancellationToken);
-        if (existing.Count > 0)
+        if (await repository.AnyAsync(cancellationToken))
             return;
 
         // Door Locks
@@ -80,7 +79,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
         officeThermostat.TurnOn();
 
         // Aggregate all seeded devices into a single collection
-        var devices_seed = new DomainDevice[]
+        var seededDevice = new DomainDevice[]
         {
             frontDoor,
             backDoor,
@@ -94,7 +93,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
             officeThermostat
         };
 
-        foreach (var device in devices_seed)
+        foreach (var device in seededDevice)
             await repository.AddAsync(device, cancellationToken);
 
         await repository.SaveChangesAsync(cancellationToken);

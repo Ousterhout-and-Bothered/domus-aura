@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using SmartHome.Api.Controllers;
+using SmartHome.Api.Controller;
 
 namespace SmartHome.Api.Validation;
 

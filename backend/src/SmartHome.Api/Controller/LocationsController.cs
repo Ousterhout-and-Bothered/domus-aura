@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Domain.Simulation;
 
-namespace SmartHome.Api.Controllers;
+namespace SmartHome.Api.Controller;
 
 /// <summary>
 /// Provides API endpoints for managing location-based simulation settings.

@@ -15,6 +15,9 @@ namespace SmartHome.Infrastructure.Device.Repository;
 public sealed class DeviceRepository(SmartHomeDbContext dbContext) 
     : IDeviceRepository, ISimulationRepository
 {
+    
+    public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
+        => dbContext.Devices.AnyAsync(cancellationToken);
 
     
     public async Task<IReadOnlyList<DomainDevice>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -79,8 +82,8 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
     public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
     {
         // Change-tracked query so Tick() mutations persist on SaveChangesAsync.
-        var devices = await dbContext.Devices.ToListAsync(cancellationToken);
-        return devices.OfType<ITickable>().ToList();
+        var thermostats = await dbContext.Thermostats.ToListAsync(cancellationToken);
+        return thermostats.Cast<ITickable>().ToList();
     }
     
     public async Task ResetAllAsync(CancellationToken cancellationToken = default)

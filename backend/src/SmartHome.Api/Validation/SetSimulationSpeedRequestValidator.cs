@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using SmartHome.Api.Controller;
+using SmartHome.Domain.Simulation;
 
 namespace SmartHome.Api.Validation;
 
@@ -15,6 +16,6 @@ public sealed class SetSimulationSpeedRequestValidator : AbstractValidator<SetSi
     {
         RuleFor(request => request.Speed)
             .IsInEnum()
-            .WithMessage("Speed must be one of: Normal, Double, Fast, Ultra.");
+            .WithMessage($"Speed must be one of: {string.Join(", ", Enum.GetNames<SimulationSpeed>())}.");
     }
 }
