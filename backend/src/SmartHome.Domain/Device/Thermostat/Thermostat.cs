@@ -1,14 +1,16 @@
+using SmartHome.Domain.Device.StateMachine;
+
 namespace SmartHome.Domain.Device.Thermostat;
 
 /// <summary>
 /// Represents a smart thermostat that monitors and controls the ambient temperature
 /// of a location. Supports heating, cooling, and auto modes.
-/// Transitions between Off, Idle, Heating, and Cooling states based on the
-/// relationship between ambient and desired temperature.
+/// Transitions between Off, Idle, Heating, and Cooling are enforced by a state machine;
+/// which target state is appropriate at any given moment is decided by the active
+/// <see cref="IThermostatModeStrategy"/>.
 /// </summary>
-public sealed class Thermostat : Device, IThermostatControllable
+public sealed class Thermostat : Device, IThermostatControllable, ITickable
 {
-    
     /// <summary>
     /// The current state of the thermostat.
     /// </summary>
@@ -60,6 +62,16 @@ public sealed class Thermostat : Device, IThermostatControllable
         { ThermostatMode.Auto, new AutoModeStrategy() }
     };
 
+    /// <summary>
+    /// State machine enforcing legal transitions. Not persisted — rebuilt from
+    /// <see cref="State"/> on first use so EF-rehydrated instances honor the
+    /// same invariants as freshly-constructed ones.
+    /// </summary>
+    private StateMachine<ThermostatState>? _stateMachine;
+
+    private StateMachine<ThermostatState> Machine =>
+        _stateMachine ??= BuildMachine(State);
+
     // Required for EF Core
     private Thermostat()
     {
@@ -85,10 +97,7 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOn()
     {
-        if (State != ThermostatState.Off)
-            throw new InvalidOperationException("Thermostat is already on.");
-
-        State = ThermostatState.Idle;
+        TransitionTo(ThermostatState.Idle);
         EvaluateState();
     }
 
@@ -97,12 +106,9 @@ public sealed class Thermostat : Device, IThermostatControllable
     /// </summary>
     public void TurnOff()
     {
-        if (State == ThermostatState.Off)
-            throw new InvalidOperationException("Thermostat is already off.");
-
-        State = ThermostatState.Off;
+        TransitionTo(ThermostatState.Off);
     }
-    
+
     /// <summary>
     /// Sets the operating mode and immediately re-evaluates state.
     /// </summary>
@@ -162,14 +168,33 @@ public sealed class Thermostat : Device, IThermostatControllable
     }
 
     /// <summary>
-    /// Delegates evaluation to the active mode strategy.
+    /// Delegates state evaluation to the active mode strategy and,
+    /// if the strategy wants a different state, transitions to it
+    /// through the state machine.
     /// </summary>
     private void EvaluateState()
     {
         if (State == ThermostatState.Off)
             return;
 
-        State = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);
+        var targetState = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);
+
+        // No-op if strategy returns the current state — the state machine
+        // rejects identity transitions, so we short-circuit here.
+        if (targetState == State)
+            return;
+
+        TransitionTo(targetState);
+    }
+
+    /// <summary>
+    /// Validated transition helper. Uses the state machine to enforce invariants
+    /// and keeps the public <see cref="State"/> property synchronized.
+    /// </summary>
+    private void TransitionTo(ThermostatState target)
+    {
+        Machine.Transition(target);
+        State = Machine.CurrentState;
     }
 
     /// <summary>
@@ -180,12 +205,53 @@ public sealed class Thermostat : Device, IThermostatControllable
 
     public override void ResetToDefaults()
     {
+        // Reset is privileged — bypass the transition table entirely so a
+        // thermostat in any state (Heating, Cooling, Idle) collapses to Off
+        // in one step without needing intermediate transitions.
         Mode = ThermostatMode.Auto;
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
         State = ThermostatState.Off;
+        _stateMachine = BuildMachine(State);
     }
-    
+
+    /// <summary>
+    /// Builds the transition table for a thermostat.
+    /// Rules:
+    ///   Off      → Idle only (entered via TurnOn).
+    ///   Idle     → Off, Heating, Cooling.
+    ///   Heating  → Off, Idle, Cooling (Cooling added for Auto mode swings).
+    ///   Cooling  → Off, Idle, Heating.
+    /// Self-transitions are never in the table — that's how we preserve the
+    /// "already on / already off" rejection semantics from the original design.
+    /// </summary>
+    private static StateMachine<ThermostatState> BuildMachine(ThermostatState initialState) =>
+        new(initialState, new Dictionary<ThermostatState, IReadOnlySet<ThermostatState>>
+        {
+            [ThermostatState.Off] = new HashSet<ThermostatState>
+            {
+                ThermostatState.Idle
+            },
+            [ThermostatState.Idle] = new HashSet<ThermostatState>
+            {
+                ThermostatState.Off,
+                ThermostatState.Heating,
+                ThermostatState.Cooling
+            },
+            [ThermostatState.Heating] = new HashSet<ThermostatState>
+            {
+                ThermostatState.Off,
+                ThermostatState.Idle,
+                ThermostatState.Cooling
+            },
+            [ThermostatState.Cooling] = new HashSet<ThermostatState>
+            {
+                ThermostatState.Off,
+                ThermostatState.Idle,
+                ThermostatState.Heating
+            }
+        });
+
     /// <summary>
     /// Log-friendly representation including operational state, mode, and both temperatures.
     /// </summary>

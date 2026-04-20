@@ -1,0 +1,25 @@
+﻿using SmartHome.Domain.Device;
+
+namespace SmartHome.Domain.Simulation;
+
+/// <summary>
+/// Persistence operations specific to the simulation engine.
+/// Focused interface: consumers that only need CRUD (e.g., device management)
+/// should depend on <see cref="SmartHome.Domain.Device.Repository.IDeviceRepository"/>
+/// instead of taking on simulation concerns they do not use.
+/// </summary>
+public interface ISimulationRepository
+{
+    /// <summary>
+    /// Retrieves all devices that participate in simulation ticks.
+    /// Returned instances are change-tracked and will be persisted
+    /// on the next save.
+    /// </summary>
+    Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resets all devices to their default state in a single tracked operation.
+    /// Performs load + mutate + save as one unit of work.
+    /// </summary>
+    Task ResetAllAsync(CancellationToken cancellationToken = default);
+}

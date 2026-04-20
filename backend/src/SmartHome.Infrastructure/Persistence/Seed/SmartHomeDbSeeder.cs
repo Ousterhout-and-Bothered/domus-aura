@@ -1,34 +1,26 @@
-using Microsoft.EntityFrameworkCore;
 using SmartHome.Domain.Device.DoorLock;
 using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.Light;
+using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Device.Thermostat;
 using DomainDevice = SmartHome.Domain.Device.Device;
 
 namespace SmartHome.Infrastructure.Persistence.Seed;
 
-public sealed class SmartHomeDbSeeder
+public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
 {
-    private readonly SmartHomeDbContext _dbContext;
-
-    public SmartHomeDbSeeder(SmartHomeDbContext dbContext)
-    {
-        // Inject DbContext
-        _dbContext = dbContext;
-    }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         // Prevent duplicate seeding
-        if (await _dbContext.Devices.AnyAsync(cancellationToken))
+        var existing = await repository.GetAllAsync(cancellationToken);
+        if (existing.Count > 0)
             return;
 
         // Door Locks
         var frontDoor = new DoorLock("Front Door", "Entryway");
 
         var backDoor = new DoorLock("Back Door", "Patio");
-        // Initialize unlocked state
-        backDoor.Unlock();
 
         // Fans
         var livingRoomFan = new Fan("Living Room Fan", "Living Room");
@@ -88,7 +80,7 @@ public sealed class SmartHomeDbSeeder
         officeThermostat.TurnOn();
 
         // Aggregate all seeded devices into a single collection
-        var devices = new DomainDevice[]
+        var devices_seed = new DomainDevice[]
         {
             frontDoor,
             backDoor,
@@ -102,10 +94,9 @@ public sealed class SmartHomeDbSeeder
             officeThermostat
         };
 
-        // Add all devices in a single batch operation
-        await _dbContext.Devices.AddRangeAsync(devices, cancellationToken);
+        foreach (var device in devices_seed)
+            await repository.AddAsync(device, cancellationToken);
 
-        // Persist seeded data to database
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await repository.SaveChangesAsync(cancellationToken);
     }
 }

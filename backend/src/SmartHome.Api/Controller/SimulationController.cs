@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SmartHome.Infrastructure.Simulation;
+using SmartHome.Api.Contracts;
+using SmartHome.Domain.Simulation;
 
-namespace SmartHome.Api.Controllers;
+namespace SmartHome.Api.Controller;
 
 /// <summary>
 /// Provides API endpoints for managing global simulation settings,
@@ -9,81 +10,62 @@ namespace SmartHome.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/simulation")]
-public sealed class SimulationController : ControllerBase
+[Produces("application/json")]
+public sealed class SimulationController(ISimulationService simulationService) : ControllerBase
 {
-    private readonly ISimulationService _simulationService;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="SimulationController"/> class.
+    /// Retrieves the current simulation state — active speed and simulation clock.
     /// </summary>
-    /// <param name="simulationService">
-    /// The simulation service responsible for managing simulation state and behavior.
-    /// </param>
-    public SimulationController(ISimulationService simulationService)
-    {
-        // Inject simulation service
-        // Centralizes simulation logic and state
-        _simulationService = simulationService;
-    }
-
-    /// <summary>
-    /// Retrieves the current simulation state, including speed multiplier and simulation clock.
-    /// </summary>
-    /// <returns>
-    /// An object containing the current simulation speed multiplier and simulation clock value.
-    /// </returns>
+    /// <response code="200">The current simulation state.</response>
     [HttpGet]
-    public IActionResult GetSimulationState() =>
-        Ok(new
-        {
-            // Expose current simulation speed
-            // Controls thermostat tick rate
-            speedMultiplier = _simulationService.SpeedMultiplier,
-
-            // Expose simulation clock
-            // Used for UI display and time tracking
-            simulationClock = _simulationService.SimulationClock
-        });
+    [ProducesResponseType(typeof(SimulationStateResponse), StatusCodes.Status200OK)]
+    public ActionResult<SimulationStateResponse> GetSimulationState() =>
+        Ok(new SimulationStateResponse(
+            simulationService.Speed,
+            simulationService.SimulationClock));
 
     /// <summary>
-    /// Sets the simulation speed multiplier.
-    /// Throws <see cref="ArgumentException"/> if the speed multiplier is invalid.
+    /// Lists the speeds permitted by the current simulation speed registry.
+    /// Frontend dropdowns can consume this endpoint instead of hardcoding the list.
     /// </summary>
-    /// <param name="request">The request containing the new speed multiplier.</param>
-    /// <param name="cancellationToken">A token used to cancel the operation.</param>
-    /// <returns>A <see cref="NoContentResult"/> if the update succeeds.</returns>
-    [HttpPut("speed")]
-    public async Task<IActionResult> SetSpeed([FromBody] SetSimulationSpeedRequest request, CancellationToken cancellationToken)
-    {
-        // Delegate to simulation service
-        // Enforces valid speed values and applies change
-        await _simulationService.SetSpeedAsync(request.SpeedMultiplier, cancellationToken);
+    /// <response code="200">The set of permitted simulation speeds.</response>
+    [HttpGet("allowed-speeds")]
+    [ProducesResponseType(typeof(AllowedSpeedsResponse), StatusCodes.Status200OK)]
+    public ActionResult<AllowedSpeedsResponse> GetAllowedSpeeds(
+        [FromServices] ISimulationSpeedRegistry registry) =>
+        Ok(new AllowedSpeedsResponse(registry.AllowedSpeeds.ToList()));
 
-        // Return 204 since the update succeeds without a response body
+    /// <summary>
+    /// Sets the simulation speed.
+    /// </summary>
+    /// <response code="204">Speed successfully updated.</response>
+    /// <response code="400">The requested speed is invalid or not permitted by the registry.</response>
+    [HttpPut("speed")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetSpeed(
+        [FromBody] SetSimulationSpeedRequest request,
+        CancellationToken cancellationToken)
+    {
+        await simulationService.SetSpeedAsync(request.Speed, cancellationToken);
         return NoContent();
     }
 
     /// <summary>
-    /// Resets all devices in the simulation to their default states.
+    /// Resets all devices in the simulation to their default states and resets the simulation clock.
     /// </summary>
-    /// <param name="cancellationToken">A token used to cancel the operation.</param>
-    /// <returns>A <see cref="NoContentResult"/> if the reset succeeds.</returns>
+    /// <response code="204">All devices successfully reset.</response>
     [HttpPost("reset")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Reset(CancellationToken cancellationToken)
     {
-        // Reset all devices
-        // Returns system to factory defaults per specification
-        await _simulationService.ResetAllDevicesAsync(cancellationToken);
-
-        // Return 204 since the operation completes without a response body
+        await simulationService.ResetAllDevicesAsync(cancellationToken);
         return NoContent();
     }
 }
 
 /// <summary>
-/// Represents a request to update the simulation speed multiplier.
+/// Request to update the simulation speed.
 /// </summary>
-/// <param name="SpeedMultiplier">
-/// The simulation speed multiplier (e.g., 1x, 2x, 5x, 10x).
-/// </param>
-public sealed record SetSimulationSpeedRequest(int SpeedMultiplier);
+/// <param name="Speed">The target simulation speed. Must be permitted by the registry.</param>
+public sealed record SetSimulationSpeedRequest(SimulationSpeed Speed);
