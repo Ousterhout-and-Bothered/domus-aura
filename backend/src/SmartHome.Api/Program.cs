@@ -93,8 +93,7 @@ if (app.Environment.IsDevelopment())
     // Development-only; don't expose API surface in production without auth.
     app.MapScalarApiReference();
     // Redirect root to the Scalar docs in development for a friendly landing page.
-    if (app.Environment.IsDevelopment())
-        app.MapGet("/", () => Results.Redirect("/scalar/v1"));
+    app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 }
 
 // Exception handler MUST be registered before other middleware so it catches
