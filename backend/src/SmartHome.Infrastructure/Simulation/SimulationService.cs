@@ -35,7 +35,7 @@ public sealed class SimulationService(
             device.Tick();
 
         clock.Advance(TickInterval);
-        await devices.SaveChangesAsync(cancellationToken);
+        await simulation.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SetAmbientTemperatureAsync(

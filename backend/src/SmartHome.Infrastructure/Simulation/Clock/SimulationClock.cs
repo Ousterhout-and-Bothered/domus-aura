@@ -23,7 +23,9 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
             lock (_lock) return _currentTime;
         } 
     }
-    
+
+    public TimeSpan BaseTickInterval { get; } = TimeSpan.FromSeconds(5);
+
     public void SetSpeed(SimulationSpeed speed)
     {
         if (!speedRegistry.IsAllowed(speed))

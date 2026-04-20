@@ -67,7 +67,8 @@ public abstract class PoweredDevice : Device, IPowerable
     public override void ResetToDefaults()
     {
         // Subclasses reset their device-specific attributes first so that
-        // ForceOff() below sees a clean slate.
+        // ResetPoweredDefaults() sees a clean slate before it sets PowerState
+        // to Off and rebuilds the state machine.
         ResetPoweredDefaults();
 
         // Force power state to Off, bypassing the transition table.

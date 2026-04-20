@@ -12,6 +12,7 @@ public interface ISimulationClock
 {
     SimulationSpeed Speed { get; }
     DateTime CurrentTime { get; }
+    TimeSpan BaseTickInterval { get; }
 
     void SetSpeed(SimulationSpeed speed);
     void Advance(TimeSpan simulatedInterval);

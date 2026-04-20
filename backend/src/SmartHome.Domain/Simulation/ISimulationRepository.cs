@@ -22,4 +22,12 @@ public interface ISimulationRepository
     /// Performs load + mutate + save as one unit of work.
     /// </summary>
     Task ResetAllAsync(CancellationToken cancellationToken = default);
+    
+    
+    /// <summary>
+    /// Persists all pending simulation-related changes to the underlying storage medium.
+    /// Must share a unit of work with <see cref="GetTickableAsync"/> so that
+    /// mutations to returned entities are captured when this is called.
+    /// </summary>
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
