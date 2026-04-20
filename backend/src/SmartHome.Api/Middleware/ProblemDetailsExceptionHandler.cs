@@ -11,13 +11,23 @@ public sealed class ProblemDetailsExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        // Log full exception server-side — never leak details to clients.
-        logger.LogError(exception, "Unhandled exception processing {Method} {Path}",
-            httpContext.Request.Method, httpContext.Request.Path);
-
         var problem = MapToProblemDetails(exception, httpContext);
+        var statusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
 
-        httpContext.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
+        if (statusCode >= StatusCodes.Status500InternalServerError)
+        {
+            logger.LogError(exception, 
+                "Unhandled exception processing {Method} {Path}",
+                httpContext.Request.Method, httpContext.Request.Path);
+        }
+        else
+        {
+            logger.LogWarning(exception,
+                "Handled exception mapped to {StatusCode} for {Method} {Path}",
+                statusCode, httpContext.Request.Method, httpContext.Request.Path);
+        }
+        
+        httpContext.Response.StatusCode = statusCode;
         httpContext.Response.ContentType = "application/problem+json";
 
         await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
