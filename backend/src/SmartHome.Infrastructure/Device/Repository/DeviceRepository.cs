@@ -83,7 +83,7 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
     {
         // Change-tracked query so Tick() mutations persist on SaveChangesAsync.
         var thermostats = await dbContext.Thermostats.ToListAsync(cancellationToken);
-        return thermostats.Cast<ITickable>().ToList();
+        return thermostats;
     }
     
     public async Task ResetAllAsync(CancellationToken cancellationToken = default)
