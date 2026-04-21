@@ -14,7 +14,6 @@ public sealed class SimulationBackgroundService(
     IServiceScopeFactory scopeFactory,
     ISimulationClock clock) : BackgroundService
 {
-    private static readonly TimeSpan BaseRealTimePerTick = TimeSpan.FromSeconds(5);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -31,7 +30,7 @@ public sealed class SimulationBackgroundService(
                 }
 
                 var multiplier = (int)clock.Speed;
-                var delay = BaseRealTimePerTick / multiplier;
+                var delay = clock.BaseTickInterval / multiplier;
 
                 await Task.Delay(delay, stoppingToken);
             }

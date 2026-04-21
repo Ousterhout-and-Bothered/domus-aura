@@ -5,21 +5,18 @@ namespace SmartHome.Domain.Tests.Device;
 
 public class DoorLockTests
 {
-   
     /// <summary>
     /// Helpers
     /// </summary>
-    
+
+    // A freshly-constructed DoorLock is Unlocked per spec §1.1.4 / §1.4 / §3.5.
+    private static DoorLock CreateUnlocked() => new("Front Door", "Entryway");
+
+    // Drive a fresh DoorLock to the Locked state for tests that need it.
     private static DoorLock CreateLocked()
     {
-        var doorLock = new DoorLock("Front Door", "Entryway");
-        return doorLock;
-    }
-
-    private static DoorLock CreateUnlocked()
-    {
-        var doorLock = CreateLocked();
-        doorLock.Unlock();
+        var doorLock = CreateUnlocked();
+        doorLock.Lock();
         return doorLock;
     }
 
@@ -28,20 +25,20 @@ public class DoorLockTests
     /// </summary>
 
     [Fact]
-    public void DoorLock_DefaultState_IsLocked()
+    public void DoorLock_DefaultState_IsUnlocked()
     {
         // Arrange & Act
-        var doorLock = CreateLocked();
+        var doorLock = new DoorLock("Front Door", "Entryway");
 
-        // Assert
-        Assert.Equal(DoorLockState.Locked, doorLock.LockState);
+        // Assert — spec §1.1.4 state diagram: [*] --> Unlocked
+        Assert.Equal(DoorLockState.Unlocked, doorLock.LockState);
     }
 
     [Fact]
     public void DoorLock_IsAlwaysOn()
     {
         // Arrange & Act
-        var doorLock = CreateLocked();
+        var doorLock = CreateUnlocked();
 
         // Assert
         Assert.True(doorLock.IsOn());
@@ -129,5 +126,22 @@ public class DoorLockTests
 
         // Assert
         Assert.True(result);
+    }
+
+    /// <summary>
+    /// Reset
+    /// </summary>
+
+    [Fact]
+    public void ResetToDefaults_WhenLocked_ReturnsToUnlocked()
+    {
+        // Arrange — spec §1.4: factory default for door locks is Unlocked
+        var doorLock = CreateLocked();
+
+        // Act
+        doorLock.ResetToDefaults();
+
+        // Assert
+        Assert.Equal(DoorLockState.Unlocked, doorLock.LockState);
     }
 }

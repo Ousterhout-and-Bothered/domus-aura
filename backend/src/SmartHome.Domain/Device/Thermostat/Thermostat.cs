@@ -92,11 +92,17 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
     }
 
     /// <summary>
-    /// Powers the thermostat on, transitioning to Idle and immediately
-    /// evaluating whether heating or cooling should begin.
+    /// Powers the thermostat on from the Off state, transitioning to Idle and
+    /// immediately evaluating whether heating or cooling should begin.
+    /// Throws <see cref="InvalidOperationException"/> if the thermostat is
+    /// already on (any state other than Off).
     /// </summary>
     public void TurnOn()
     {
+        if (State != ThermostatState.Off)
+            throw new InvalidOperationException(
+                $"Cannot turn on a thermostat in state {State}. It must be Off.");
+
         TransitionTo(ThermostatState.Idle);
         EvaluateState();
     }

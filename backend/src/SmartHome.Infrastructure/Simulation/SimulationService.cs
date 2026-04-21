@@ -14,9 +14,6 @@ public sealed class SimulationService(
     IDeviceRepository devices,
     ISimulationRepository simulation) : ISimulationService
 {
-    // One tick advances simulated time by this amount. Real-time pacing is
-    // controlled separately by the background service using Speed.
-    private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(5);
 
     public SimulationSpeed Speed    => clock.Speed;
     public DateTime SimulationClock => clock.CurrentTime;
@@ -34,7 +31,7 @@ public sealed class SimulationService(
         foreach (var device in tickables)
             device.Tick();
 
-        clock.Advance(TickInterval);
+        clock.Advance(clock.BaseTickInterval);
         await simulation.SaveChangesAsync(cancellationToken);
     }
 

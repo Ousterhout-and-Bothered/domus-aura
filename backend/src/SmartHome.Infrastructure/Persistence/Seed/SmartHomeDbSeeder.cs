@@ -79,7 +79,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
         officeThermostat.TurnOn();
 
         // Aggregate all seeded devices into a single collection
-        var seededDevice = new DomainDevice[]
+        var seededDevices = new DomainDevice[]
         {
             frontDoor,
             backDoor,
@@ -93,7 +93,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
             officeThermostat
         };
 
-        foreach (var device in seededDevice)
+        foreach (var device in seededDevices)
             await repository.AddAsync(device, cancellationToken);
 
         await repository.SaveChangesAsync(cancellationToken);
