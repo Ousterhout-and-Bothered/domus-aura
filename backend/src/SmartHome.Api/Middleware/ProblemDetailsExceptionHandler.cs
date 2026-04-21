@@ -27,6 +27,9 @@ public sealed class ProblemDetailsExceptionHandler(
                 statusCode, httpContext.Request.Method, httpContext.Request.Path);
         }
         
+        if (httpContext.Response.HasStarted)
+            return false;
+        
         httpContext.Response.StatusCode = statusCode;
         httpContext.Response.ContentType = "application/problem+json";
 
@@ -78,6 +81,7 @@ public sealed class ProblemDetailsExceptionHandler(
             Title = title,
             Detail = detail,
             Instance = httpContext.Request.Path,
-            Type = $"https://tools.ietf.org/html/rfc9110#section-15.{(status / 100)}"
+            // RFC 9110 §15 classes: 1xx=15.2, 2xx=15.3, 3xx=15.4, 4xx=15.5, 5xx=15.6
+            Type = $"https://www.rfc-editor.org/rfc/rfc9110#section-15.{(status / 100) + 1}"
         };
 }

@@ -29,7 +29,7 @@ public sealed class SimulationBackgroundService(
                     await simulationService.TickAsync(stoppingToken);
                 }
 
-                var multiplier = (int)clock.Speed;
+                var multiplier = Math.Max(1, (int)clock.Speed);
                 var delay = clock.BaseTickInterval / multiplier;
 
                 await Task.Delay(delay, stoppingToken);
