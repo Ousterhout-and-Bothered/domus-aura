@@ -1,0 +1,16 @@
+meta {
+  name: Get Light History
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:5137/api/devices/5d2f64b1-7bc4-4352-9606-4baaade3f241/history
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -10,7 +10,7 @@ public interface IFanControllable
     /// The current speed of the fan (Low, Medium, or High).
     /// </summary>
     FanSpeed Speed { get; }
-    
+
     /// <summary>
     /// Sets the speed of the fan.
     /// Throws <see cref="InvalidOperationException"/> if the device is off.

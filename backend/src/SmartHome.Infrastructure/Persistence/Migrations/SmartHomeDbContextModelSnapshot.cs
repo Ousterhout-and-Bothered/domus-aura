@@ -17,11 +17,34 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
 
-            modelBuilder.Entity("SmartHome.Domain.Device.Device", b =>
+            modelBuilder.Entity("SmartHome.Domain.Device.CommandHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("DeviceHistory");
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Device.Device", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT COLLATE NOCASE");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -36,14 +59,18 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Devices");
+                    b.HasIndex("Location")
+                        .IsUnique()
+                        .HasFilter("\"Type\" = 3");
+
+                    b.ToTable("Devices", (string)null);
 
                     b.HasDiscriminator<int>("Type");
 
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("SmartHome.Domain.Device.DoorLock", b =>
+            modelBuilder.Entity("SmartHome.Domain.Device.DoorLock.DoorLock", b =>
                 {
                     b.HasBaseType("SmartHome.Domain.Device.Device");
 
@@ -53,13 +80,22 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                     b.HasDiscriminator().HasValue(0);
                 });
 
-            modelBuilder.Entity("SmartHome.Domain.Device.Fan", b =>
+            modelBuilder.Entity("SmartHome.Domain.Device.PoweredDevice", b =>
                 {
                     b.HasBaseType("SmartHome.Domain.Device.Device");
 
                     b.Property<int>("PowerState")
-                        .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("INTEGER");
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Device.TickableDevice", b =>
+                {
+                    b.HasBaseType("SmartHome.Domain.Device.Device");
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Device.Fan.Fan", b =>
+                {
+                    b.HasBaseType("SmartHome.Domain.Device.PoweredDevice");
 
                     b.Property<int>("Speed")
                         .HasColumnType("INTEGER");
@@ -67,9 +103,9 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                     b.HasDiscriminator().HasValue(1);
                 });
 
-            modelBuilder.Entity("SmartHome.Domain.Device.Light", b =>
+            modelBuilder.Entity("SmartHome.Domain.Device.Light.Light", b =>
                 {
-                    b.HasBaseType("SmartHome.Domain.Device.Device");
+                    b.HasBaseType("SmartHome.Domain.Device.PoweredDevice");
 
                     b.Property<int>("Brightness")
                         .HasColumnType("INTEGER");
@@ -78,16 +114,12 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("PowerState")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("INTEGER");
-
                     b.HasDiscriminator().HasValue(2);
                 });
 
-            modelBuilder.Entity("SmartHome.Domain.Device.Thermostat", b =>
+            modelBuilder.Entity("SmartHome.Domain.Device.Thermostat.Thermostat", b =>
                 {
-                    b.HasBaseType("SmartHome.Domain.Device.Device");
+                    b.HasBaseType("SmartHome.Domain.Device.TickableDevice");
 
                     b.Property<int>("AmbientTemperature")
                         .HasColumnType("INTEGER");

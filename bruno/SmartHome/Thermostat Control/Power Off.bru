@@ -1,0 +1,23 @@
+meta {
+  name: Power Off
+  type: http
+  seq: 7
+}
+
+put {
+  url: http://localhost:5137/api/devices/14999588-0628-4fd1-b0fa-07de570735bf/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setPower",
+    "value": "Off"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

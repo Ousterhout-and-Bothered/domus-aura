@@ -1,4 +1,5 @@
-﻿using SmartHome.Domain.Device;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Registration;
 using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Device.Fan;
@@ -9,7 +10,13 @@ namespace SmartHome.Domain.Tests.Device;
 
 public class DeviceFactoryTests
 {
-     private static readonly IDeviceFactory Factory = new DeviceFactory();
+     private static readonly IDeviceFactory Factory = new DeviceFactory(new IDeviceBuilder[]
+{
+    new LightBuilder(),
+    new FanBuilder(),
+    new DoorLockBuilder(),
+    new ThermostatBuilder(new ThermostatStrategyProvider())
+});
 
     /// <summary>
     /// Correct type tests
@@ -108,7 +115,7 @@ public class DeviceFactoryTests
     [Fact]
     public void Create_UnsupportedType_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test", "Room", (DeviceType)99));
     }
 
@@ -118,7 +125,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidName_Throws(string? name)
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create(name!, "Living Room", DeviceType.Light));
     }
 
@@ -128,7 +135,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidLocation_Throws(string? location)
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test Light", location!, DeviceType.Light));
     }
 }

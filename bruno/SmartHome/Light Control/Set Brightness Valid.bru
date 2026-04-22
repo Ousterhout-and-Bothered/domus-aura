@@ -1,0 +1,23 @@
+meta {
+  name: Set Brightness Valid
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:5137/api/devices/334a7bd0-15ef-4c8c-8f6e-753a5132eeea/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setBrightness",
+    "value": 90
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

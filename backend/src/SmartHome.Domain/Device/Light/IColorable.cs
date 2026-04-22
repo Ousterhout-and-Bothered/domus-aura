@@ -11,8 +11,8 @@ public interface IColorable
     /// The current color as a hex string
     /// </summary>
     string ColorHex { get; }
-    
-    
+
+
     /// <summary>
     /// Sets the color of the device using a hex color string.
     /// Throws <see cref="InvalidOperationException"/> if the device is off.

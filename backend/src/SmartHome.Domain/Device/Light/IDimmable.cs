@@ -13,8 +13,8 @@ public interface IDimmable
     /// Valid range is 10 to 100 inclusive.
     /// </summary>
     int Brightness { get; }
-    
-    
+
+
     /// <summary>
     /// Sets the brightness of the device.
     /// Throws <see cref="InvalidOperationException"/> if the device is off.

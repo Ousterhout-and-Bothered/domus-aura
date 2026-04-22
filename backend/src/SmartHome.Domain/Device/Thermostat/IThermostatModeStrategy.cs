@@ -10,7 +10,7 @@
 /// </summary>
 public interface IThermostatModeStrategy
 {
-    
+
     /// <summary>
     /// Evaluates ambient vs desired temperature and returns
     /// the appropriate thermostat state for this mode.

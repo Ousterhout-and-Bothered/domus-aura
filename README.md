@@ -202,7 +202,7 @@ All devices have base metadata:
 
 ##  API Endpoints
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:5137/api`
 
 > Here's a rough sketch of what we're going to need to endpoints.
 
@@ -437,31 +437,19 @@ PUT /api/simulation/speed
 Request body:
 
 ```json
-{ "multiplier": 5 }
+{ "speedMultiplier": 5 }
 ```
 
 Valid values: `1, 2, 5, 10`
 
-Response `200 OK`:
-
-```json
-{ "multiplier": 5 }
-```
-
+Response `204 No Content`
 #### Reset all devices
 
 ```
 POST /api/simulation/reset
 ```
 
-Response `200 OK`:
-
-```json
-{ "message": "All devices reset to factory defaults." }
-```
-
-
-
+Response `204 No Content`
 ## Database
 
 We're using EF Core + SQLite. Database file lives at `data/smarthome.db` (gitignored).

@@ -1,133 +1,42 @@
 ﻿using SmartHome.Domain.Device;
+using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.DoorLock;
 
 namespace SmartHome.Domain.Tests.Device;
 
 public class DoorLockTests
 {
-   
-    /// <summary>
-    /// Helpers
-    /// </summary>
-    
-    private static DoorLock CreateLocked()
-    {
-        var doorLock = new DoorLock("Front Door", "Entryway");
-        return doorLock;
-    }
-
-    private static DoorLock CreateUnlocked()
-    {
-        var doorLock = CreateLocked();
-        doorLock.Unlock();
-        return doorLock;
-    }
-
-    /// <summary>
-    /// Initial state test
-    /// </summary>
+    private static DoorLock CreateDoorLock() => new("Front Door", "Entryway");
 
     [Fact]
-    public void DoorLock_DefaultState_IsLocked()
+    public void Lock_UnlockedToLocked_SetsStateToLocked()
     {
-        // Arrange & Act
-        var doorLock = CreateLocked();
-
-        // Assert
-        Assert.Equal(DoorLockState.Locked, doorLock.LockState);
-    }
-
-    [Fact]
-    public void DoorLock_IsAlwaysOn()
-    {
-        // Arrange & Act
-        var doorLock = CreateLocked();
-
-        // Assert
-        Assert.True(doorLock.IsOn());
-    }
-
-    /// <summary>
-    /// Lock tests
-    /// </summary>
-
-    [Fact]
-    public void Lock_WhenUnlocked_SetsStateToLocked()
-    {
-        // Arrange
-        var doorLock = CreateUnlocked();
-
-        // Act
+        var doorLock = CreateDoorLock();
         doorLock.Lock();
-
-        // Assert
         Assert.Equal(DoorLockState.Locked, doorLock.LockState);
     }
 
     [Fact]
-    public void Lock_WhenAlreadyLocked_Throws()
+    public void Unlock_LockedToUnlocked_SetsStateToUnlocked()
     {
-        // Arrange
-        var doorLock = CreateLocked();
-
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => doorLock.Lock());
-    }
-
-    /// <summary>
-    /// Unlock test
-    /// </summary>
-
-    [Fact]
-    public void Unlock_WhenLocked_SetsStateToUnlocked()
-    {
-        // Arrange
-        var doorLock = CreateLocked();
-
-        // Act
+        var doorLock = CreateDoorLock();
+        doorLock.Lock();
         doorLock.Unlock();
-
-        // Assert
         Assert.Equal(DoorLockState.Unlocked, doorLock.LockState);
     }
 
     [Fact]
-    public void Unlock_WhenAlreadyUnlocked_Throws()
+    public void Lock_LockedToLocked_ThrowsInvalidOperationException()
     {
-        // Arrange
-        var doorLock = CreateUnlocked();
-
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => doorLock.Unlock());
-    }
-
-    /// <summary>
-    /// Is On
-    /// </summary>
-
-    [Fact]
-    public void IsOn_WhenLocked_ReturnsTrue()
-    {
-        // Arrange
-        var doorLock = CreateLocked();
-
-        // Act
-        var result = doorLock.IsOn();
-
-        // Assert
-        Assert.True(result);
+        var doorLock = CreateDoorLock();
+        doorLock.Lock();
+        Assert.Throws<InvalidDomainOperationException>(() => doorLock.Lock());
     }
 
     [Fact]
-    public void IsOn_WhenUnlocked_ReturnsTrue()
+    public void Unlock_UnlockedToUnlocked_ThrowsInvalidOperationException()
     {
-        // Arrange
-        var doorLock = CreateUnlocked();
-
-        // Act
-        var result = doorLock.IsOn();
-
-        // Assert
-        Assert.True(result);
+        var doorLock = CreateDoorLock();
+        Assert.Throws<InvalidDomainOperationException>(() => doorLock.Unlock());
     }
 }

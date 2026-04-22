@@ -1,0 +1,23 @@
+meta {
+  name: Unlock
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:5137/api/devices/0e6909dc-7357-4a76-ba79-d2625849d234/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "Unlock",
+    "value": "Unlock"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

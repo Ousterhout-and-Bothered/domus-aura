@@ -7,24 +7,24 @@
 /// </summary>
 public interface ILockable
 {
-    
+
     /// <summary>
     /// The current lock state of the device.
     /// </summary>
     DoorLockState LockState { get; }
 
-    
+
     /// <summary>
     /// Locks the device.
     /// Throws <see cref="InvalidOperationException"/> if the device is already locked.
     /// </summary>
     void Lock();
-    
-    
+
+
     /// <summary>
     /// Unlocks the device.
     /// Throws <see cref="InvalidOperationException"/> if the device is already unlocked.
     /// </summary>
     void Unlock();
-    
+
 }

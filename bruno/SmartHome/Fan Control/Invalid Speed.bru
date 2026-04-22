@@ -1,0 +1,23 @@
+meta {
+  name: Invalid Speed
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/devices/49bebfd4-484f-44a0-9190-f2fdea3b614d/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setSpeed",
+    "value": "Turbo"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

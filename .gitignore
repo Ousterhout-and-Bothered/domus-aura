@@ -426,9 +426,9 @@ dist/
 appsettings.Development.json
 
 # SQLite
-data/smarthome.db
-*.db-shm
-*.db-wal
+**/smarthome.db
+**/*.db-shm
+**/*.db-wal
 
 # OS
 .DS_Store
@@ -436,3 +436,6 @@ Thumbs.db
 
 # Rider
 .idea/
+
+CLAUDE.md
+READMEPROJ.md

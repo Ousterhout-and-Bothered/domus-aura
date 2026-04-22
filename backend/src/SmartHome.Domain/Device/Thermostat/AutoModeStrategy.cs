@@ -13,5 +13,5 @@ public sealed class AutoModeStrategy : IThermostatModeStrategy
         if (ambient > desired) return ThermostatState.Cooling;
         return ThermostatState.Idle;
     }
-        
+
 }

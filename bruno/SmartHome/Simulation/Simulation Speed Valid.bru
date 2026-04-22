@@ -1,0 +1,26 @@
+meta {
+  name: Simulation Speed Valid
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:5137/api/simulation/speed
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "speedMultiplier": 2
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
