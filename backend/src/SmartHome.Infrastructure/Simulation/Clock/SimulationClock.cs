@@ -1,4 +1,5 @@
-﻿using SmartHome.Domain.Simulation;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Simulation;
 
 namespace SmartHome.Infrastructure.Simulation.Clock;
 
@@ -29,7 +30,7 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
     public void SetSpeed(SimulationSpeed speed)
     {
         if (!speedRegistry.IsAllowed(speed))
-            throw new ArgumentException(
+            throw new InvalidDomainArgumentException(
                 $"Speed '{(int)speed}' is not allowed. Permitted speeds: " +
                 $"{string.Join(", ", speedRegistry.AllowedSpeeds.Select(s => (int)s).Order())}.");
 

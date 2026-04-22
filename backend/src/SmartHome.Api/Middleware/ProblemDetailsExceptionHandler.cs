@@ -67,7 +67,7 @@ public sealed class ProblemDetailsExceptionHandler(
                 httpContext),
 
             InvalidDomainOperationException => Build(
-                StatusCodes.Status400BadRequest,
+                StatusCodes.Status409Conflict,
                 "Invalid domain operation",
                 exception.Message,
                 "https://domus-aura.com/problems/invalid-operation",

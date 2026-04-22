@@ -5,12 +5,7 @@ meta {
 }
 
 put {
-  url: '''
-    {
-      "command": "setSpeed",
-      "value": "Low"
-    }
-'''
+  url: {{baseUrl}}/api/devices/{{fanId}}/state
   body: json
   auth: inherit
 }

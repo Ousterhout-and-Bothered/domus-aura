@@ -1,4 +1,6 @@
-﻿namespace SmartHome.Domain.Simulation;
+﻿using SmartHome.Domain.Common.Exceptions;
+
+namespace SmartHome.Domain.Simulation;
 
 /// <summary>
 /// Defines operations for managing and advancing the smart home simulation,
@@ -18,8 +20,10 @@ public interface ISimulationService
 
     /// <summary>
     /// Sets the simulation speed.
-    /// Throws <see cref="ArgumentOutOfRangeException"/> if the speed is not permitted by the registry.
     /// </summary>
+    /// <exception cref="InvalidDomainArgumentException">
+    /// Thrown if the speed is not permitted by the registry.
+    /// </exception>
     Task SetSpeedAsync(SimulationSpeed speed, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -34,8 +38,10 @@ public interface ISimulationService
 
     /// <summary>
     /// Sets the ambient temperature for a specific location.
-    /// Throws <see cref="InvalidOperationException"/> if no thermostats exist at the location.
     /// </summary>
+    /// <exception cref="InvalidDomainOperationException">
+    /// Thrown if no thermostats exist at the specified location.
+    /// </exception>
     Task SetAmbientTemperatureAsync(
         string location, int temperature, CancellationToken cancellationToken = default);
 }
