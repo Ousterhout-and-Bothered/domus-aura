@@ -62,7 +62,7 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
             _ => value.ToString() ?? throw new InvalidDomainArgumentException($"Value must be a string for enum parsing. Allowed values: {allowedValues}")
         };
 
-        if (Enum.TryParse<T>(stringValue, true, out var result))
+        if (Enum.TryParse<T>(stringValue, true, out var result) && Enum.IsDefined(result))
             return result;
 
         throw new InvalidDomainArgumentException($"Unsupported {typeof(T).Name} value. Allowed values: {allowedValues}");

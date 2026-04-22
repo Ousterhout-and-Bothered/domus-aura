@@ -40,6 +40,7 @@ public abstract class PoweredDevice : Device, IPowerable
 
     public virtual void TurnOn()
     {
+        if (PowerState == PowerState.On) return;
         Machine.Transition(PowerState.On);
         PowerState = Machine.CurrentState;
 
@@ -49,6 +50,7 @@ public abstract class PoweredDevice : Device, IPowerable
 
     public virtual void TurnOff()
     {
+        if (PowerState == PowerState.Off) return;
         Machine.Transition(PowerState.Off);
         PowerState = Machine.CurrentState;
 
