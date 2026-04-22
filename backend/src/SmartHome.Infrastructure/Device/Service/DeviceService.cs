@@ -59,9 +59,8 @@ public sealed class DeviceService(
         var commandValue = ValueParser.Normalize(value);
         var command = commandFactory.Create(commandName, commandValue, device);
 
-        command.Execute();
-
-        await repository.LogActionAsync(device.Id, $"{commandName}: {commandValue}", cancellationToken);
+        var result = command.Execute();
+        await repository.LogActionAsync(device.Id, result.Operation, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
         return device;

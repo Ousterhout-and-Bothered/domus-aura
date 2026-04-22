@@ -8,11 +8,13 @@ namespace SmartHome.Domain.Device.Commands;
 public sealed class SetPowerCommand(IPowerable receiver, PowerState targetState) : IDeviceCommand
 {
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         if (targetState == PowerState.On)
             receiver.TurnOn();
         else
             receiver.TurnOff();
+        
+        return new CommandResult($"SetPower({targetState})", true);
     }
 }

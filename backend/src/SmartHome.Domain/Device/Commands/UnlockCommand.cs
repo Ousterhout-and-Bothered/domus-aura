@@ -9,8 +9,9 @@ namespace SmartHome.Domain.Device.Commands;
 public sealed class UnlockCommand(ILockable receiver) : IDeviceCommand
 {
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.Unlock();
+        return new CommandResult("Unlock", true);
     }
 }

@@ -10,8 +10,9 @@ namespace SmartHome.Domain.Device.Commands;
 public sealed class SetBrightnessCommand(IDimmable receiver, int brightness) : IDeviceCommand
 {
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetBrightness(brightness);
+        return new CommandResult($"SetBrightness({brightness})", true);
     }
 }

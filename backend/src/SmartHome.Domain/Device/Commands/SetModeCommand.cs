@@ -10,8 +10,9 @@ namespace SmartHome.Domain.Device.Commands;
 public sealed class SetModeCommand(IThermostatControllable receiver, ThermostatMode mode) : IDeviceCommand
 {
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetMode(mode);
+        return new CommandResult($"SetMode({mode})", true);
     }
 }

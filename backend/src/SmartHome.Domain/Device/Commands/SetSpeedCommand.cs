@@ -10,8 +10,9 @@ namespace SmartHome.Domain.Device.Commands;
 public sealed class SetSpeedCommand(IFanControllable receiver, FanSpeed speed) : IDeviceCommand
 {
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetSpeed(speed);
+        return new CommandResult($"SetSpeed({speed})", true);
     }
 }

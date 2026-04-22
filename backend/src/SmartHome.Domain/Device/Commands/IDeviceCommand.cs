@@ -10,5 +10,5 @@ public interface IDeviceCommand
     /// Executes the command.
     /// The receiver of the command is typically bound at creation time.
     /// </summary>
-    void Execute();
+    CommandResult Execute();
 }
