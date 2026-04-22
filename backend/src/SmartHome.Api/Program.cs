@@ -20,6 +20,7 @@ using FluentValidation.AspNetCore;
 using Scalar.AspNetCore;
 using SmartHome.Api.Validation;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 /*
  * Domus Aura - Smart Home Simulation API
@@ -39,6 +40,7 @@ builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.SerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
 });
 
 builder.Services.AddCors(options =>
@@ -68,13 +70,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// Register MVC controllers with enum-as-string JSON serialization
-// Enables API clients to send/receive "X5" instead of 5 for SimulationSpeed,
-// producing self-documenting requests and cleaner Swagger docs.
+// Register MVC controllers with enum-as-string JSON serialization and
+// polymorphic device serialization. Polymorphism config is layered separately
+// from the domain entity (no [JsonDerivedType] attributes on Device) so the
+// domain remains framework-agnostic.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(
-            new JsonStringEnumConverter()));
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
+    });
 
 // FluentValidation — register all AbstractValidator<T> implementations in this assembly.
 // Combined with AddFluentValidationAutoValidation(), ASP.NET will invoke matching
@@ -205,6 +210,31 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<SmartHomeDbSeeder>();
     await seeder.SeedAsync();
 }
+
+static DefaultJsonTypeInfoResolver ConfigureDevicePolymorphism() =>
+    new DefaultJsonTypeInfoResolver
+    {
+        Modifiers =
+        {
+            typeInfo =>
+            {
+                if (typeInfo.Type == typeof(Device))
+                {
+                    typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+                    {
+                        TypeDiscriminatorPropertyName = "$type",
+                        DerivedTypes =
+                        {
+                            new JsonDerivedType(typeof(Light), "Light"),
+                            new JsonDerivedType(typeof(Fan), "Fan"),
+                            new JsonDerivedType(typeof(Thermostat), "Thermostat"),
+                            new JsonDerivedType(typeof(DoorLock), "DoorLock")
+                        }
+                    };
+                }
+            }
+        }
+    };
 
 // Map attribute-routed API controllers
 app.MapControllers();
