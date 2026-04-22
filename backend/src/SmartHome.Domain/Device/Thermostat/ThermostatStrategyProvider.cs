@@ -28,6 +28,12 @@ public sealed class ThermostatStrategyProvider : IThermostatStrategyProvider
         _strategies[mode] = strategy;
     }
 
+    /// <summary>
+    /// Returns the strategy implementation for the given thermostat mode.
+    /// </summary>
+    /// <exception cref="InvalidDomainOperationException">
+    /// Thrown if no strategy is registered for the specified mode.
+    /// </exception>
     public IThermostatModeStrategy GetStrategy(ThermostatMode mode)
     {
         if (_strategies.TryGetValue(mode, out var strategy))
