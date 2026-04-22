@@ -19,6 +19,9 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         => dbContext.Devices.AnyAsync(cancellationToken);
 
     /// <inheritdoc />
+    // In-memory filtering is acceptable here due to projects
+    // status as a simulation. It prioritizes maintainability over
+    // extreme scalability.
     public async Task<IReadOnlyList<DomainDevice>> GetAllAsync(
         string? location = null,
         DeviceType? type = null,
