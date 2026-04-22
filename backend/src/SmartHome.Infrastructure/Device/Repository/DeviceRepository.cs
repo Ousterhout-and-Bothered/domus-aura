@@ -74,18 +74,14 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
     /// Deletes the device with the specified identifier.
     /// </summary>
     /// <param name="id">The unique identifier for the device to delete.</param>
-    /// <param name="cancellationToken">A token used to cancel the operation.</param>
-    /// <returns>True when a matching device was found and marked for deletion; otherwise false.</returns>
+    /// <returns>True when a matching device was found and deleted; otherwise false.</returns>
     public async Task<bool> RemoveByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var device = await dbContext.Devices
-            .FirstOrDefaultAsync(device => device.Id == id, cancellationToken);
+        var affectedRows = await dbContext.Devices
+            .Where(d => d.Id == id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        if (device is null)
-            return false;
-
-        dbContext.Devices.Remove(device);
-        return true;
+        return affectedRows > 0;
     }
 
     /// <inheritdoc />
