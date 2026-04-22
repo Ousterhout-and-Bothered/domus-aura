@@ -32,9 +32,11 @@ public sealed class ProblemDetailsExceptionHandler(
             return false;
         
         httpContext.Response.StatusCode = statusCode;
-        httpContext.Response.ContentType = "application/problem+json";
-
-        await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            problem,
+            options: null,
+            contentType: "application/problem+json",
+            cancellationToken);
 
         // Returning true signals "handled — don't propagate further".
         return true;
