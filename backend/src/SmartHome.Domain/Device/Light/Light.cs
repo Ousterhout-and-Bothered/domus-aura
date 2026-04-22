@@ -38,11 +38,7 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
     }
 
 
-    /// <summary>
-    /// Sets the brightness of the light.
-    /// Throws <see cref="InvalidOperationException"/> if the light is off.
-    /// Values outside 10–100 are clamped to the nearest bound.
-    /// </summary>
+    /// <inheritdoc />
     public void SetBrightness(int brightness)
     {
         Guard.AgainstInvalidState(PowerState == PowerState.On, "Brightness can only be changed while the light is on.");
@@ -54,8 +50,8 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
 
     /// <summary>
     /// Sets the color of the light using a hex color string.
-    /// Throws <see cref="InvalidOperationException"/> if the light is off.
-    /// Throws <see cref="ArgumentException"/> if the hex format is invalid.
+    /// Throws <see cref="InvalidDomainOperationException"/> if the light is off.
+    /// Throws <see cref="InvalidDomainArgumentException"/> if the hex format is invalid.
     /// </summary>
     public void SetColor(string colorHex)
     {

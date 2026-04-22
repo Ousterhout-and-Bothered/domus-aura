@@ -1,4 +1,4 @@
-using SmartHome.Domain.Device.Registration;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Domain.Device;
 
@@ -16,7 +16,7 @@ public interface IDeviceService
     /// <param name="type">The type of device.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The newly created device.</returns>
-    /// <exception cref="Common.Exceptions.DuplicateThermostatException">
+    /// <exception cref="DuplicateThermostatException">
     /// Thrown if a thermostat is registered in a location that already has one.
     /// </exception>
     Task<Device> RegisterDeviceAsync(string name, string location, DeviceType type, CancellationToken cancellationToken = default);
@@ -29,6 +29,6 @@ public interface IDeviceService
     /// <param name="value">The optional value for the command.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated device.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown if the device is not found.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
     Task<Device> ExecuteCommandAsync(Guid deviceId, string commandName, string? value, CancellationToken cancellationToken = default);
 }

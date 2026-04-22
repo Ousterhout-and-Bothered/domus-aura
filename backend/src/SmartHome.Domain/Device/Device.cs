@@ -1,10 +1,4 @@
 using SmartHome.Domain.Common;
-using System.Text.Json.Serialization;
-using SmartHome.Domain.Device.Light;
-using SmartHome.Domain.Device.Fan;
-using SmartHome.Domain.Device.Thermostat;
-using SmartHome.Domain.Device.DoorLock;
-
 namespace SmartHome.Domain.Device;
 
 
@@ -13,11 +7,6 @@ namespace SmartHome.Domain.Device;
 /// Enforces that every device has a unique identity,
 /// a human-readable name, a location, and a type.
 /// </summary>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-[JsonDerivedType(typeof(Light.Light), typeDiscriminator: "Light")]
-[JsonDerivedType(typeof(Fan.Fan), typeDiscriminator: "Fan")]
-[JsonDerivedType(typeof(Thermostat.Thermostat), typeDiscriminator: "Thermostat")]
-[JsonDerivedType(typeof(DoorLock.DoorLock), typeDiscriminator: "DoorLock")]
 public abstract class Device : IDevice
 {
 

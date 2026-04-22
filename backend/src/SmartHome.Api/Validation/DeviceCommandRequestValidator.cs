@@ -54,7 +54,8 @@ public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceComm
                     }
 
                     var val = normalizedValue.ToString();
-                    if (!Enum.TryParse<SmartHome.Domain.Device.PowerState>(val, true, out _))
+                    if (!Enum.TryParse<SmartHome.Domain.Device.PowerState>(val, true, out var parsedPower) 
+                        || !Enum.IsDefined(parsedPower))
                     {
                         context.AddFailure($"Power state must be one of: {string.Join(", ", Enum.GetNames<SmartHome.Domain.Device.PowerState>())}.");
                     }
@@ -69,7 +70,8 @@ public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceComm
                     }
 
                     var val = normalizedValue.ToString();
-                    if (!Enum.TryParse<SmartHome.Domain.Device.Fan.FanSpeed>(val, true, out _))
+                    if (!Enum.TryParse<SmartHome.Domain.Device.Fan.FanSpeed>(val, true, out var parsedSpeed) 
+                        || !Enum.IsDefined(parsedSpeed))
                     {
                         context.AddFailure($"Fan speed must be one of: {string.Join(", ", Enum.GetNames<SmartHome.Domain.Device.Fan.FanSpeed>())}.");
                     }
@@ -84,7 +86,8 @@ public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceComm
                     }
 
                     var val = normalizedValue.ToString();
-                    if (!Enum.TryParse<SmartHome.Domain.Device.Thermostat.ThermostatMode>(val, true, out _))
+                    if (!Enum.TryParse<SmartHome.Domain.Device.Thermostat.ThermostatMode>(val, true, out var parsedMode)
+                        || !Enum.IsDefined(parsedMode))
                     {
                         context.AddFailure($"Thermostat mode must be one of: {string.Join(", ", Enum.GetNames<SmartHome.Domain.Device.Thermostat.ThermostatMode>())}.");
                     }

@@ -1,4 +1,6 @@
-﻿namespace SmartHome.Domain.Device.Light;
+﻿using SmartHome.Domain.Common.Exceptions;
+
+namespace SmartHome.Domain.Device.Light;
 
 
 /// <summary>
@@ -17,9 +19,11 @@ public interface IDimmable
 
     /// <summary>
     /// Sets the brightness of the device.
-    /// Throws <see cref="InvalidOperationException"/> if the device is off.
-    /// Throws <see cref="ArgumentOutOfRangeException"/> if brightness is outside 10–100.
+    /// Values outside the 10–100 range are clamped to the nearest bound.
     /// </summary>
+    /// <exception cref="InvalidDomainOperationException">
+    /// Thrown if the device is off.
+    /// </exception>
     void SetBrightness(int brightness);
 
 }
