@@ -1,4 +1,5 @@
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Domain.Device.Fan;
 
@@ -31,8 +32,8 @@ public sealed class Fan : PoweredDevice, IFanControllable
 
     /// <summary>
     /// Sets the speed of the fan.
-    /// Throws <see cref="InvalidOperationException"/> if the fan is off.
-    /// Throws <see cref="ArgumentOutOfRangeException"/> is the speed is not defined.
+    /// Throws <see cref="InvalidDomainOperationException"/> if the fan is off.
+    /// Throws <see cref="InvalidDomainArgumentException"/> if the speed is not defined.
     /// </summary>
     public void SetSpeed(FanSpeed speed)
     {

@@ -15,7 +15,7 @@ public static class Guard
     /// <param name="value">The value to check.</param>
     /// <param name="parameterName">The name of the parameter being validated.</param>
     /// <param name="messagePrefix">Optional custom prefix for the error message.</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is not defined in the enum.</exception>
+    /// <exception cref="InvalidDomainArgumentException">Thrown if the value is not defined in the enum.</exception>
     public static void EnumDefined<T>(T value, string? parameterName = null, string? messagePrefix = null) where T : struct, Enum
     {
         if (!Enum.IsDefined(value))
@@ -44,7 +44,7 @@ public static class Guard
     /// <param name="value">The string to check.</param>
     /// <param name="message">The exception message.</param>
     /// <returns>The trimmed string if valid.</returns>
-    /// <exception cref="ArgumentException">Thrown if the string is null or whitespace.</exception>
+    /// <exception cref="InvalidDomainArgumentException">Thrown if the string is null or whitespace.</exception>
     public static string NotNullOrWhitespace(string value, string message)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -60,7 +60,7 @@ public static class Guard
     /// <param name="min">The minimum allowed value.</param>
     /// <param name="max">The maximum allowed value.</param>
     /// <param name="message">The exception message.</param>
-    /// <exception cref="ArgumentException">Thrown if the value is out of range.</exception>
+    /// <exception cref="InvalidDomainArgumentException">Thrown if the value is out of range.</exception>
     public static void InRange(int value, int min, int max, string message)
     {
         if (value < min || value > max)
@@ -68,11 +68,11 @@ public static class Guard
     }
 
     /// <summary>
-    /// Ensures the specified condition is met, otherwise throws an <see cref="ArgumentException"/>.
+    /// Ensures the specified condition is met, otherwise throws an <see cref="InvalidDomainArgumentException"/>.
     /// </summary>
     /// <param name="condition">The condition to check.</param>
     /// <param name="message">The exception message.</param>
-    /// <exception cref="ArgumentException">Thrown if the condition is false.</exception>
+    /// <exception cref="InvalidDomainArgumentException">Thrown if the condition is false.</exception>
     public static void Against(bool condition, string message)
     {
         if (!condition)
@@ -80,11 +80,11 @@ public static class Guard
     }
 
     /// <summary>
-    /// Ensures the condition is met, otherwise throws an <see cref="InvalidOperationException"/>.
+    /// Ensures the condition is met, otherwise throws an <see cref="InvalidDomainOperationException"/>.
     /// </summary>
     /// <param name="condition">The condition to check.</param>
     /// <param name="message">The exception message.</param>
-    /// <exception cref="InvalidOperationException">Thrown if the condition is false.</exception>
+    /// <exception cref="InvalidDomainOperationException">Thrown if the condition is false.</exception>
     public static void AgainstInvalidState(bool condition, string message)
     {
         if (!condition)
@@ -99,7 +99,7 @@ public static class Guard
     /// <param name="allowedTransitions">The transition table.</param>
     /// <param name="currentState">The current state.</param>
     /// <param name="targetState">The desired target state.</param>
-    /// <exception cref="InvalidOperationException">Thrown if the transition is not allowed.</exception>
+    /// <exception cref="InvalidDomainOperationException">Thrown if the transition is not allowed.</exception>
     public static void ThrowIfInvalidTransition<TState>(
         TState currentState,
         TState targetState,
