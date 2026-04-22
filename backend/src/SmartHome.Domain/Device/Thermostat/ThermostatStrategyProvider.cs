@@ -8,9 +8,9 @@ namespace SmartHome.Domain.Device.Thermostat;
 /// </summary>
 public sealed class ThermostatStrategyProvider : IThermostatStrategyProvider
 {
-    private static readonly ConcurrentDictionary<ThermostatMode, IThermostatModeStrategy> Strategies = new();
+    private readonly ConcurrentDictionary<ThermostatMode, IThermostatModeStrategy> _strategies = new();
 
-    static ThermostatStrategyProvider()
+    public ThermostatStrategyProvider()
     {
         // Register default strategies
         Register(ThermostatMode.Heat, new HeatModeStrategy());
@@ -22,14 +22,14 @@ public sealed class ThermostatStrategyProvider : IThermostatStrategyProvider
     /// Programmatically adds a new mode strategy.
     /// This allows adding new modes without changing the provider itself.
     /// </summary>
-    public static void Register(ThermostatMode mode, IThermostatModeStrategy strategy)
+    public void Register(ThermostatMode mode, IThermostatModeStrategy strategy)
     {
-        Strategies[mode] = strategy;
+        _strategies[mode] = strategy;
     }
 
     public IThermostatModeStrategy GetStrategy(ThermostatMode mode)
     {
-        if (Strategies.TryGetValue(mode, out var strategy))
+        if (_strategies.TryGetValue(mode, out var strategy))
             return strategy;
 
         throw new NotSupportedException($"No strategy registered for thermostat mode: {mode}");
