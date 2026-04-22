@@ -131,9 +131,8 @@ builder.Services.AddDbContext<SmartHomeDbContext>(options =>
     options.UseSqlite(connectionString));
 
 // Register persistence and seeding services
-builder.Services.AddScoped<DeviceRepository>();
-builder.Services.AddScoped<IDeviceRepository>(sp => sp.GetRequiredService<DeviceRepository>());
-builder.Services.AddScoped<ISimulationRepository>(sp => sp.GetRequiredService<DeviceRepository>());
+builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
+builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<SmartHomeDbSeeder>();
 builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
