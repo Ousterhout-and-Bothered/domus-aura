@@ -5,6 +5,7 @@ using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Simulation;
 using SmartHome.Infrastructure.Persistence;
 using ThermostatDevice = SmartHome.Domain.Device.Thermostat.Thermostat;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Infrastructure.Device.Repository;
 
@@ -104,44 +105,70 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Commits all pending changes to the database.
+    /// Handles database-level constraint violations by mapping them to domain-specific exceptions.
+    /// </summary>
+    /// <exception cref="DuplicateThermostatException">
+    /// Thrown when a database unique constraint is violated for the one-thermostat-per-location rule.
+    /// </exception>
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // Commit all pending changes to the database
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-    
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
-    {
-        return await dbContext.Devices
-            .OfType<TickableDevice>()
-            .ToListAsync(cancellationToken);
-    }
-    
-    /// <inheritdoc />
-    public async Task ResetAllAsync(CancellationToken cancellationToken = default)
-    {
-        var devices = await dbContext.Devices.ToListAsync(cancellationToken);
-
-        foreach (var device in devices)
-            device.ResetToDefaults();
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        // A transactional net for the one-thermostat-per-location invariant
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            
+            throw new DuplicateThermostatException("this location (database constraint violation)");
+        }
     }
 
-    /// <inheritdoc />
-    public async Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default)
-    {
-        var entry = new CommandHistory(deviceId, operation);
-        await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
-    }
+    /// <summary>
+    /// Determines if a <see cref="DbUpdateException"/> was caused by a SQLite UNIQUE constraint failure.
+    /// </summary>
+    /// <param name="ex">The exception to inspect.</param>
+    /// <returns>True if the inner exception contains the SQLite-specific unique constraint error message.</returns>
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+        {
+            return ex.InnerException?.Message.Contains("Unique constraint failed") ?? false;
+        }
 
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(Guid deviceId, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.DeviceHistory
-            .AsNoTracking()
-            .Where(h => h.DeviceId == deviceId)
-            .OrderByDescending(h => h.Timestamp)
-            .ToListAsync(cancellationToken);
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
+        {
+            return await dbContext.Devices
+                .OfType<TickableDevice>()
+                .ToListAsync(cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task ResetAllAsync(CancellationToken cancellationToken = default)
+        {
+            var devices = await dbContext.Devices.ToListAsync(cancellationToken);
+
+            foreach (var device in devices)
+                device.ResetToDefaults();
+        }
+
+        /// <inheritdoc />
+        public async Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default)
+        {
+            var entry = new CommandHistory(deviceId, operation);
+            await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(Guid deviceId,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbContext.DeviceHistory
+                .AsNoTracking()
+                .Where(h => h.DeviceId == deviceId)
+                .OrderByDescending(h => h.Timestamp)
+                .ToListAsync(cancellationToken);
+        }
     }
-}

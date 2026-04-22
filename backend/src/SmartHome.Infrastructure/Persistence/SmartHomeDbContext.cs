@@ -62,8 +62,14 @@ public sealed class SmartHomeDbContext : DbContext
         modelBuilder.Entity<CommandHistory>(entity =>
         {
             entity.HasKey(e => e.Id);
-            // Index DeviceId for faster history lookups (Requirement 2.4.4)
+            // Index DeviceId for faster history lookups
             entity.HasIndex(e => e.DeviceId);
+            
+            
+            modelBuilder.Entity<DomainDevice>()
+                .HasIndex(d => d.Location)
+                .IsUnique()
+                .HasFilter($"\"Type\" = {(int)DeviceType.Thermostat}");
         });
 
         modelBuilder.Entity<DomainDevice>()
