@@ -64,36 +64,39 @@ public sealed class SmartHomeDbContext : DbContext
             entity.HasKey(e => e.Id);
             // Index DeviceId for faster history lookups
             entity.HasIndex(e => e.DeviceId);
-            
-            
-            modelBuilder.Entity<DomainDevice>()
-                .HasIndex(d => d.Location)
-                .IsUnique()
-                .HasFilter($"\"Type\" = {(int)DeviceType.Thermostat}");
         });
 
-        modelBuilder.Entity<DomainDevice>()
-            .ToTable("Devices")
-            // Configure TPH inheritance using discriminator column
-            .HasDiscriminator(d => d.Type)
-            // Map each concrete type to its corresponding discriminator value
-            .HasValue<Light>(DeviceType.Light)
-            .HasValue<Fan>(DeviceType.Fan)
-            .HasValue<Thermostat>(DeviceType.Thermostat)
-            .HasValue<DoorLock>(DeviceType.DoorLock);
+        modelBuilder.Entity<DomainDevice>(entity =>
+        {
+            entity.ToTable("Devices")
+                // Configure TPH inheritance using discriminator column
+                .HasDiscriminator(d => d.Type)
+                // Map each concrete type to its corresponding discriminator value
+                .HasValue<Light>(DeviceType.Light)
+                .HasValue<Fan>(DeviceType.Fan)
+                .HasValue<Thermostat>(DeviceType.Thermostat)
+                .HasValue<DoorLock>(DeviceType.DoorLock);
+
+            // Enforce one-thermostat-per-location at the database level.
+            // Partial unique index — applies only to rows where Type = Thermostat.
+            // The in-memory pre-check in DeviceService catches the common case;
+            // this is the transactional backstop for concurrent registrations.
+            entity.HasIndex(d => d.Location)
+                .IsUnique()
+                .HasFilter($"\"Type\" = {(int)DeviceType.Thermostat}");
+
+            // Ensure GUIDs are handled consistently in SQLite.
+            // Using a string conversion and NOCASE collation avoids issues with case-sensitivity 
+            // (e.g., 404s when querying with lowercase GUIDs against uppercase DB values).
+            entity.Property(d => d.Id)
+                .HasConversion<string>()
+                .HasColumnType("TEXT COLLATE NOCASE");
+        });
 
         // Explicitly include abstract intermediate classes in the model
         // so that OfType<TickableDevice>() can be translated by LINQ.
         modelBuilder.Entity<PoweredDevice>();
         modelBuilder.Entity<TickableDevice>();
-
-        // Ensure GUIDs are handled consistently in SQLite.
-        // Using a string conversion and NOCASE collation avoids issues with case-sensitivity 
-        // (e.g., 404s when querying with lowercase GUIDs against uppercase DB values).
-        modelBuilder.Entity<DomainDevice>()
-            .Property(d => d.Id)
-            .HasConversion<string>()
-            .HasColumnType("TEXT COLLATE NOCASE");
 
         // Allow EF Core to apply any additional default configurations
         base.OnModelCreating(modelBuilder);
