@@ -6,7 +6,7 @@ namespace SmartHome.Api.Validation;
 
 public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceCommandRequest>
 {
-    private static readonly string[] AllowedCommands = 
+    private static readonly string[] AllowedCommands =
     [
         "setPower", "setBrightness", "setSpeed", "setMode", "lock", "unlock", "setDesiredTemperature", "setColor"
     ];
@@ -23,7 +23,7 @@ public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceComm
             {
                 var request = context.InstanceToValidate;
                 var normalizedValue = ValueParser.Normalize(value);
-                
+
                 if (request.Command.Equals("setBrightness", StringComparison.OrdinalIgnoreCase))
                 {
                     if (normalizedValue == null)

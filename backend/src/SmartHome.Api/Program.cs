@@ -87,19 +87,19 @@ if (!string.IsNullOrEmpty(connectionString))
 {
     // Resolve "Data Source" or "DataSource" path
     var parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-    var dataSourcePart = parts.FirstOrDefault(p => 
-        p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) || 
+    var dataSourcePart = parts.FirstOrDefault(p =>
+        p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) ||
         p.TrimStart().StartsWith("DataSource=", StringComparison.OrdinalIgnoreCase));
-    
+
     if (dataSourcePart != null)
     {
         var dbPath = dataSourcePart.Split('=', 2)[1].Trim();
-        
+
         // If the path is relative, resolve it against the application root
         if (!string.IsNullOrEmpty(dbPath) && !Path.IsPathRooted(dbPath))
         {
             var absoluteDbPath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, dbPath));
-            
+
             // Ensure the directory exists
             var directory = Path.GetDirectoryName(absoluteDbPath);
             if (!string.IsNullOrEmpty(directory))
@@ -109,10 +109,10 @@ if (!string.IsNullOrEmpty(connectionString))
 
             // Rebuild the connection string with the absolute path
             var otherParts = parts
-                .Where(p => !p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) && 
+                .Where(p => !p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) &&
                             !p.TrimStart().StartsWith("DataSource=", StringComparison.OrdinalIgnoreCase))
                 .ToList();
-            
+
             connectionString = $"Data Source={absoluteDbPath};{string.Join(';', otherParts)}";
         }
     }
@@ -167,7 +167,7 @@ if (app.Environment.IsDevelopment())
 {
     // Expose OpenAPI document in development
     app.MapOpenApi();
-    
+
     // Scalar UI — interactive API docs at /scalar/v1
     // Development-only; don't expose API surface in production without auth.
     app.MapScalarApiReference();

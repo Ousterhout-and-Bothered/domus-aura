@@ -17,7 +17,7 @@ public sealed class ProblemDetailsExceptionHandler(
 
         if (statusCode >= StatusCodes.Status500InternalServerError)
         {
-            logger.LogError(exception, 
+            logger.LogError(exception,
                 "Unhandled exception processing {Method} {Path}",
                 httpContext.Request.Method, httpContext.Request.Path);
         }
@@ -27,10 +27,10 @@ public sealed class ProblemDetailsExceptionHandler(
                 "Handled exception mapped to {StatusCode} for {Method} {Path}",
                 statusCode, httpContext.Request.Method, httpContext.Request.Path);
         }
-        
+
         if (httpContext.Response.HasStarted)
             return false;
-        
+
         httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsJsonAsync(
             problem,
