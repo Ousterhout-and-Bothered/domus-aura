@@ -15,7 +15,21 @@ public sealed class SetAmbientTemperatureRequestValidator : AbstractValidator<Se
     public SetAmbientTemperatureRequestValidator()
     {
         RuleFor(request => request.Temperature)
-            .InclusiveBetween(-40, 150)
-            .WithMessage("Ambient temperature must be between -40 and 150 °F.");
+            .Custom((value, context) =>
+            {
+                var request = context.InstanceToValidate;
+                var intValue = request.GetTemperatureValue();
+
+                if (intValue == null)
+                {
+                    context.AddFailure("Ambient temperature must be a valid number.");
+                    return;
+                }
+
+                if (intValue.Value < -40 || intValue.Value > 150)
+                {
+                    context.AddFailure("Ambient temperature must be between -40 and 150 °F.");
+                }
+            });
     }
 }

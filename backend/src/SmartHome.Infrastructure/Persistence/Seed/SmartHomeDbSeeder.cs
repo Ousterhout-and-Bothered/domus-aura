@@ -7,9 +7,17 @@ using DomainDevice = SmartHome.Domain.Device.Device;
 
 namespace SmartHome.Infrastructure.Persistence.Seed;
 
+/// <summary>
+/// Responsible for populating the database with initial smart home data.
+/// Ensures a consistent starting state for development and testing.
+/// </summary>
+/// <param name="repository">The repository used to persist seeded devices.</param>
 public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
 {
-
+    /// <summary>
+    /// Seeds the database with a default set of devices if it is currently empty.
+    /// This method is idempotent and will not duplicate data on subsequent runs.
+    /// </summary>
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         // Prevent duplicate seeding
@@ -52,31 +60,36 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
         // Turn off to verify state restoration on next power-on
         hallwayLight.TurnOff();
 
+        var porchLight = new Light("Porch Light", "Entryway");
+        porchLight.TurnOn();
+        porchLight.SetBrightness(85);
+        porchLight.SetColor("#FFC0CB");
+
         // Thermostats
 
         // Cooling example
         // ambient > desired (triggers cooling)
         var livingRoomThermostat = new Thermostat("Living Room Thermostat", "Living Room");
+        livingRoomThermostat.TurnOn();
         livingRoomThermostat.SetMode(ThermostatMode.Cool);
         livingRoomThermostat.SetDesiredTemperature(72);
         livingRoomThermostat.SetAmbientTemperature(78);
-        livingRoomThermostat.TurnOn();
 
         // Heating example
         // ambient < desired (triggers heating)
         var bedroomThermostat = new Thermostat("Bedroom Thermostat", "Bedroom");
+        bedroomThermostat.TurnOn();
         bedroomThermostat.SetMode(ThermostatMode.Heat);
         bedroomThermostat.SetDesiredTemperature(68);
         bedroomThermostat.SetAmbientTemperature(62);
-        bedroomThermostat.TurnOn();
 
         // Idle example
         // ambient == desired results in idle state
         var officeThermostat = new Thermostat("Office Thermostat", "Office");
+        officeThermostat.TurnOn();
         officeThermostat.SetMode(ThermostatMode.Auto);
         officeThermostat.SetDesiredTemperature(72);
         officeThermostat.SetAmbientTemperature(72);
-        officeThermostat.TurnOn();
 
         // Aggregate all seeded devices into a single collection
         var seededDevices = new DomainDevice[]
@@ -88,6 +101,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
             kitchenOverhead,
             livingRoomOverhead,
             hallwayLight,
+            porchLight,
             livingRoomThermostat,
             bedroomThermostat,
             officeThermostat

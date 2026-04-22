@@ -1,3 +1,10 @@
+using SmartHome.Domain.Common;
+using System.Text.Json.Serialization;
+using SmartHome.Domain.Device.Light;
+using SmartHome.Domain.Device.Fan;
+using SmartHome.Domain.Device.Thermostat;
+using SmartHome.Domain.Device.DoorLock;
+
 namespace SmartHome.Domain.Device;
 
 
@@ -6,6 +13,11 @@ namespace SmartHome.Domain.Device;
 /// Enforces that every device has a unique identity,
 /// a human-readable name, a location, and a type.
 /// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(Light.Light), typeDiscriminator: "Light")]
+[JsonDerivedType(typeof(Fan.Fan), typeDiscriminator: "Fan")]
+[JsonDerivedType(typeof(Thermostat.Thermostat), typeDiscriminator: "Thermostat")]
+[JsonDerivedType(typeof(DoorLock.DoorLock), typeDiscriminator: "DoorLock")]
 public abstract class Device : IDevice
 {
     
@@ -42,21 +54,11 @@ public abstract class Device : IDevice
         Id = Guid.NewGuid();
 
         // Validate and normalize required fields
-        Name = ValidateRequired(name, nameof(name), "Device name is required.");
-        Location = ValidateRequired(location, nameof(location), "Device location is required.");
+        Name = Guard.NotNullOrWhitespace(name, "Device name is required.");
+        Location = Guard.NotNullOrWhitespace(location, "Device location is required.");
 
         // Assign device type
         Type = type;
-    }
-    
-    private static string ValidateRequired(string value, string paramName, string message)
-    {
-        // Reject null, empty, or whitespace-only values
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException(message, paramName);
-
-        // Remove leading/trailing whitespace
-        return value.Trim();
     }
     
     /// <summary>
@@ -65,7 +67,7 @@ public abstract class Device : IDevice
     /// </summary>
     public void Rename(string name)
     {
-        Name = ValidateRequired(name, nameof(name), "Device name is required.");
+        Name = Guard.NotNullOrWhitespace(name, "Device name is required.");
     }
 
     
@@ -75,7 +77,7 @@ public abstract class Device : IDevice
     /// </summary>
     public void Relocate(string location)
     {
-        Location = ValidateRequired(location, nameof(location), "Device location is required.");
+        Location = Guard.NotNullOrWhitespace(location, "Device location is required.");
     }
 
     
@@ -89,7 +91,7 @@ public abstract class Device : IDevice
     /// <summary>
     /// Entity equality: two devices are equal if and only if they share the same <see cref="Id"/>.
     /// Transient devices (Id = Guid.Empty, not yet persisted or fully rehydrated) compare by
-    /// reference — two separately-constructed transient instances are considered distinct entities
+    /// reference — two separately constructed transient instances are considered distinct entities
     /// that will receive distinct IDs once persistence completes.
     /// Mutable attributes (Name, Location, state) are intentionally excluded from equality.
     /// </summary>
@@ -98,7 +100,7 @@ public abstract class Device : IDevice
         if (obj is not Device other) return false;
     
         // Transient (not-yet-identified) entities use reference equality.
-        // Two separately-constructed transient devices must NOT compare equal just because
+        // Two separately constructed transient devices must NOT compare equal just because
         // both have Guid.Empty — they will become distinct devices once EF populates them.
         if (Id == Guid.Empty || other.Id == Guid.Empty)
             return ReferenceEquals(this, other);
@@ -126,7 +128,7 @@ public abstract class Device : IDevice
         $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}')";
     
     /// <summary>
-    /// Resets all devices to default settings.
+    /// Resets this device to its default settings.
     /// </summary>
     public abstract void ResetToDefaults();
 }

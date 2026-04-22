@@ -1,0 +1,23 @@
+meta {
+  name: Set Mode Heat
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:5137/api/devices/08d044a4-7a03-48e4-a9ba-3265ad80e670/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setMode",
+    "value": "Heat"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

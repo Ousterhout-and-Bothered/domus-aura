@@ -6,6 +6,6 @@ namespace SmartHome.Api.Contracts;
 /// The set of simulation speeds currently permitted by the registry.
 /// Intended for frontend dropdowns and speed-picker UIs.
 /// </summary>
-/// <param name="Speeds">Permitted speed values.</param>
+/// <param name="Speeds">Permitted speed multipliers.</param>
 public sealed record AllowedSpeedsResponse(
-    IReadOnlyCollection<SimulationSpeed> Speeds);
+    IReadOnlyCollection<int> Speeds);

@@ -1,0 +1,22 @@
+meta {
+  name: Set Ambient Temp
+  type: http
+  seq: 1
+}
+
+put {
+  url: http://localhost:5137/api/locations/Living Room/ambient-temperature
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "temperature": 69
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,11 +1,11 @@
 meta {
-  name: Set Simulation Speed
+  name: Simulation Speed Valid
   type: http
   seq: 2
 }
 
 put {
-  url: {{baseUrl}}/api/simulation/speed
+  url: http://localhost:5137/api/simulation/speed
   body: json
   auth: inherit
 }
@@ -22,4 +22,5 @@ body:json {
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

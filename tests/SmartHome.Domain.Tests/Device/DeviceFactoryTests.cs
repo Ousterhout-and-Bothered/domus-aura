@@ -14,7 +14,7 @@ public class DeviceFactoryTests
     new LightBuilder(),
     new FanBuilder(),
     new DoorLockBuilder(),
-    new ThermostatBuilder()
+    new ThermostatBuilder(new ThermostatStrategyProvider())
 });
 
     /// <summary>
@@ -114,7 +114,7 @@ public class DeviceFactoryTests
     [Fact]
     public void Create_UnsupportedType_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             Factory.Create("Test", "Room", (DeviceType)99));
     }
 

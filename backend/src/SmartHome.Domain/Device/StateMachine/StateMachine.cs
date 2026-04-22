@@ -1,4 +1,6 @@
-﻿namespace SmartHome.Domain.Device.StateMachine;
+﻿using SmartHome.Domain.Common;
+
+namespace SmartHome.Domain.Device.StateMachine;
 
 /// <summary>
 /// Default state machine. Configured with an allowed-transitions table at
@@ -41,8 +43,9 @@ public sealed class StateMachine<TState> : IStateMachine<TState>
     public void Transition(TState target)
     {
         if (!CanTransition(target))
-            throw new InvalidOperationException(
-                $"Invalid transition: {_currentState} -> {target}.");
+        {
+            Guard.ThrowIfInvalidTransition(_currentState, target, _allowedTransitions);
+        }
 
         _currentState = target;
     }

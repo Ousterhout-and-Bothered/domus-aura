@@ -18,8 +18,8 @@ public interface ISimulationRepository
     Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Resets all devices to their default state in a single tracked operation.
-    /// Performs load + mutate + save as one unit of work.
+    /// Resets all devices to their default state.
+    /// The change is not guaranteed to be committed until SaveChangesAsync is called.
     /// </summary>
     Task ResetAllAsync(CancellationToken cancellationToken = default);
     

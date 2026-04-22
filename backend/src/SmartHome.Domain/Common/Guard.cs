@@ -1,0 +1,122 @@
+namespace SmartHome.Domain.Common;
+
+/// <summary>
+/// Provides common validation and exception helpers to ensure consistency 
+/// and adhere to DRY principles across the domain.
+/// </summary>
+public static class Guard
+{
+    /// <summary>
+    /// Ensures the specified enum value is defined.
+    /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <param name="value">The value to check.</param>
+    /// <param name="parameterName">The name of the parameter being validated.</param>
+    /// <param name="messagePrefix">Optional custom prefix for the error message.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the value is not defined in the enum.</exception>
+    public static void EnumDefined<T>(T value, string? parameterName = null, string? messagePrefix = null) where T : struct, Enum
+    {
+        if (!Enum.IsDefined(value))
+        {
+            var allowedValues = GetAllowedValues<T>();
+            var prefix = messagePrefix ?? $"Unsupported {typeof(T).Name} value.";
+            var message = $"{prefix} Allowed values: {allowedValues}";
+            
+            // To provide the exact message requested by the user in the API response,
+            // we throw ArgumentException with only the message. 
+            // If we provided a parameterName to the ArgumentException constructor,
+            // .NET would append " (Parameter '...')" to the message property,
+            // which the ProblemDetails middleware then exposes in the "detail" field.
+            throw new ArgumentException(message);
+        }
+    }
+
+    /// <summary>
+    /// Gets a comma-separated string of all defined names for an enum type.
+    /// </summary>
+    public static string GetAllowedValues<T>() where T : struct, Enum
+    {
+        return string.Join(", ", Enum.GetNames<T>());
+    }
+
+    /// <summary>
+    /// Ensures the specified string is not null, empty, or whitespace.
+    /// </summary>
+    /// <param name="value">The string to check.</param>
+    /// <param name="message">The exception message.</param>
+    /// <returns>The trimmed string if valid.</returns>
+    /// <exception cref="ArgumentException">Thrown if the string is null or whitespace.</exception>
+    public static string NotNullOrWhitespace(string value, string message)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException(message);
+
+        return value.Trim();
+    }
+
+    /// <summary>
+    /// Ensures the specified value is within the given range (inclusive).
+    /// </summary>
+    /// <param name="value">The value to check.</param>
+    /// <param name="min">The minimum allowed value.</param>
+    /// <param name="max">The maximum allowed value.</param>
+    /// <param name="message">The exception message.</param>
+    /// <exception cref="ArgumentException">Thrown if the value is out of range.</exception>
+    public static void InRange(int value, int min, int max, string message)
+    {
+        if (value < min || value > max)
+            throw new ArgumentException(message);
+    }
+
+    /// <summary>
+    /// Ensures the specified condition is met, otherwise throws an <see cref="ArgumentException"/>.
+    /// </summary>
+    /// <param name="condition">The condition to check.</param>
+    /// <param name="message">The exception message.</param>
+    /// <exception cref="ArgumentException">Thrown if the condition is false.</exception>
+    public static void Against(bool condition, string message)
+    {
+        if (!condition)
+            throw new ArgumentException(message);
+    }
+
+    /// <summary>
+    /// Ensures the condition is met, otherwise throws an <see cref="InvalidOperationException"/>.
+    /// </summary>
+    /// <param name="condition">The condition to check.</param>
+    /// <param name="message">The exception message.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the condition is false.</exception>
+    public static void AgainstInvalidState(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException(message);
+    }
+
+    /// <summary>
+    /// Ensures the specified transition is legal for the given state machine.
+    /// </summary>
+    /// <typeparam name="TState">The state type.</typeparam>
+    /// <param name="machine">The state machine to validate against.</param>
+    /// <param name="allowedTransitions">The transition table.</param>
+    /// <param name="currentState">The current state.</param>
+    /// <param name="targetState">The desired target state.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the transition is not allowed.</exception>
+    public static void ThrowIfInvalidTransition<TState>(
+        TState currentState,
+        TState targetState,
+        IReadOnlyDictionary<TState, IReadOnlySet<TState>> allowedTransitions) where TState : struct
+    {
+        var detail = allowedTransitions.TryGetValue(currentState, out var allowed)
+            ? $"Allowed transitions from {currentState}: {string.Join(", ", allowed)}."
+            : $"No transitions are allowed from the current state {currentState}.";
+
+        throw new InvalidOperationException(
+            $"Invalid transition: {currentState} -> {targetState}. {detail}");
+    }
+    public static int Clamp(int value, int min, int max)
+    {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+}

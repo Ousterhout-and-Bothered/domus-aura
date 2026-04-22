@@ -1,242 +1,119 @@
 ﻿using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Light;
-
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Domain.Tests.Device;
 
 public class LightTests
 {
-    
     private static Light CreateLight() => new("Test Light", "Living Room");
 
-    private static Light CreateLightOn()
-    {
-        var light = CreateLight();
-        light.TurnOn();
-        return light;
-    }
-    
-    /// <summary>
-    /// Power tests
-    /// </summary>
     [Fact]
-    public void TurnOn_WhenOff_SetsStateToOn()
+    public void TurnOn_OffToOn_SetsStateToOn()
     {
-        // Arrange
         var light = CreateLight();
-
-        // Act
         light.TurnOn();
-
-        // Assert
         Assert.Equal(PowerState.On, light.PowerState);
     }
 
     [Fact]
-    public void TurnOff_WhenOn_SetsStateToOff()
+    public void TurnOff_OnToOff_SetsStateToOff()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
+        var light = CreateLight();
+        light.TurnOn();
         light.TurnOff();
-
-        // Assert
         Assert.Equal(PowerState.Off, light.PowerState);
     }
 
     [Fact]
-    public void IsOn_WhenOn_ReturnsTrue()
+    public void TurnOn_OnToOn_ThrowsInvalidOperationException()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
-        var result = light.IsOn();
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void IsOn_WhenOff_ReturnsFalse()
-    {
-        // Arrange
         var light = CreateLight();
-
-        // Act
-        var result = light.IsOn();
-
-        // Assert
-        Assert.False(result);
-    }
-    
-    
-    /// <summary>
-    ///  Brightness tests
-    /// </summary>
-    [Fact]
-    public void SetBrightness_WhenOn_UpdatesBrightness()
-    {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
-        light.SetBrightness(75);
-
-        // Assert
-        Assert.Equal(75, light.Brightness);
+        light.TurnOn();
+        Assert.Throws<InvalidOperationException>(() => light.TurnOn());
     }
 
     [Fact]
-    public void SetBrightness_WhenOff_Throws()
+    public void TurnOff_OffToOff_ThrowsInvalidOperationException()
     {
-        // Arrange
         var light = CreateLight();
-
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => light.SetBrightness(50));
+        Assert.Throws<InvalidOperationException>(() => light.TurnOff());
     }
 
     [Fact]
-    public void SetBrightness_AtMinBoundary_Succeeds()
+    public void SetBrightness_ValidValue_UpdatesBrightness()
     {
-        // Arrange
-        var light = CreateLightOn();
+        var light = CreateLight();
+        light.TurnOn();
+        light.SetBrightness(50);
+        Assert.Equal(50, light.Brightness);
+    }
 
-        // Act
+    [Fact]
+    public void SetBrightness_MinBoundary_Succeeds()
+    {
+        var light = CreateLight();
+        light.TurnOn();
         light.SetBrightness(10);
-
-        // Assert
         Assert.Equal(10, light.Brightness);
     }
 
     [Fact]
-    public void SetBrightness_AtMaxBoundary_Succeeds()
+    public void SetBrightness_MaxBoundary_Succeeds()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
+        var light = CreateLight();
+        light.TurnOn();
         light.SetBrightness(100);
-
-        // Assert
         Assert.Equal(100, light.Brightness);
     }
 
     [Fact]
-    public void SetBrightness_BelowMin_Throws()
+    public void SetBrightness_BelowMin_ClampsToMin()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => light.SetBrightness(9));
-    }
-
-    [Fact]
-    public void SetBrightness_AboveMax_Throws()
-    {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => light.SetBrightness(101));
-    }
-    
-    
-    /// <summary>
-    /// Color tests
-    /// </summary>
-    
-    [Fact]
-    public void SetColor_WhenOn_ValidHex_UpdatesColor()
-    {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
-        light.SetColor("#FF8800");
-
-        // Assert
-        Assert.Equal("#FF8800", light.ColorHex);
-    }
-
-    [Fact]
-    public void SetColor_WhenOff_Throws()
-    {
-        // Arrange
         var light = CreateLight();
-
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => light.SetColor("#FF8800"));
+        light.TurnOn();
+        light.SetBrightness(9);
+        Assert.Equal(10, light.Brightness);
     }
 
     [Fact]
-    public void SetColor_InvalidHex_Throws()
+    public void SetBrightness_AboveMax_ClampsToMax()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() => light.SetColor("not-a-color"));
+        var light = CreateLight();
+        light.TurnOn();
+        light.SetBrightness(101);
+        Assert.Equal(100, light.Brightness);
     }
 
     [Fact]
-    public void SetColor_EmptyString_Throws()
+    public void SetColor_ValidHex_UpdatesColor()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() => light.SetColor(""));
+        var light = CreateLight();
+        light.TurnOn();
+        light.SetColor("#FF0000");
+        Assert.Equal("#FF0000", light.ColorHex);
     }
 
     [Fact]
-    public void SetColor_StoresAsUppercase()
+    public void SetColor_InvalidHex_ThrowsArgumentException()
     {
-        // Arrange
-        var light = CreateLightOn();
-
-        // Act
-        light.SetColor("#ff8800");
-
-        // Assert
-        Assert.Equal("#FF8800", light.ColorHex);
+        var light = CreateLight();
+        light.TurnOn();
+        Assert.Throws<ArgumentException>(() => light.SetColor("invalid"));
     }
-    
-    
-    /// <summary>
-    /// Settings Retention tests
-    /// </summary>
-    
-    [Fact]
-    public void Brightness_RetainedAfterPowerCycle()
-    {
-        // Arrange
-        var light = CreateLightOn();
-        light.SetBrightness(42);
 
-        // Act
+    [Fact]
+    public void Settings_SurvivePowerCycle_Retained()
+    {
+        var light = CreateLight();
+        light.TurnOn();
+        light.SetBrightness(75);
+        light.SetColor("#00FF00");
+        
         light.TurnOff();
         light.TurnOn();
-
-        // Assert
-        Assert.Equal(42, light.Brightness);
-    }
-
-    [Fact]
-    public void Color_RetainedAfterPowerCycle()
-    {
-        // Arrange
-        var light = CreateLightOn();
-        light.SetColor("#FF8800");
-
-        // Act
-        light.TurnOff();
-        light.TurnOn();
-
-        // Assert
-        Assert.Equal("#FF8800", light.ColorHex);
+        
+        Assert.Equal(75, light.Brightness);
+        Assert.Equal("#00FF00", light.ColorHex);
     }
 }

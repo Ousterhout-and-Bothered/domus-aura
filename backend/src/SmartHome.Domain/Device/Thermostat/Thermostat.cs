@@ -1,4 +1,5 @@
 using SmartHome.Domain.Device.StateMachine;
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Domain.Device.Thermostat;
 
@@ -9,8 +10,11 @@ namespace SmartHome.Domain.Device.Thermostat;
 /// which target state is appropriate at any given moment is decided by the active
 /// <see cref="IThermostatModeStrategy"/>.
 /// </summary>
-public sealed class Thermostat : Device, IThermostatControllable, ITickable
+public sealed class Thermostat : TickableDevice, IThermostatControllable, IPowerable
 {
+    /// <inheritdoc />
+    public PowerState PowerState => State == ThermostatState.Off ? PowerState.Off : PowerState.On;
+
     /// <summary>
     /// The current state of the thermostat.
     /// </summary>
@@ -28,12 +32,10 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
         get => _mode;
         private set
         {
-            if (!Enum.IsDefined<ThermostatMode>(value))
-                throw new ArgumentOutOfRangeException(nameof(value),
-                    $"Unsupported thermostat mode: {value}.");
+            Guard.EnumDefined(value, nameof(value));
 
             _mode = value;
-            _strategy = Strategies[value];
+            _strategy = _strategyProvider.GetStrategy(value);
         }
     }
 
@@ -52,15 +54,7 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
     private const int MaxTemperature = 80;
 
     private IThermostatModeStrategy _strategy = null!;
-
-    // To add a new mode: implement IThermostatModeStrategy and add an entry here.
-    // Thermostat's core logic never changes — Open/Closed Principle.
-    private static readonly Dictionary<ThermostatMode, IThermostatModeStrategy> Strategies = new()
-    {
-        { ThermostatMode.Heat, new HeatModeStrategy() },
-        { ThermostatMode.Cool, new CoolModeStrategy() },
-        { ThermostatMode.Auto, new AutoModeStrategy() }
-    };
+    private IThermostatStrategyProvider _strategyProvider = new ThermostatStrategyProvider();
 
     /// <summary>
     /// State machine enforcing legal transitions. Not persisted — rebuilt from
@@ -77,14 +71,20 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
     {
         Type = DeviceType.Thermostat;
         State = ThermostatState.Off;
-        Mode = ThermostatMode.Auto;
+        Mode = ThermostatMode.Auto; // Ensure mode and strategy are initialized
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
     }
 
     public Thermostat(string name, string location)
+        : this(name, location, new ThermostatStrategyProvider())
+    {
+    }
+
+    public Thermostat(string name, string location, IThermostatStrategyProvider strategyProvider)
         : base(name, location, DeviceType.Thermostat)
     {
+        _strategyProvider = strategyProvider;
         State = ThermostatState.Off;
         Mode = ThermostatMode.Auto;
         DesiredTemperature = DefaultTemperature;
@@ -94,15 +94,11 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
     /// <summary>
     /// Powers the thermostat on from the Off state, transitioning to Idle and
     /// immediately evaluating whether heating or cooling should begin.
-    /// Throws <see cref="InvalidOperationException"/> if the thermostat is
-    /// already on (any state other than Off).
+    /// If the thermostat is already in an active state (Idle, Heating, or Cooling),
+    /// this operation ensures the current state is still appropriate.
     /// </summary>
     public void TurnOn()
     {
-        if (State != ThermostatState.Off)
-            throw new InvalidOperationException(
-                $"Cannot turn on a thermostat in state {State}. It must be Off.");
-
         TransitionTo(ThermostatState.Idle);
         EvaluateState();
     }
@@ -117,26 +113,27 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
 
     /// <summary>
     /// Sets the operating mode and immediately re-evaluates state.
+    /// Throws <see cref="InvalidOperationException"/> if the thermostat is off.
     /// </summary>
     public void SetMode(ThermostatMode mode)
     {
-        Mode = mode;
+        Guard.AgainstInvalidState(State != ThermostatState.Off, "Mode can only be changed while the thermostat is on.");
 
-        if (State != ThermostatState.Off)
-            EvaluateState();
+        Mode = mode;
+        EvaluateState();
     }
 
     /// <summary>
     /// Sets the desired temperature in Fahrenheit.
-    /// Clamp rather than reject. Thermostat silently enforces its own operating limits,
-    /// consistent with how physical thermostats behave at their min/max range.
+    /// Values outside 60–80°F are clamped to the nearest bound.
+    /// Throws <see cref="InvalidOperationException"/> if the thermostat is off.
     /// </summary>
     public void SetDesiredTemperature(int temperature)
     {
-        DesiredTemperature = Math.Clamp(temperature, MinTemperature, MaxTemperature);
-
-        if (State != ThermostatState.Off)
-            EvaluateState();
+        Guard.AgainstInvalidState(State != ThermostatState.Off, "Temperature can only be changed while the thermostat is on.");
+        
+        DesiredTemperature = Guard.Clamp(temperature, MinTemperature, MaxTemperature);
+        EvaluateState();
     }
 
     /// <summary>
@@ -156,7 +153,7 @@ public sealed class Thermostat : Device, IThermostatControllable, ITickable
     /// by 1°F toward the desired temperature and re-evaluates state.
     /// Has no effect when Off or Idle.
     /// </summary>
-    public void Tick()
+    public override void Tick()
     {
         if (State == ThermostatState.Off || State == ThermostatState.Idle)
             return;

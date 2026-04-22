@@ -1,3 +1,5 @@
+using SmartHome.Domain.Common;
+
 namespace SmartHome.Domain.Device.Fan;
 
 
@@ -34,11 +36,9 @@ public sealed class Fan : PoweredDevice, IFanControllable
     /// </summary>
     public void SetSpeed(FanSpeed speed)
     {
-        if (PowerState != PowerState.On)
-            throw new InvalidOperationException("Speed can only be changed while the fan is on.");
+        Guard.AgainstInvalidState(PowerState == PowerState.On, "Speed can only be changed while the fan is on.");
 
-		if (!Enum.IsDefined(speed))
-        	throw new ArgumentOutOfRangeException(nameof(speed), $"Unsupported fan speed: {speed}.");
+        Guard.EnumDefined(speed, nameof(speed));
 
         Speed = speed;
     }

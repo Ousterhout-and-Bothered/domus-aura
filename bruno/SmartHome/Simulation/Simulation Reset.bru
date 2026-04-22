@@ -1,15 +1,16 @@
 meta {
-  name: Reset All Devices
+  name: Simulation Reset
   type: http
   seq: 4
 }
 
 post {
-  url: {{baseUrl}}/api/simulation/reset
+  url: http://localhost:5137/api/simulation/reset
   body: none
   auth: inherit
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

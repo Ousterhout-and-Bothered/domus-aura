@@ -5,7 +5,7 @@ namespace SmartHome.Infrastructure.Simulation.Clock;
 public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : ISimulationClock
 {
     private readonly Lock _lock = new();
-    private SimulationSpeed _speed = SimulationSpeed.Normal;
+    private SimulationSpeed _speed = SimulationSpeed.X1;
     private DateTime _currentTime = DateTime.UtcNow;
 
     public SimulationSpeed Speed
@@ -29,10 +29,9 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
     public void SetSpeed(SimulationSpeed speed)
     {
         if (!speedRegistry.IsAllowed(speed))
-            throw new ArgumentOutOfRangeException(
-                nameof(speed),
-                $"Speed '{speed}' is not allowed. Permitted speeds: " +
-                $"{string.Join(", ", speedRegistry.AllowedSpeeds)}.");
+            throw new ArgumentException(
+                $"Speed '{(int)speed}' is not allowed. Permitted speeds: " +
+                $"{string.Join(", ", speedRegistry.AllowedSpeeds.Select(s => (int)s).Order())}.");
 
         lock (_lock) _speed = speed;
     }

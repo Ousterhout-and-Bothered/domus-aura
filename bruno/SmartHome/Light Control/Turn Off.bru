@@ -1,0 +1,23 @@
+meta {
+  name: Turn Off
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:5137/api/devices/5d2f64b1-7bc4-4352-9606-4baaade3f241/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setPower",
+    "value": "Off"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

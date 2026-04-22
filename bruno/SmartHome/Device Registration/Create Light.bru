@@ -1,0 +1,30 @@
+meta {
+  name: Create Light
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5137/api/devices
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Test Light",
+    "location": "Test Room",
+    "type": 2
+  }
+}
+
+tests {
+  if (res.body?.id) {
+    bru.setEnvVar("testDeviceId", res.body.id);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

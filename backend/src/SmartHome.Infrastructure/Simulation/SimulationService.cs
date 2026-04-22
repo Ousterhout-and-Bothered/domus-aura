@@ -9,21 +9,29 @@ namespace SmartHome.Infrastructure.Simulation;
 /// temperature changes, and resetting devices. Delegates time/speed state
 /// to <see cref="ISimulationClock"/> and persistence to <see cref="IDeviceRepository"/>.
 /// </summary>
+/// <param name="clock">The global simulation clock owning time and speed state.</param>
+/// <param name="devices">The repository for general device domain operations.</param>
+/// <param name="simulation">The repository for bulk simulation operations (ticking, resetting).</param>
 public sealed class SimulationService(
     ISimulationClock clock,
     IDeviceRepository devices,
     ISimulationRepository simulation) : ISimulationService
 {
 
+    /// <inheritdoc />
     public SimulationSpeed Speed    => clock.Speed;
+    
+    /// <inheritdoc />
     public DateTime SimulationClock => clock.CurrentTime;
 
+    /// <inheritdoc />
     public Task SetSpeedAsync(SimulationSpeed speed, CancellationToken cancellationToken = default)
     {
         clock.SetSpeed(speed);
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public async Task TickAsync(CancellationToken cancellationToken = default)
     {
         var tickables = await simulation.GetTickableAsync(cancellationToken);
@@ -35,6 +43,7 @@ public sealed class SimulationService(
         clock.Advance(clock.BaseTickInterval);
     }
 
+    /// <inheritdoc />
     public async Task SetAmbientTemperatureAsync(
         string location, int temperature, CancellationToken cancellationToken = default)
     {
@@ -50,9 +59,11 @@ public sealed class SimulationService(
         await devices.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task ResetAllDevicesAsync(CancellationToken cancellationToken = default)
     {
         await simulation.ResetAllAsync(cancellationToken);
+        await simulation.SaveChangesAsync(cancellationToken);
         clock.Reset();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Api.Middleware;
 
@@ -42,28 +43,39 @@ public sealed class ProblemDetailsExceptionHandler(
     private static ProblemDetails MapToProblemDetails(Exception exception, HttpContext httpContext) =>
         exception switch
         {
+            DuplicateThermostatException => Build(
+                StatusCodes.Status409Conflict,
+                "Duplicate thermostat",
+                exception.Message,
+                "https://domus-aura.com/problems/duplicate-thermostat",
+                httpContext),
+
             ArgumentOutOfRangeException => Build(
                 StatusCodes.Status400BadRequest,
                 "Invalid argument",
                 exception.Message,
+                "https://domus-aura.com/problems/invalid-request",
                 httpContext),
 
             ArgumentException => Build(
                 StatusCodes.Status400BadRequest,
                 "Invalid input",
                 exception.Message,
+                "https://domus-aura.com/problems/invalid-request",
                 httpContext),
 
             InvalidOperationException => Build(
-                StatusCodes.Status409Conflict,
+                StatusCodes.Status400BadRequest,
                 "Invalid operation",
                 exception.Message,
+                "https://domus-aura.com/problems/invalid-operation",
                 httpContext),
 
             KeyNotFoundException => Build(
                 StatusCodes.Status404NotFound,
-                "Resource not found",
+                "Device not found",
                 exception.Message,
+                "https://domus-aura.com/problems/device-not-found",
                 httpContext),
 
             _ => Build(
@@ -71,17 +83,17 @@ public sealed class ProblemDetailsExceptionHandler(
                 "An unexpected error occurred",
                 // Deliberately generic — don't leak internals to the client.
                 "An unexpected error occurred while processing your request.",
+                null,
                 httpContext)
         };
 
-    private static ProblemDetails Build(int status, string title, string detail, HttpContext httpContext) =>
+    private static ProblemDetails Build(int status, string title, string detail, string? type, HttpContext httpContext) =>
         new()
         {
             Status = status,
             Title = title,
             Detail = detail,
             Instance = httpContext.Request.Path,
-            // RFC 9110 §15 classes: 1xx=15.2, 2xx=15.3, 3xx=15.4, 4xx=15.5, 5xx=15.6
-            Type = $"https://www.rfc-editor.org/rfc/rfc9110#section-15.{(status / 100) + 1}"
+            Type = type ?? $"https://www.rfc-editor.org/rfc/rfc9110#section-15.{(status / 100) + 1}"
         };
 }

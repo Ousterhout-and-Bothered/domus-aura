@@ -16,24 +16,55 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
     : IDeviceRepository, ISimulationRepository
 {
     
+    /// <inheritdoc />
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
         => dbContext.Devices.AnyAsync(cancellationToken);
 
-    
-    public async Task<IReadOnlyList<DomainDevice>> GetAllAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<DomainDevice>> GetAllAsync(
+        string? location = null, 
+        DeviceType? type = null, 
+        bool? isOn = null,
+        CancellationToken cancellationToken = default)
     {
-        return await dbContext.Devices
-            .AsNoTracking() // Read-only query 
-            .ToListAsync(cancellationToken);
+        var query = dbContext.Devices.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            query = query.Where(d => d.Location == location);
+        }
+
+        if (type.HasValue)
+        {
+            query = query.Where(d => d.Type == type.Value);
+        }
+
+        var devices = await query.ToListAsync(cancellationToken);
+
+        if (isOn.HasValue)
+        {
+            return devices.Where(d => d.IsOn() == isOn.Value).ToList();
+        }
+
+        return devices;
     }
 
+    /// <inheritdoc />
     public async Task<DomainDevice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await dbContext.Devices
-            .AsNoTracking() // Read-only lookup
             .FirstOrDefaultAsync(device => device.Id == id, cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<DomainDevice?> GetByIdReadOnlyAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Devices
+            .AsNoTracking() // Read-only: single device
+            .FirstOrDefaultAsync(device => device.Id == id, cancellationToken);
+    }
+    
+    /// <inheritdoc />
     public async Task AddAsync(DomainDevice device, CancellationToken cancellationToken = default)
     {
         // Stage new device for insertion
@@ -41,22 +72,22 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
         await dbContext.Devices.AddAsync(device, cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes the device with the specified identifier.
+    /// Uses <see cref="RelationalQueryableExtensions.ExecuteDeleteAsync"/> for immediate persistence.
+    /// </summary>
+    /// <param name="id">The unique identifier for the device to delete.</param>
+    /// <returns>True when a matching device was found and deleted; otherwise false.</returns>
     public async Task<bool> RemoveByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        // Lookup device to remove
-        DomainDevice? device = await dbContext.Devices
-            .FirstOrDefaultAsync(device => device.Id == id, cancellationToken);
+        int deletedCount = await dbContext.Devices
+            .Where(device => device.Id == id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        // Return false if device does not exist
-        if (device is null)
-            return false;
-
-        // Mark entity for deletion
-        // Executed on SaveChangesAsync
-        dbContext.Devices.Remove(device);
-        return true;
+        return deletedCount > 0;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ThermostatExistsAtLocationAsync(string location, CancellationToken cancellationToken = default)
     {
         return await dbContext.Thermostats
@@ -64,36 +95,53 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext)
             .AnyAsync(thermostat => thermostat.Location == location, cancellationToken);
     }
     
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ThermostatDevice>> GetThermostatsByLocationAsync(
         string location, CancellationToken cancellationToken = default)
     {
-        // Change-tracked query — ambient-temperature mutations must be persisted.
         return await dbContext.Thermostats
             .Where(t => t.Location == location)
             .ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // Commit all pending changes to the database
         await dbContext.SaveChangesAsync(cancellationToken);
     }
     
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
     {
-        // Change-tracked query so Tick() mutations persist on SaveChangesAsync.
-        var thermostats = await dbContext.Thermostats.ToListAsync(cancellationToken);
-        return thermostats;
+        return await dbContext.Devices
+            .OfType<TickableDevice>()
+            .ToListAsync(cancellationToken);
     }
     
+    /// <inheritdoc />
     public async Task ResetAllAsync(CancellationToken cancellationToken = default)
     {
-        // Single tracked load + mutate + save so every device resets in one unit of work.
         var devices = await dbContext.Devices.ToListAsync(cancellationToken);
 
         foreach (var device in devices)
             device.ResetToDefaults();
+    }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+    /// <inheritdoc />
+    public async Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default)
+    {
+        var entry = new CommandHistory(deviceId, operation);
+        await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(Guid deviceId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.DeviceHistory
+            .AsNoTracking()
+            .Where(h => h.DeviceId == deviceId)
+            .OrderByDescending(h => h.Timestamp)
+            .ToListAsync(cancellationToken);
     }
 }

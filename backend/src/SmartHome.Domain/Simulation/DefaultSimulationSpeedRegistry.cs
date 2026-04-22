@@ -5,10 +5,10 @@ public sealed class DefaultSimulationSpeedRegistry : ISimulationSpeedRegistry
     public IReadOnlySet<SimulationSpeed> AllowedSpeeds { get; } =
         new HashSet<SimulationSpeed>
         {
-            SimulationSpeed.Normal,
-            SimulationSpeed.Double,
-            SimulationSpeed.Fast,
-            SimulationSpeed.Ultra
+            SimulationSpeed.X1,
+            SimulationSpeed.X2,
+            SimulationSpeed.X5,
+            SimulationSpeed.X10
         };
 
     public bool IsAllowed(SimulationSpeed speed) => AllowedSpeeds.Contains(speed);

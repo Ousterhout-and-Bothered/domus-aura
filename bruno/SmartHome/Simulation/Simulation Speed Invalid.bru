@@ -1,11 +1,11 @@
 meta {
-  name: Put Temperature
+  name: Simulation Speed Invalid
   type: http
-  seq: 3
+  seq: 4
 }
 
 put {
-  url: {{baseUrl}}/api/locations/Living%20Room/ambient-temperature
+  url: {{baseUrl}}/api/simulation/speed
   body: json
   auth: inherit
 }
@@ -16,10 +16,11 @@ headers {
 
 body:json {
   {
-    "temperature": 75
+    "speedMultiplier": "hello"
   }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

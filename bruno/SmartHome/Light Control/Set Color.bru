@@ -1,0 +1,23 @@
+meta {
+  name: Set Color
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:5137/api/devices/334a7bd0-15ef-4c8c-8f6e-753a5132eeea/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setColor",
+    "value": "#FF8800"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
