@@ -1,4 +1,5 @@
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Device.Light;
@@ -29,9 +30,8 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
             ("unlock", ILockable l) => new UnlockCommand(l),
             
             _ when !IsCommandKnown(normalizedCommand) 
-                => throw new ArgumentException($"Unknown command: {commandName}", nameof(commandName)),
-            
-            _ => throw new InvalidOperationException($"Command '{commandName}' is not supported by device type '{device.Type}'.")
+                => throw new InvalidDomainArgumentException($"Unknown command: {commandName}"),
+            _ => throw new InvalidDomainOperationException($"Command '{commandName}' is not supported by device type '{device.Type}'.")
         };
     }
 
@@ -48,22 +48,24 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
     /// <typeparam name="T">The target enum type.</typeparam>
     /// <param name="value">The value to parse.</param>
     /// <returns>The parsed enum value.</returns>
-    /// <exception cref="ArgumentException">Thrown if the value is null, not a string, or not a valid enum member.</exception>
+    /// <exception cref="InvalidDomainArgumentException">
+    /// Thrown if the value is null, not a string, or not a valid enum member.
+    /// </exception>
     private static T ParseEnum<T>(object? value) where T : struct, Enum
     {
         var allowedValues = Guard.GetAllowedValues<T>();
         
         var stringValue = value switch
         {
-            null => throw new ArgumentException($"Value is required for this command. Allowed values: {allowedValues}"),
+            null => throw new InvalidDomainArgumentException($"Value is required for this command. Allowed values: {allowedValues}"),
             string s => s,
-            _ => value.ToString() ?? throw new ArgumentException($"Value must be a string for enum parsing. Allowed values: {allowedValues}")
+            _ => value.ToString() ?? throw new InvalidDomainArgumentException($"Value must be a string for enum parsing. Allowed values: {allowedValues}")
         };
 
         if (Enum.TryParse<T>(stringValue, true, out var result))
             return result;
 
-        throw new ArgumentException($"Unsupported {typeof(T).Name} value. Allowed values: {allowedValues}");
+        throw new InvalidDomainArgumentException($"Unsupported {typeof(T).Name} value. Allowed values: {allowedValues}");
     }
 
     /// <summary>
@@ -72,8 +74,11 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
     /// </summary>
     /// <param name="value">The value to parse.</param>
     /// <returns>The parsed integer value.</returns>
+    /// <exception cref="InvalidDomainArgumentException">
+    /// Thrown if the value cannot be parsed as an integer.
+    /// </exception>
     private static int ParseInt(object? value)
     {
-        return ValueParser.TryParseInt(value) ?? throw new ArgumentException("Value must be a valid number.");
+        return ValueParser.TryParseInt(value) ?? throw new InvalidDomainArgumentException("Value must be a valid number.");
     }
 }
