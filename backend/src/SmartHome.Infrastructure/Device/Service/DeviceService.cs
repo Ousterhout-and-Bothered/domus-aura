@@ -20,13 +20,13 @@ public sealed class DeviceService(
 {
     /// <inheritdoc />
     public async Task<Domain.Device.Device> RegisterDeviceAsync(
-        string name, 
-        string location, 
-        DeviceType type, 
+        string name,
+        string location,
+        DeviceType type,
         CancellationToken cancellationToken = default)
     {
         // One thermostat per location rule
-        if (type == DeviceType.Thermostat && 
+        if (type == DeviceType.Thermostat &&
             await repository.ThermostatExistsAtLocationAsync(location, cancellationToken))
         {
             throw new DuplicateThermostatException(location);
@@ -44,9 +44,9 @@ public sealed class DeviceService(
 
     /// <inheritdoc />
     public async Task<Domain.Device.Device> ExecuteCommandAsync(
-        Guid deviceId, 
-        string commandName, 
-        string? value, 
+        Guid deviceId,
+        string commandName,
+        string? value,
         CancellationToken cancellationToken = default)
     {
         var device = await repository.GetByIdAsync(deviceId, cancellationToken);

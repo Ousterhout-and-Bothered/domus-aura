@@ -91,6 +91,6 @@ public abstract class PoweredDevice : Device, IPowerable
         new(initialState, new Dictionary<PowerState, IReadOnlySet<PowerState>>
         {
             [PowerState.Off] = new HashSet<PowerState> { PowerState.On },
-            [PowerState.On]  = new HashSet<PowerState> { PowerState.Off }
+            [PowerState.On] = new HashSet<PowerState> { PowerState.Off }
         });
 }

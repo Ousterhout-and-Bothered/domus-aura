@@ -132,7 +132,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     public void SetDesiredTemperature(int temperature)
     {
         Guard.AgainstInvalidState(State != ThermostatState.Off, "Temperature can only be changed while the thermostat is on.");
-        
+
         DesiredTemperature = Guard.Clamp(temperature, MinTemperature, MaxTemperature);
         EvaluateState();
     }

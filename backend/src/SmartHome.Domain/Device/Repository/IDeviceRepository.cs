@@ -14,8 +14,8 @@ public interface IDeviceRepository
     /// Retrieves all devices, with optional filtering by location, type, and power state.
     /// </summary>
     Task<IReadOnlyList<Device>> GetAllAsync(
-        string? location = null, 
-        DeviceType? type = null, 
+        string? location = null,
+        DeviceType? type = null,
         bool? isOn = null,
         CancellationToken cancellationToken = default);
 
@@ -31,7 +31,7 @@ public interface IDeviceRepository
     /// Improves query performance by avoiding EF Core tracking overhead.
     /// </summary>
     Task<Device?> GetByIdReadOnlyAsync(Guid id, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Adds a new device to persistence.
     /// The change is not guaranteed to be committed until SaveChangesAsync is called.
@@ -61,7 +61,7 @@ public interface IDeviceRepository
     /// Persists all pending changes to the underlying storage medium.
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Returns true if any device exists in the repository.
     /// </summary>

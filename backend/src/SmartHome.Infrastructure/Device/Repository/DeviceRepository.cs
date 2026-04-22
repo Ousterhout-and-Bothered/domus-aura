@@ -17,7 +17,7 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
     /// <inheritdoc />
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
         => dbContext.Devices.AnyAsync(cancellationToken);
-    
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<DomainDevice>> GetAllAsync(
         string? location = null,
@@ -115,7 +115,7 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
             .OrderByDescending(h => h.Timestamp)
             .ToListAsync(cancellationToken);
     }
-    
+
     /// <inheritdoc />
     public async Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default)
     {
@@ -123,5 +123,5 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
     }
 }
-    
+
 

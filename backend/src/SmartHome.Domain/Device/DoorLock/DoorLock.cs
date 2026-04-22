@@ -80,7 +80,7 @@ public sealed class DoorLock : Device, ILockable
     private static StateMachine<DoorLockState> BuildMachine(DoorLockState initialState) =>
         new(initialState, new Dictionary<DoorLockState, IReadOnlySet<DoorLockState>>
         {
-            [DoorLockState.Locked]   = new HashSet<DoorLockState> { DoorLockState.Unlocked },
+            [DoorLockState.Locked] = new HashSet<DoorLockState> { DoorLockState.Unlocked },
             [DoorLockState.Unlocked] = new HashSet<DoorLockState> { DoorLockState.Locked }
         });
 

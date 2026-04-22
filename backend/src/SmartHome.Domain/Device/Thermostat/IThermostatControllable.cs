@@ -9,7 +9,7 @@
 /// </summary>
 public interface IThermostatControllable
 {
-    
+
     /// <summary>
     /// The current operational state of the thermostat.
     /// </summary>
@@ -20,22 +20,22 @@ public interface IThermostatControllable
     /// evaluating whether heating or cooling should begin.
     /// </summary>
     void TurnOn();
-    
+
     /// <summary>
     /// Powers the thermostat off from any active state.
     /// </summary>
     void TurnOff();
-    
+
     /// <summary>
     /// Sets the operating mode (Heat, Cool, Auto).
     /// </summary>
     void SetMode(ThermostatMode mode);
-    
+
     /// <summary>
     /// Sets the desired temperature in Fahrenheit.
     /// </summary>
     void SetDesiredTemperature(int temperature);
-    
+
     /// <summary>
     /// Updates the ambient temperature of the location.
     /// </summary>

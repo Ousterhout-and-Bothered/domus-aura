@@ -101,6 +101,6 @@ public sealed class SmartHomeDbContext : DbContext
         // Allow EF Core to apply any additional default configurations
         base.OnModelCreating(modelBuilder);
     }
-    
-    
+
+
 }

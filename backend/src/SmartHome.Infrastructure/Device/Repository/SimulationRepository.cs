@@ -12,20 +12,20 @@ namespace SmartHome.Infrastructure.Device.Repository;
 public sealed class SimulationRepository(SmartHomeDbContext dbContext)
     : EfRepositoryBase(dbContext), ISimulationRepository
 {
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
-        {
-            return await dbContext.Devices
-                .OfType<TickableDevice>()
-                .ToListAsync(cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public async Task ResetAllAsync(CancellationToken cancellationToken = default)
-        {
-            var devices = await dbContext.Devices.ToListAsync(cancellationToken);
-
-            foreach (var device in devices)
-                device.ResetToDefaults();
-        }
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ITickable>> GetTickableAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Devices
+            .OfType<TickableDevice>()
+            .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task ResetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var devices = await dbContext.Devices.ToListAsync(cancellationToken);
+
+        foreach (var device in devices)
+            device.ResetToDefaults();
+    }
+}

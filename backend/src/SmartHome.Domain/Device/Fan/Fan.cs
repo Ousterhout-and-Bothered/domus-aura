@@ -9,8 +9,8 @@ namespace SmartHome.Domain.Device.Fan;
 /// </summary>
 public sealed class Fan : PoweredDevice, IFanControllable
 {
-    
-    
+
+
     /// <summary>
     /// The current speed of the fan.
     /// </summary>
@@ -27,12 +27,12 @@ public sealed class Fan : PoweredDevice, IFanControllable
     {
         Speed = FanSpeed.Medium;
     }
-    
-    
+
+
     /// <summary>
     /// Sets the speed of the fan.
     /// Throws <see cref="InvalidOperationException"/> if the fan is off.
-	/// Throws <see cref="ArgumentOutOfRangeException"/> is the speed is not defined.
+    /// Throws <see cref="ArgumentOutOfRangeException"/> is the speed is not defined.
     /// </summary>
     public void SetSpeed(FanSpeed speed)
     {
@@ -42,7 +42,7 @@ public sealed class Fan : PoweredDevice, IFanControllable
 
         Speed = speed;
     }
-    
+
     /// <summary>
     /// Resets powered device attributes for the fan to their default values.
     /// </summary>
@@ -51,7 +51,7 @@ public sealed class Fan : PoweredDevice, IFanControllable
         // Fans default to Medium when powered on
         Speed = FanSpeed.Medium;
     }
-    
+
     /// <summary>
     /// Log-friendly representation including power and speed.
     /// </summary>

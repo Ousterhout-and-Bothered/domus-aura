@@ -11,7 +11,7 @@
 /// </remarks>
 public interface IDeviceFactory
 {
-    
+
     /// <summary>
     /// Creates a new device of the specified type.
     /// </summary>

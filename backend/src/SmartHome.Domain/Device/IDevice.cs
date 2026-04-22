@@ -8,22 +8,22 @@
 /// </summary>
 public interface IDevice
 {
-    
+
     /// <summary>
     /// The unique identifier for this device.
     /// </summary>
     Guid Id { get; }
-    
+
     /// <summary>
     /// The human-readable name of the device.
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// The room or area the device is located in.
     /// </summary>
     string Location { get; }
-    
+
     /// <summary>
     /// The type of device (Light, Fan, Thermostat, DoorLock).
     /// </summary>

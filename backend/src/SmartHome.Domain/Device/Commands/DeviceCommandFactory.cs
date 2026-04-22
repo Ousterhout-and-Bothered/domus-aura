@@ -28,8 +28,8 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
             ("setdesiredtemperature", IThermostatControllable t) => new SetDesiredTemperatureCommand(t, ParseInt(value)),
             ("lock", ILockable l) => new LockCommand(l),
             ("unlock", ILockable l) => new UnlockCommand(l),
-            
-            _ when !IsCommandKnown(normalizedCommand) 
+
+            _ when !IsCommandKnown(normalizedCommand)
                 => throw new InvalidDomainArgumentException($"Unknown command: {commandName}"),
             _ => throw new InvalidDomainOperationException($"Command '{commandName}' is not supported by device type '{device.Type}'.")
         };
@@ -37,7 +37,7 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
 
     private static bool IsCommandKnown(string commandName) => commandName switch
     {
-        "setpower" or "setbrightness" or "setcolor" or "setspeed" or 
+        "setpower" or "setbrightness" or "setcolor" or "setspeed" or
         "setmode" or "setdesiredtemperature" or "lock" or "unlock" => true,
         _ => false
     };
@@ -54,7 +54,7 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
     private static T ParseEnum<T>(object? value) where T : struct, Enum
     {
         var allowedValues = Guard.GetAllowedValues<T>();
-        
+
         var stringValue = value switch
         {
             null => throw new InvalidDomainArgumentException($"Value is required for this command. Allowed values: {allowedValues}"),

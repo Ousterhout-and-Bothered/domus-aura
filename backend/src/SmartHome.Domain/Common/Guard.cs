@@ -23,7 +23,7 @@ public static class Guard
             var allowedValues = GetAllowedValues<T>();
             var prefix = messagePrefix ?? $"Unsupported {typeof(T).Name} value.";
             var message = $"{prefix} Allowed values: {allowedValues}";
-            
+
             // To provide the exact message requested by the user in the API response,
             // we throw InvalidDomainArgumentException with only the message. 
             throw new InvalidDomainArgumentException(message);

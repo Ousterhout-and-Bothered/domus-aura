@@ -11,7 +11,7 @@ public sealed class DeviceFactory(IEnumerable<IDeviceBuilder> builders) : IDevic
     private readonly Dictionary<DeviceType, IDeviceBuilder> _builders =
         builders.ToDictionary(b => b.HandledType);
 
-    
+
     /// <summary>
     /// Creates a new device of the specified type.
     /// </summary>

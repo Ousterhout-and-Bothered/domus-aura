@@ -5,5 +5,5 @@ namespace SmartHome.Domain.Common.Exceptions;
 /// Using a base class allows the global exception handler to distinguish between 
 /// controlled domain errors and unexpected framework/infrastructure errors.
 /// </summary>
-public abstract class DomainException(string message, Exception? innerException = null) 
+public abstract class DomainException(string message, Exception? innerException = null)
     : Exception(message, innerException);

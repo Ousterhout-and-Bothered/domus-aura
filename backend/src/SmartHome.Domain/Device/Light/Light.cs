@@ -11,12 +11,12 @@ namespace SmartHome.Domain.Device.Light;
 /// </summary>
 public sealed class Light : PoweredDevice, IDimmable, IColorable
 {
-    
+
     /// <summary>
     /// The current brightness level as an integer percentage (10–100).
     /// </summary>
     public int Brightness { get; private set; }
-    
+
     /// <summary>
     /// The current color as a hex string (e.g. "#FF8800").
     /// </summary>
@@ -37,7 +37,7 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
         ColorHex = "#FFFFFF";
     }
 
-    
+
     /// <summary>
     /// Sets the brightness of the light.
     /// Throws <see cref="InvalidOperationException"/> if the light is off.
@@ -46,12 +46,12 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
     public void SetBrightness(int brightness)
     {
         Guard.AgainstInvalidState(PowerState == PowerState.On, "Brightness can only be changed while the light is on.");
-        
+
         // Clamped to [10, 100] as per README requirement.
         Brightness = Guard.Clamp(brightness, 10, 100);
     }
 
-    
+
     /// <summary>
     /// Sets the color of the light using a hex color string.
     /// Throws <see cref="InvalidOperationException"/> if the light is off.
@@ -62,14 +62,14 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
         Guard.AgainstInvalidState(PowerState == PowerState.On, "Color can only be changed while the light is on.");
 
         colorHex = Guard.NotNullOrWhitespace(colorHex, "Color is required.");
-        
+
         // Validate hex format — prevents garbage values
         if (!Regex.IsMatch(colorHex, "^#[0-9a-fA-F]{6}$"))
             throw new InvalidDomainArgumentException("Color must be a valid hex color.");
 
         ColorHex = colorHex.ToUpperInvariant();
     }
-    
+
     /// <summary>
     /// Resets powered device attributes for the light to their default values.
     /// </summary>
@@ -80,7 +80,7 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
         // Reset color to default (white (#FFFFFF))
         ColorHex = "#FFFFFF";
     }
-    
+
     /// <summary>
     /// Log-friendly representation including power and light-specific attributes.
     /// </summary>

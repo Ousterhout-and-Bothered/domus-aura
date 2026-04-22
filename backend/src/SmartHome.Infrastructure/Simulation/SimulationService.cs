@@ -20,8 +20,8 @@ public sealed class SimulationService(
 {
 
     /// <inheritdoc />
-    public SimulationSpeed Speed    => clock.Speed;
-    
+    public SimulationSpeed Speed => clock.Speed;
+
     /// <inheritdoc />
     public DateTime SimulationClock => clock.CurrentTime;
 

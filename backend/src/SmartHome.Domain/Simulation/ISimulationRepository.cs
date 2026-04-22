@@ -22,8 +22,8 @@ public interface ISimulationRepository
     /// The change is not guaranteed to be committed until SaveChangesAsync is called.
     /// </summary>
     Task ResetAllAsync(CancellationToken cancellationToken = default);
-    
-    
+
+
     /// <summary>
     /// Persists all pending simulation-related changes to the underlying storage medium.
     /// Must share a unit of work with <see cref="GetTickableAsync"/> so that

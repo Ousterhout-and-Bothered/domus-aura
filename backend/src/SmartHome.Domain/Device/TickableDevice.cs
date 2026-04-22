@@ -10,7 +10,7 @@ public abstract class TickableDevice : Device, ITickable
 {
     protected TickableDevice() : base() { }
 
-    protected TickableDevice(string name, string location, DeviceType type) 
+    protected TickableDevice(string name, string location, DeviceType type)
         : base(name, location, type) { }
 
     /// <summary>

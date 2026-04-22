@@ -12,7 +12,7 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
     {
         get
         {
-            lock (_lock) return _speed; 
+            lock (_lock) return _speed;
         }
     }
 
@@ -21,7 +21,7 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
         get
         {
             lock (_lock) return _currentTime;
-        } 
+        }
     }
 
     public TimeSpan BaseTickInterval { get; } = TimeSpan.FromSeconds(5);
