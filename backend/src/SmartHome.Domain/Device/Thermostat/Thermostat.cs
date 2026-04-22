@@ -13,7 +13,7 @@ namespace SmartHome.Domain.Device.Thermostat;
 public sealed class Thermostat : TickableDevice, IThermostatControllable, IPowerable
 {
     /// <inheritdoc />
-    public PowerState PowerState => State == ThermostatState.Off ? PowerState.Off : PowerState.On;
+    public PowerState PowerState => IsOn() ? PowerState.On : PowerState.Off;
 
     /// <summary>
     /// The current state of the thermostat.
@@ -99,6 +99,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// </summary>
     public void TurnOn()
     {
+        if (State != ThermostatState.Off) return;
         TransitionTo(ThermostatState.Idle);
         EvaluateState();
     }
