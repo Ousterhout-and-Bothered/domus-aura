@@ -1,4 +1,4 @@
-using SmartHome.Domain.Device.Thermostat;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Domain.Device.Thermostat;
 
@@ -12,5 +12,8 @@ public interface IThermostatStrategyProvider
     /// <summary>
     /// Returns the strategy implementation for the given thermostat mode.
     /// </summary>
+    /// <exception cref="InvalidDomainOperationException">
+    /// Thrown if no strategy is registered for the specified mode.
+    /// </exception>
     IThermostatModeStrategy GetStrategy(ThermostatMode mode);
 }
