@@ -53,7 +53,7 @@ public sealed class DeviceService(
 
         if (device is null)
         {
-            throw new KeyNotFoundException($"Device with id {deviceId} not found.");
+            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
 
         var commandValue = ValueParser.Normalize(value);

@@ -43,6 +43,13 @@ public sealed class ProblemDetailsExceptionHandler(
     private static ProblemDetails MapToProblemDetails(Exception exception, HttpContext httpContext) =>
         exception switch
         {
+            ResourceNotFoundException => Build(
+                StatusCodes.Status404NotFound,
+                "Resource not found",
+                exception.Message,
+                "https://domus-aura.com/problems/resource-not-found",
+                httpContext),
+
             DuplicateThermostatException => Build(
                 StatusCodes.Status409Conflict,
                 "Duplicate thermostat",
@@ -50,32 +57,25 @@ public sealed class ProblemDetailsExceptionHandler(
                 "https://domus-aura.com/problems/duplicate-thermostat",
                 httpContext),
 
-            ArgumentOutOfRangeException => Build(
+            InvalidDomainArgumentException => Build(
                 StatusCodes.Status400BadRequest,
-                "Invalid argument",
+                "Invalid domain argument",
                 exception.Message,
                 "https://domus-aura.com/problems/invalid-request",
                 httpContext),
 
-            ArgumentException => Build(
+            InvalidDomainOperationException => Build(
                 StatusCodes.Status400BadRequest,
-                "Invalid input",
-                exception.Message,
-                "https://domus-aura.com/problems/invalid-request",
-                httpContext),
-
-            InvalidOperationException => Build(
-                StatusCodes.Status400BadRequest,
-                "Invalid operation",
+                "Invalid domain operation",
                 exception.Message,
                 "https://domus-aura.com/problems/invalid-operation",
                 httpContext),
 
-            KeyNotFoundException => Build(
-                StatusCodes.Status404NotFound,
-                "Device not found",
+            DomainException => Build(
+                StatusCodes.Status400BadRequest,
+                "Domain error",
                 exception.Message,
-                "https://domus-aura.com/problems/device-not-found",
+                "https://domus-aura.com/problems/domain-error",
                 httpContext),
 
             _ => Build(

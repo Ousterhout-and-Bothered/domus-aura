@@ -1,4 +1,5 @@
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Common.Exceptions;
 using System.Text.RegularExpressions;
 
 namespace SmartHome.Domain.Device.Light;
@@ -64,7 +65,7 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
         
         // Validate hex format — prevents garbage values
         if (!Regex.IsMatch(colorHex, "^#[0-9a-fA-F]{6}$"))
-            throw new ArgumentException("Color must be a valid hex color.");
+            throw new InvalidDomainArgumentException("Color must be a valid hex color.");
 
         ColorHex = colorHex.ToUpperInvariant();
     }

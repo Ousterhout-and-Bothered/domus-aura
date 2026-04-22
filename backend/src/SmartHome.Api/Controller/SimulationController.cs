@@ -66,7 +66,11 @@ public sealed class SimulationController(ISimulationService simulationService) :
     [ApiExplorerSettings(IgnoreApi = true)]
     public IActionResult RejectPathSpeed(string? multiplier)
     {
-        throw new ArgumentException($"The simulation speed '{multiplier}' was passed in the URL. Please send the speed multiplier in the JSON request body as '{{ \"speedMultiplier\": {multiplier} }}' instead.");
+        return Problem(
+            type: "https://domus-aura.com/problems/invalid-request-format",
+            title: "Invalid Request Format",
+            detail: $"The simulation speed '{multiplier}' was passed in the URL. Please send the speed multiplier in the JSON request body as '{{ \"speedMultiplier\": {multiplier} }}' instead.",
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     /// <summary>

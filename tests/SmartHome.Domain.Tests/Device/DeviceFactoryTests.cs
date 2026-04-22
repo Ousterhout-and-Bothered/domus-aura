@@ -1,4 +1,5 @@
-﻿using SmartHome.Domain.Device;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Registration;
 using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Device.Fan;
@@ -114,7 +115,7 @@ public class DeviceFactoryTests
     [Fact]
     public void Create_UnsupportedType_Throws()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test", "Room", (DeviceType)99));
     }
 
@@ -124,7 +125,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidName_Throws(string? name)
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create(name!, "Living Room", DeviceType.Light));
     }
 
@@ -134,7 +135,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidLocation_Throws(string? location)
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test Light", location!, DeviceType.Light));
     }
 }

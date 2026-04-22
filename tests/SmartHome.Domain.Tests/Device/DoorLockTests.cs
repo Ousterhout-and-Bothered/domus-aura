@@ -1,4 +1,5 @@
 ﻿using SmartHome.Domain.Device;
+using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.DoorLock;
 
 namespace SmartHome.Domain.Tests.Device;
@@ -29,13 +30,13 @@ public class DoorLockTests
     {
         var doorLock = CreateDoorLock();
         doorLock.Lock();
-        Assert.Throws<InvalidOperationException>(() => doorLock.Lock());
+        Assert.Throws<InvalidDomainOperationException>(() => doorLock.Lock());
     }
 
     [Fact]
     public void Unlock_UnlockedToUnlocked_ThrowsInvalidOperationException()
     {
         var doorLock = CreateDoorLock();
-        Assert.Throws<InvalidOperationException>(() => doorLock.Unlock());
+        Assert.Throws<InvalidDomainOperationException>(() => doorLock.Unlock());
     }
 }

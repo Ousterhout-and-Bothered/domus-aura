@@ -31,22 +31,13 @@ public sealed class LocationsController(ISimulationService simulationService) : 
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<SetAmbientTemperatureResponse>> SetAmbientTemperature(
         string location,
-        [FromBody] SetAmbientTemperatureRequest? request,
+        [FromBody] SetAmbientTemperatureRequest request,
         CancellationToken cancellationToken)
     {
-        if (request is null)
-        {
-            throw new ArgumentException("The set ambient temperature request body is missing or in an improper format.");
-        }
+        var temperatureValue = request.GetTemperatureValue()!.Value;
 
-        var temperatureValue = request.GetTemperatureValue();
-        if (temperatureValue == null)
-        {
-            throw new ArgumentException("The temperature must be a valid number.");
-        }
-
-        await simulationService.SetAmbientTemperatureAsync(location, temperatureValue.Value, cancellationToken);
-        return Ok(new SetAmbientTemperatureResponse(location, temperatureValue.Value));
+        await simulationService.SetAmbientTemperatureAsync(location, temperatureValue, cancellationToken);
+        return Ok(new SetAmbientTemperatureResponse(location, temperatureValue));
     }
 }
 

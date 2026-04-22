@@ -1,3 +1,4 @@
+using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Simulation;
 using SmartHome.Infrastructure.Simulation.Clock;
@@ -50,7 +51,7 @@ public sealed class SimulationService(
         var thermostats = await devices.GetThermostatsByLocationAsync(location, cancellationToken);
 
         if (thermostats.Count == 0)
-            throw new InvalidOperationException(
+            throw new InvalidDomainOperationException(
                 $"No thermostats exist at location '{location}'.");
 
         foreach (var thermostat in thermostats)

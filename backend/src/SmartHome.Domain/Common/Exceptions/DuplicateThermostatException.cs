@@ -4,7 +4,7 @@ namespace SmartHome.Domain.Common.Exceptions;
 /// Thrown when an attempt is made to register a thermostat in a location that already has one.
 /// </summary>
 public sealed class DuplicateThermostatException(string location) 
-    : Exception($"A thermostat already exists in {location}.")
+    : DomainException($"A thermostat already exists in {location}.")
 {
     public string Location { get; } = location;
 }

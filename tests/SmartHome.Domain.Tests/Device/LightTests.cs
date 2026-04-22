@@ -1,4 +1,5 @@
-﻿using SmartHome.Domain.Device;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Common;
 
@@ -30,14 +31,14 @@ public class LightTests
     {
         var light = CreateLight();
         light.TurnOn();
-        Assert.Throws<InvalidOperationException>(() => light.TurnOn());
+        Assert.Throws<InvalidDomainOperationException>(() => light.TurnOn());
     }
 
     [Fact]
     public void TurnOff_OffToOff_ThrowsInvalidOperationException()
     {
         var light = CreateLight();
-        Assert.Throws<InvalidOperationException>(() => light.TurnOff());
+        Assert.Throws<InvalidDomainOperationException>(() => light.TurnOff());
     }
 
     [Fact]
@@ -99,7 +100,7 @@ public class LightTests
     {
         var light = CreateLight();
         light.TurnOn();
-        Assert.Throws<ArgumentException>(() => light.SetColor("invalid"));
+        Assert.Throws<InvalidDomainArgumentException>(() => light.SetColor("invalid"));
     }
 
     [Fact]

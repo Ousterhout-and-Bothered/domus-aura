@@ -1,4 +1,5 @@
-﻿using SmartHome.Domain.Device;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Fan;
 
 namespace SmartHome.Domain.Tests.Device;
@@ -29,14 +30,14 @@ public class FanTests
     {
         var fan = CreateFan();
         fan.TurnOn();
-        Assert.Throws<InvalidOperationException>(() => fan.TurnOn());
+        Assert.Throws<InvalidDomainOperationException>(() => fan.TurnOn());
     }
 
     [Fact]
     public void TurnOff_OffToOff_ThrowsInvalidOperationException()
     {
         var fan = CreateFan();
-        Assert.Throws<InvalidOperationException>(() => fan.TurnOff());
+        Assert.Throws<InvalidDomainOperationException>(() => fan.TurnOff());
     }
 
     [Fact]
@@ -52,7 +53,7 @@ public class FanTests
     public void SetSpeed_ValidSpeedWhileOff_ThrowsInvalidOperationException()
     {
         var fan = CreateFan();
-        Assert.Throws<InvalidOperationException>(() => fan.SetSpeed(FanSpeed.High));
+        Assert.Throws<InvalidDomainOperationException>(() => fan.SetSpeed(FanSpeed.High));
     }
 
     [Fact]
@@ -60,7 +61,7 @@ public class FanTests
     {
         var fan = CreateFan();
         fan.TurnOn();
-        Assert.Throws<ArgumentException>(() => fan.SetSpeed((FanSpeed)99));
+        Assert.Throws<InvalidDomainArgumentException>(() => fan.SetSpeed((FanSpeed)99));
     }
 
     [Fact]

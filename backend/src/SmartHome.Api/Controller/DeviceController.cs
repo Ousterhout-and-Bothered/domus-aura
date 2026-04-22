@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Devices;
-using SmartHome.Domain.Common;
 using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Repository;
-using SmartHome.Domain.Device.Registration;
 using SmartHome.Domain.Device.Commands;
 
 
@@ -159,17 +157,10 @@ public class DeviceController : ControllerBase
         [FromBody] DeviceCommandRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var device = await _deviceService.ExecuteCommandAsync(
-                id, request.Command, request.Value?.ToString(), cancellationToken);
+        var device = await _deviceService.ExecuteCommandAsync(
+            id, request.Command, request.Value?.ToString(), cancellationToken);
 
-            return Ok(device);
-        }
-        catch (KeyNotFoundException)
-        {
-            return DeviceNotFound(id);
-        }
+        return Ok(device);
     }
 
     private ObjectResult DeviceNotFound(Guid id)

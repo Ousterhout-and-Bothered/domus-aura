@@ -1,3 +1,5 @@
+using SmartHome.Domain.Common.Exceptions;
+
 namespace SmartHome.Domain.Common;
 
 /// <summary>
@@ -23,11 +25,8 @@ public static class Guard
             var message = $"{prefix} Allowed values: {allowedValues}";
             
             // To provide the exact message requested by the user in the API response,
-            // we throw ArgumentException with only the message. 
-            // If we provided a parameterName to the ArgumentException constructor,
-            // .NET would append " (Parameter '...')" to the message property,
-            // which the ProblemDetails middleware then exposes in the "detail" field.
-            throw new ArgumentException(message);
+            // we throw InvalidDomainArgumentException with only the message. 
+            throw new InvalidDomainArgumentException(message);
         }
     }
 
@@ -49,7 +48,7 @@ public static class Guard
     public static string NotNullOrWhitespace(string value, string message)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException(message);
+            throw new InvalidDomainArgumentException(message);
 
         return value.Trim();
     }
@@ -65,7 +64,7 @@ public static class Guard
     public static void InRange(int value, int min, int max, string message)
     {
         if (value < min || value > max)
-            throw new ArgumentException(message);
+            throw new InvalidDomainArgumentException(message);
     }
 
     /// <summary>
@@ -77,7 +76,7 @@ public static class Guard
     public static void Against(bool condition, string message)
     {
         if (!condition)
-            throw new ArgumentException(message);
+            throw new InvalidDomainArgumentException(message);
     }
 
     /// <summary>
@@ -89,7 +88,7 @@ public static class Guard
     public static void AgainstInvalidState(bool condition, string message)
     {
         if (!condition)
-            throw new InvalidOperationException(message);
+            throw new InvalidDomainOperationException(message);
     }
 
     /// <summary>
@@ -110,7 +109,7 @@ public static class Guard
             ? $"Allowed transitions from {currentState}: {string.Join(", ", allowed)}."
             : $"No transitions are allowed from the current state {currentState}.";
 
-        throw new InvalidOperationException(
+        throw new InvalidDomainOperationException(
             $"Invalid transition: {currentState} -> {targetState}. {detail}");
     }
     public static int Clamp(int value, int min, int max)
