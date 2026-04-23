@@ -21,15 +21,7 @@ using Scalar.AspNetCore;
 using SmartHome.Api.Validation;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-
-/*
- * Domus Aura - Smart Home Simulation API
- * 
- * This file serves as the entry point for the Web API. It is responsible for:
- * 1. Configuring the Dependency Injection (DI) container.
- * 2. Setting up the request processing pipeline (middleware).
- * 3. Initializing infrastructure such as SQLite and automatic database seeding.
- */
+using SmartHome.Infrastructure.Device.Events;
 
 // Create the application builder and load configuration/services
 var builder = WebApplication.CreateBuilder(args);
@@ -81,13 +73,13 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
     });
 
-// FluentValidation — register all AbstractValidator<T> implementations in this assembly.
+// FluentValidation - register all AbstractValidator<T> implementations in this assembly.
 // Combined with AddFluentValidationAutoValidation(), ASP.NET will invoke matching
 // validators automatically before a request body reaches the controller action.
 builder.Services.AddValidatorsFromAssemblyContaining<SetSimulationSpeedRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
-// --- SQLite Connection String and Directory Resolution ---
+// SQLite Connection String and Directory Resolution
 // This ensures that the SQLite database directory exists and the connection string 
 // uses an absolute path, fixing "SQLite Error 14: unable to open database file".
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -129,7 +121,8 @@ if (!string.IsNullOrEmpty(connectionString))
 else
 {
     // Fallback for development if not in appsettings
-    var dataDirectory = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "data"));
+    var infrastructurePath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SmartHome.Infrastructure"));
+    var dataDirectory = Path.Combine(infrastructurePath, "data");
     Directory.CreateDirectory(dataDirectory);
     var databasePath = Path.Combine(dataDirectory, "smarthome.db");
     connectionString = $"Data Source={databasePath};Cache=Shared;Default Timeout=30;";
@@ -168,6 +161,12 @@ builder.Services.AddScoped<ISimulationService, SimulationService>();
 // Runs the background loop that updates thermostat behavior over time
 builder.Services.AddHostedService<SimulationBackgroundService>();
 
+builder.Services.AddSingleton<DeviceEventBroker>();
+builder.Services.AddSingleton<IDeviceEventPublisher>(sp =>
+    sp.GetRequiredService<DeviceEventBroker>());
+builder.Services.AddSingleton<IDeviceEventStream>(sp =>
+    sp.GetRequiredService<DeviceEventBroker>());
+
 // Build the application pipeline
 var app = builder.Build();
 
@@ -177,7 +176,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
     // Scalar UI — interactive API docs at /scalar/v1
-    // Development-only; don't expose API surface in production without auth.
+    // Development only
     app.MapScalarApiReference();
     // Redirect root to the Scalar docs in development for a friendly landing page.
     // This endpoint is excluded from OpenAPI to prevent it from being treated as part of the API contract.

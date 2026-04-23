@@ -1,21 +1,27 @@
 namespace SmartHome.Domain.Device;
 
 /// <summary>
-/// Abstract base class for all devices that require a simulation tick
-/// to update their state over time (e.g., Temperature changing).
-/// Enables OCP by allowing the infrastructure to discover all tickable 
-/// devices through a common base type rather than hardcoding.
+/// Abstract base class for devices whose internal state advances over simulation time.
+/// Provides a common foundation for time-driven behavior while allowing subclasses
+/// to define their own tick logic.
 /// </summary>
+/// <remarks>
+/// Implementing <see cref="ITickable"/> allows these devices to participate in the
+/// simulation loop without the infrastructure needing to know their concrete type.
+/// </remarks>
 public abstract class TickableDevice : Device, ITickable
 {
-    protected TickableDevice() : base() { }
+    protected TickableDevice() { }
 
     protected TickableDevice(string name, string location, DeviceType type)
         : base(name, location, type) { }
 
     /// <summary>
-    /// Advances the simulation by one tick.
-    /// Subclasses provide the concrete behavior.
+    /// Advances the device state by one simulation tick.
     /// </summary>
-    public abstract void Tick();
+    /// <returns>
+    /// <c>true</c> if the device's observable state changed as a result of the tick;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    public abstract bool Tick();
 }

@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Device\Events\" />
     <Folder Include="Device\Scenes\" />
     <Folder Include="Scene\" />
   </ItemGroup>
