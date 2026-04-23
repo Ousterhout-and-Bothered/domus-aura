@@ -7,6 +7,9 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="targetState">The desired power state (On/Off).</param>
 public sealed class SetPowerCommand(IPowerable receiver, PowerState targetState) : IDeviceCommand
 {
+    
+    public string OperationName => $"SetPower({targetState})";
+    
     /// <inheritdoc />
     public CommandResult Execute()
     {
@@ -15,6 +18,6 @@ public sealed class SetPowerCommand(IPowerable receiver, PowerState targetState)
         else
             receiver.TurnOff();
         
-        return new CommandResult($"SetPower({targetState})", true);
+        return new CommandResult(OperationName, true);
     }
 }

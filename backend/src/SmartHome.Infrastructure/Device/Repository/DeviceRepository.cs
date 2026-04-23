@@ -121,6 +121,23 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         var entry = new CommandHistory(deviceId, operation);
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
     }
+    
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<DomainDevice>> GetAllTrackedAsync(
+        string? location = null,
+        DeviceType? type = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Devices.AsQueryable();  // tracked by default
+
+        if (!string.IsNullOrWhiteSpace(location))
+            query = query.Where(d => d.Location == location);
+
+        if (type.HasValue)
+            query = query.Where(d => d.Type == type.Value);
+
+        return await query.ToListAsync(cancellationToken);
+    }
 }
 
 

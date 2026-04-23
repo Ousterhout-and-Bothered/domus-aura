@@ -75,5 +75,21 @@ public interface IDeviceRepository
     /// <summary>
     /// Retrieves the command history for a specific device, ordered by most recent first.
     /// </summary>
-    Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(Guid deviceId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(
+        Guid deviceId, 
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves all devices matching the specified filters, with EF change tracking enabled.
+    /// Intended for callers that will mutate the returned entities and persist those changes
+    /// via <see cref="SaveChangesAsync"/> — for example, scene execution against group targets.
+    /// </summary>
+    /// <remarks>
+    /// Prefer <see cref="GetAllAsync"/> for read-only scenarios. Tracked queries carry
+    /// additional overhead and should only be used when mutation is intended.
+    /// </remarks>
+    Task<IReadOnlyList<Device>> GetAllTrackedAsync(
+        string? location = null,
+        DeviceType? type = null,
+        CancellationToken cancellationToken = default);
 }

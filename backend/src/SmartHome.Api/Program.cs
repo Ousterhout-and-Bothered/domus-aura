@@ -21,6 +21,8 @@ using Scalar.AspNetCore;
 using SmartHome.Api.Validation;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using SmartHome.Domain.Scene;
+using SmartHome.Infrastructure.Scene;
 
 /*
  * Domus Aura - Smart Home Simulation API
@@ -153,6 +155,13 @@ builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, FanBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, DoorLockBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, ThermostatBuilder>();
+
+// Scene feature — CRUD, resolution, and execution against registered devices.
+// Scoped so each request gets a fresh unit of work tied to the per-request DbContext,
+// matching the rest of the persistence layer.
+builder.Services.AddScoped<ISceneRepository, SceneRepository>();
+builder.Services.AddScoped<ISceneResolver, SceneResolver>();
+builder.Services.AddScoped<ISceneService, SceneService>();
 
 // Simulation speed registry — the source of truth for permitted multipliers.
 // Singleton because allowed speeds are immutable for the app's lifetime.

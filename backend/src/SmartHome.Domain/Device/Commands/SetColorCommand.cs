@@ -9,10 +9,13 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="colorHex">The target color in hex format.</param>
 public sealed class SetColorCommand(IColorable receiver, string colorHex) : IDeviceCommand
 {
+    
+    public string OperationName => $"SetColor({colorHex})";
+    
     /// <inheritdoc />
     public CommandResult Execute()
     {
         receiver.SetColor(colorHex);
-        return new CommandResult($"SetColor({colorHex})", true);
+        return new CommandResult(OperationName, true);
     }
 }
