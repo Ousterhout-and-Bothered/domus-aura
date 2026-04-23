@@ -18,7 +18,8 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
     {
         return await dbContext.Scenes
             .AsNoTracking()
-            .Include(s => s.Actions)
+            .AsSplitQuery()
+            .Include(s => s.Actions.OrderBy(a=>a.OrderIndex))
             .ToListAsync(cancellationToken);
     }
 
@@ -27,7 +28,8 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
     {
         // Tracked: callers may mutate via Rename/ReplaceActions and persist through SaveChangesAsync.
         return await dbContext.Scenes
-            .Include(s => s.Actions)
+            .AsSplitQuery()
+            .Include(s => s.Actions.OrderBy(a=> a.OrderIndex))
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 

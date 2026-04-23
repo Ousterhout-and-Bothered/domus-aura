@@ -23,6 +23,8 @@ public sealed class DeviceScene
     /// <summary>
     /// The ordered list of actions this scene executes. Exposed read-only;
     /// the aggregate replaces the collection wholesale via <see cref="ReplaceActions"/>.
+    /// Ordering (OrderIndex == list position) is established on construction and mutation,
+    /// and restored by the repository on load.
     /// </summary>
     public IReadOnlyList<SceneAction> Actions => _actions;
 
