@@ -2,7 +2,6 @@ using SmartHome.Domain.Common.Exceptions;
 using DeviceBase = SmartHome.Domain.Device.Device;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Domain.Device.Repository;
-using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Simulation;
 using SmartHome.Infrastructure.Device.Events;
 using SmartHome.Infrastructure.Simulation.Clock;
@@ -37,8 +36,7 @@ public sealed class SimulationService(
         clock.SetSpeed(speed);
         return Task.CompletedTask;
     }
-
-    /// <inheritdoc />
+    
     /// <remarks>
     /// Publishes an <see cref="DeviceChangeType.Updated"/> event only for devices
     /// whose state changed during the simulation tick.
@@ -54,22 +52,9 @@ public sealed class SimulationService(
 
         foreach (var tickable in tickables)
         {
-            if (tickable is Thermostat thermostat)
+            if (tickable.Tick() && tickable is DeviceBase device)
             {
-                var previousAmbientTemperature = thermostat.AmbientTemperature;
-                var previousState = thermostat.State;
-
-                thermostat.Tick();
-
-                if (thermostat.AmbientTemperature != previousAmbientTemperature ||
-                    thermostat.State != previousState)
-                {
-                    changedDevices.Add(thermostat);
-                }
-            }
-            else
-            {
-                tickable.Tick();
+                changedDevices.Add(device);
             }
         }
 

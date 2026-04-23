@@ -47,7 +47,7 @@ public interface IDeviceService
     /// <param name="deviceId">The unique identifier of the device.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown if the device is not found.</exception>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
     /// <remarks>
     /// Persists the removal and publishes a <see cref="DeviceChangeType.Deleted"/> event
     /// so connected SSE clients can remove the device from their UI in real time.

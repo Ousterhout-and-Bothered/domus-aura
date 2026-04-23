@@ -69,7 +69,7 @@ public sealed class DeviceService(
         // Load the device.
         var device = await repository.GetByIdAsync(deviceId, cancellationToken);
 
-        // Validate the devices exists.
+        // Validate the device exists.
         if (device is null)
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
@@ -104,23 +104,22 @@ public sealed class DeviceService(
     /// <inheritdoc />
     /// <remarks>
     /// Removes a device from the system and publishes a <see cref="DeviceChangeType.Deleted"/>
-    /// event after persistence succeeds.
+    /// event after the deletion succeeds.
     ///
     /// The device state is captured before deletion so a final snapshot can be included
-    /// in the event payload. This allows clients to update or remove the device from
-    /// their local state without requiring a full refresh.
+    /// in the event payload. This allows clients to remove the device from local state
+    /// without requiring a full refresh.
     /// </remarks>
     public async Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default)
     {
-        // Load the device first so we can capture its final snapshot for the Deleted event.
-        var device = await repository.GetByIdAsync(deviceId, cancellationToken);
+        // Load a read-only snapshot so we can publish a final Deleted payload.
+        var device = await repository.GetByIdReadOnlyAsync(deviceId, cancellationToken);
 
         if (device is null)
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
 
-        // Build payload before the device is removed from persistence.
         var payload = DeviceEventPayloadFactory.Create(device);
 
         var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
@@ -129,8 +128,6 @@ public sealed class DeviceService(
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
-
-        await repository.SaveChangesAsync(cancellationToken);
 
         await deviceEventPublisher.PublishAsync(
             new DeviceChangedEvent(

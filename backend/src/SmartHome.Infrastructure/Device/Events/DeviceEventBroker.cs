@@ -7,7 +7,8 @@ namespace SmartHome.Infrastructure.Device.Events;
 
 /// <summary>
 /// In-memory event broker that broadcasts device change events to all active subscribers.
-/// Each subscriber receives its own channel so SSE clients can consume events independently.
+/// Each subscriber receives its own bounded channel so SSE clients can consume events independently
+/// without allowing unbounded memory growth if a client falls behind.
 /// </summary>
 public sealed class DeviceEventBroker : IDeviceEventPublisher, IDeviceEventStream
 {
@@ -32,10 +33,11 @@ public sealed class DeviceEventBroker : IDeviceEventPublisher, IDeviceEventStrea
     {
         var subscriberId = Guid.NewGuid();
 
-        var channel = Channel.CreateUnbounded<DeviceChangedEvent>(new UnboundedChannelOptions
+        var channel = Channel.CreateBounded<DeviceChangedEvent>(new BoundedChannelOptions(100)
         {
             SingleReader = true,
-            SingleWriter = false
+            SingleWriter = false,
+            FullMode = BoundedChannelFullMode.DropOldest
         });
 
         _subscribers[subscriberId] = channel;

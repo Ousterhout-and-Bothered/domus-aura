@@ -178,11 +178,11 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         var previousAmbientTemperature = AmbientTemperature;
         var previousState = State;
 
-        if (State == ThermostatState.Heating)
+        if (State == ThermostatState.Heating && AmbientTemperature < DesiredTemperature)
         {
             AmbientTemperature++;
         }
-        else if (State == ThermostatState.Cooling)
+        else if (State == ThermostatState.Cooling && AmbientTemperature > DesiredTemperature)
         {
             AmbientTemperature--;
         }
