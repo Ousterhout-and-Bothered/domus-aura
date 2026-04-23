@@ -13,4 +13,9 @@
     <Compile Remove="Device\Commands\IDeviceCommandProvider.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Device\Scenes\" />
+    <Folder Include="Scene\" />
+  </ItemGroup>
+
 </Project>

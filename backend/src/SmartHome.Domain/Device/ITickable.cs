@@ -1,13 +1,21 @@
 ﻿namespace SmartHome.Domain.Device;
 
-
 /// <summary>
-/// Marker for devices whose internal state advances with simulation time.
-/// The simulation harness will call <see cref="Tick"/> on every ITickable
-/// device on each tick, so new tickable device types can be added without
-/// modifying simulation code (Open/Closed Principle).
+/// Defines behavior for devices whose internal state advances with simulation time.
 /// </summary>
+/// <remarks>
+/// The simulation engine invokes <see cref="Tick"/> on each <see cref="ITickable"/>
+/// device during every simulation cycle. This allows new time-driven device types
+/// to be introduced without modifying simulation orchestration code.
+/// </remarks>
 public interface ITickable
 {
-    void Tick();
+    /// <summary>
+    /// Advances the device's internal state by one simulation tick.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> if the device's observable state changed as a result of the tick;
+    /// otherwise, <c>false</c>.
+    /// </returns>
+    bool Tick();
 }
