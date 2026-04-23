@@ -2,6 +2,7 @@
 using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Scene;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Infrastructure.Scene;
 
@@ -24,13 +25,38 @@ public sealed class SceneResolver(
         foreach (var action in scene.Actions)
         {
             var devices = await ResolveTargetsAsync(action, cancellationToken);
+            
+            if (devices.Count == 0)
+            {
+                var failureMessage = action.TargetsDevice
+                    ? $"Target device no longer registered (id: {action.DeviceId!.Value})."
+                    : $"No devices match group target: {action.DeviceType} in {action.Location ?? "any location"}.";
 
+                composite.Add(new FailedCommand(action.Operation, failureMessage));
+                deviceIds.Add(Guid.Empty);
+                continue;
+            }
+            
             foreach (var device in devices)
             {
-                var command = commandFactory.Create(
-                    commandName: action.Operation,
-                    value: action.Value,
-                    device: device);
+                // Construction-time failures (e.g. Lock on a Light) must not abort the
+                // whole resolution loop. CompositeCommand.Execute only catches exceptions
+                // thrown from Execute(), not from construction — so we translate the
+                // construction failure into a FailedCommand stub that reports itself as
+                // a failed CommandResult when the composite runs. This preserves the
+                // positional contract between Composite.Children and DeviceIdsInOrder.
+                IDeviceCommand command;
+                try
+                {
+                    command = commandFactory.Create(
+                        commandName: action.Operation,
+                        value: action.Value,
+                        device: device);
+                }
+                catch (DomainException ex)
+                {
+                    command = new FailedCommand(action.Operation, ex.Message);
+                }
 
                 composite.Add(command);
                 deviceIds.Add(device.Id);

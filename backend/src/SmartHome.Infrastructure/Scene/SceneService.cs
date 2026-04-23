@@ -93,10 +93,11 @@ public sealed class SceneService(
             var deviceId = resolved.DeviceIdsInOrder[i];
             var result = results[i];
 
-            // Tag the operation with the scene name so history readers can trace
-            // a command back to the scene that triggered it.
-            var operationLabel = $"{result.Operation} (scene: {scene.Name})";
-            await deviceRepository.LogActionAsync(deviceId, operationLabel, cancellationToken);
+            if (deviceId != Guid.Empty)
+            {
+                var operationLabel = $"{result.Operation} (scene: {scene.Name})";
+                await deviceRepository.LogActionAsync(deviceId, operationLabel, cancellationToken);
+            }
 
             entries.Add(new SceneExecutionEntry(deviceId, result));
         }
