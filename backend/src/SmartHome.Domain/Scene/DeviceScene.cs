@@ -26,7 +26,7 @@ public sealed class DeviceScene
     /// Ordering (OrderIndex == list position) is established on construction and mutation,
     /// and restored by the repository on load.
     /// </summary>
-    public IReadOnlyList<SceneAction> Actions => _actions;
+    public IReadOnlyList<SceneAction> Actions => _actions.OrderBy(a => a.OrderIndex).ToList();
 
     // Required for EF Core rehydration.
     private DeviceScene() { }
