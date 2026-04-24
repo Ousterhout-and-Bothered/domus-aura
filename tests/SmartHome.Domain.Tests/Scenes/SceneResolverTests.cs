@@ -69,7 +69,7 @@ public class SceneResolverTests
 
         var commandFactory = new Mock<IDeviceCommandFactory>();
         commandFactory.Setup(f => f.Create("SetPower", "Off", It.IsAny<Domain.Device.Device>()))
-                      .Returns<string, string?, Domain.Device.Device>((op, _, _) => MakeStubCommand(op));
+            .Returns<string, object?, Domain.Device.Device>((op, _, _) => MakeStubCommand(op));
 
         var scene = new DeviceScene("Lights Off",
             [SceneAction.ForGroup(DeviceType.Light, "Living Room", "SetPower", orderIndex: 0, value: "Off")]);
@@ -99,8 +99,8 @@ public class SceneResolverTests
                   .ReturnsAsync(light);
 
         var commandFactory = new Mock<IDeviceCommandFactory>();
-        commandFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Domain.Device.Device>()))
-                      .Returns<string, string?, Domain.Device.Device>((op, _, _) => MakeStubCommand(op));
+        commandFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<Domain.Device.Device>()))
+            .Returns<string, object?, Domain.Device.Device>((op, _, _) => MakeStubCommand(op));
 
         var scene = new DeviceScene("Mixed",
         [
