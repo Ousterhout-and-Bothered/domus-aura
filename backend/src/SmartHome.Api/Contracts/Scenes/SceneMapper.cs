@@ -45,31 +45,41 @@ internal static class SceneMapper
 
     private static SceneAction ToDomain(SceneActionRequest request, int orderIndex)
     {
-        // Targeting mode is inferred from which field is populated. The domain
-        // constructor enforces "exactly one" via its XOR guard; this mapper just
-        // dispatches to the correct factory.
-        if (request.DeviceId.HasValue)
+        // Enforce exactly-one targeting at the request boundary. The domain's
+        // XOR guard runs inside SceneAction's private constructor, but by then
+        // each factory has already accepted only its own field — so the mapper
+        // would silently prefer one and discard the other rather than surface
+        // the conflict. Validate here so the caller gets an honest 400 about
+        // an over- or under-specified request.
+        var hasDeviceId = request.DeviceId.HasValue;
+        var hasDeviceType = request.DeviceType.HasValue;
+
+        if (hasDeviceId && hasDeviceType)
+        {
+            throw new InvalidDomainArgumentException(
+                "Scene action must specify either deviceId or deviceType, not both.");
+        }
+
+        if (!hasDeviceId && !hasDeviceType)
+        {
+            throw new InvalidDomainArgumentException(
+                "Scene action must specify either deviceId or deviceType.");
+        }
+
+        if (hasDeviceId)
         {
             return SceneAction.ForDevice(
-                deviceId: request.DeviceId.Value,
+                deviceId: request.DeviceId!.Value,
                 operation: request.Operation,
                 orderIndex: orderIndex,
                 value: request.Value);
         }
 
-        if (request.DeviceType.HasValue)
-        {
-            return SceneAction.ForGroup(
-                deviceType: request.DeviceType.Value,
-                location: request.Location,
-                operation: request.Operation,
-                orderIndex: orderIndex,
-                value: request.Value);
-        }
-
-        // Neither targeting field was provided. Let the domain surface the error
-        // message consistent with the XOR guard in SceneAction's private constructor.
-        throw new InvalidDomainArgumentException(
-            "Scene action must specify either deviceId or deviceType.");
+        return SceneAction.ForGroup(
+            deviceType: request.DeviceType!.Value,
+            location: request.Location,
+            operation: request.Operation,
+            orderIndex: orderIndex,
+            value: request.Value);
     }
 }

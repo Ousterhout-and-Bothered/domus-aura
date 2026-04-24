@@ -1,21 +1,22 @@
 ﻿namespace SmartHome.Domain.Scene;
 
 /// <summary>
-/// The output of <see cref="ISceneResolver.ResolveAsync"/>: a command tree ready
-/// to execute, paired with the device IDs each leaf command targets.
+/// What you get back from <see cref="ISceneResolver.ResolveAsync"/>: a tree of commands
+/// ready to execute, plus a parallel list telling you which device each command targets.
 /// </summary>
 /// <param name="Composite">
-/// The command tree to execute. Children are in execution order.
+/// The commands to run, in order. Execute this and each child runs as part of the batch.
 /// </param>
 /// <param name="DeviceIdsInOrder">
-/// The device ID each child of <paramref name="Composite"/> targets, in the same
-/// order. <c>DeviceIdsInOrder[i]</c> corresponds to <c>Composite.Children[i]</c>,
-/// and (after execution) to the i-th <see cref="Device.Commands.CommandResult"/>.
+/// One device ID per command in <paramref name="Composite"/>, in the same order.
+/// After execution, you can pair each result with the device it acted on by index.
+/// Failed-resolution slots (deleted devices, empty groups) use <see cref="Guid.Empty"/>.
 /// </param>
 /// <remarks>
-/// This pairing lets the scene service correlate each command's result with the
-/// device it affected when writing to the command history, without putting device
-/// identity on <see cref="Device.Commands.CommandResult"/> itself.
+/// The two lists are parallel by design so the scene service can write history rows
+/// against the right device without coupling <see cref="Device.Commands.CommandResult"/>
+/// to device identity. Keeping commands and device IDs separate lets a command stay
+/// device-agnostic while the surrounding execution context tracks the "who."
 /// </remarks>
 public sealed record ResolvedScene(
     CompositeCommand Composite,

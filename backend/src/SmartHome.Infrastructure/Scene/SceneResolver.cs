@@ -1,5 +1,4 @@
-﻿using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Commands;
+﻿using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Scene;
 using SmartHome.Domain.Common.Exceptions;
