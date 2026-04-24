@@ -85,11 +85,9 @@ public sealed class DeviceService(
         command.Execute();
 
         // Log the action.
-        await repository.LogActionAsync(device.Id, $"{commandName}: {commandValue}", cancellationToken);
+        await repository.LogActionAsync(device.Id, result.Operation, cancellationToken);
 
         // Save changes to the database.
-        var result = command.Execute();
-        await repository.LogActionAsync(device.Id, result.Operation, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
         
         // Publish the Updated event and hand off to the broker.

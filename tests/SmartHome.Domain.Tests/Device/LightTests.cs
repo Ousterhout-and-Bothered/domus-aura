@@ -2,9 +2,6 @@
 using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Common;
-using SmartHome.Domain.Common.Exceptions;
-using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Light;
 
 namespace SmartHome.Domain.Tests.Device;
 
