@@ -1,120 +1,96 @@
 ﻿using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Registration;
-using SmartHome.Domain.Device.Light;
-using SmartHome.Domain.Device.Fan;
-using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Device.DoorLock;
+using SmartHome.Domain.Device.Fan;
+using SmartHome.Domain.Device.Light;
+using SmartHome.Domain.Device.Registration;
+using SmartHome.Domain.Device.Thermostat;
 
 namespace SmartHome.Domain.Tests.Device;
 
 public class DeviceFactoryTests
 {
-     private static readonly IDeviceFactory Factory = new DeviceFactory(new IDeviceBuilder[]
-{
-    new LightBuilder(),
-    new FanBuilder(),
-    new DoorLockBuilder(),
-    new ThermostatBuilder(new ThermostatStrategyProvider())
-});
-
-    /// <summary>
-    /// Correct type tests
-    /// </summary>
-
-    [Fact]
-    public void Create_Light_ReturnsLightInstance()
+    private static readonly IDeviceFactory Factory = new DeviceFactory(new IDeviceBuilder[]
     {
-        var device = Factory.Create("Test Light", "Living Room", DeviceType.Light);
-        Assert.IsType<Light>(device);
+        new LightBuilder(),
+        new FanBuilder(),
+        new DoorLockBuilder(),
+        new ThermostatBuilder(new ThermostatStrategyProvider()),
+    });
+
+    // --- Type dispatch ---
+
+    [Theory]
+    [InlineData(DeviceType.Light, typeof(Light))]
+    [InlineData(DeviceType.Fan, typeof(Fan))]
+    [InlineData(DeviceType.Thermostat, typeof(Thermostat))]
+    [InlineData(DeviceType.DoorLock, typeof(DoorLock))]
+    public void Create_ByDeviceType_ReturnsExpectedConcreteInstance(DeviceType type, Type expected)
+    {
+        // Act
+        var device = Factory.Create("Test Device", "Living Room", type);
+
+        // Assert
+        Assert.IsType(expected, device);
     }
 
-    [Fact]
-    public void Create_Fan_ReturnsFanInstance()
-    {
-        var device = Factory.Create("Test Fan", "Bedroom", DeviceType.Fan);
-        Assert.IsType<Fan>(device);
-    }
-
-    [Fact]
-    public void Create_Thermostat_ReturnsThermostatInstance()
-    {
-        var device = Factory.Create("Test Thermostat", "Living Room", DeviceType.Thermostat);
-        Assert.IsType<Thermostat>(device);
-    }
-
-    [Fact]
-    public void Create_DoorLock_ReturnsDoorLockInstance()
-    {
-        var device = Factory.Create("Test Lock", "Entryway", DeviceType.DoorLock);
-        Assert.IsType<DoorLock>(device);
-    }
-
-    /// <summary>
-    /// Metadata tests
-    /// </summary>
+    // --- Metadata ---
 
     [Fact]
     public void Create_SetsNameCorrectly()
     {
+        // Act
         var device = Factory.Create("Living Room Lamp", "Living Room", DeviceType.Light);
+
+        // Assert
         Assert.Equal("Living Room Lamp", device.Name);
     }
 
     [Fact]
     public void Create_SetsLocationCorrectly()
     {
+        // Act
         var device = Factory.Create("Living Room Lamp", "Living Room", DeviceType.Light);
+
+        // Assert
         Assert.Equal("Living Room", device.Location);
     }
 
     [Fact]
     public void Create_GeneratesUniqueIds()
     {
-        var device1 = Factory.Create("Light 1", "Living Room", DeviceType.Light);
-        var device2 = Factory.Create("Light 2", "Living Room", DeviceType.Light);
-        Assert.NotEqual(device1.Id, device2.Id);
+        // Act
+        var first = Factory.Create("Light 1", "Living Room", DeviceType.Light);
+        var second = Factory.Create("Light 2", "Living Room", DeviceType.Light);
+
+        // Assert
+        Assert.NotEqual(first.Id, second.Id);
     }
 
-    /// <summary>
-    /// Default state tests
-    /// </summary>
+    // --- Default state ---
 
-    [Fact]
-    public void Create_Light_DefaultsToOff()
+    [Theory]
+    [InlineData(DeviceType.Light, false)]
+    [InlineData(DeviceType.Fan, false)]
+    [InlineData(DeviceType.Thermostat, false)]
+    [InlineData(DeviceType.DoorLock, true)]
+    public void Create_DefaultPowerState_MatchesExpectedForType(DeviceType type, bool expectedIsOn)
     {
-        var device = Factory.Create("Test Light", "Living Room", DeviceType.Light);
-        Assert.False(device.IsOn());
+        // Arrange — DoorLock is "on" by default (locked); other devices default off.
+
+        // Act
+        var device = Factory.Create("Test Device", "Living Room", type);
+
+        // Assert
+        Assert.Equal(expectedIsOn, device.IsOn());
     }
 
-    [Fact]
-    public void Create_Fan_DefaultsToOff()
-    {
-        var device = Factory.Create("Test Fan", "Bedroom", DeviceType.Fan);
-        Assert.False(device.IsOn());
-    }
-
-    [Fact]
-    public void Create_Thermostat_DefaultsToOff()
-    {
-        var device = Factory.Create("Test Thermostat", "Living Room", DeviceType.Thermostat);
-        Assert.False(device.IsOn());
-    }
-
-    [Fact]
-    public void Create_DoorLock_DefaultsToOn()
-    {
-        var device = Factory.Create("Test Lock", "Entryway", DeviceType.DoorLock);
-        Assert.True(device.IsOn());
-    }
-
-    /// <summary>
-    /// Invalid input tests
-    /// </summary>
+    // --- Invalid input ---
 
     [Fact]
     public void Create_UnsupportedType_Throws()
     {
+        // Act + Assert
         Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test", "Room", (DeviceType)99));
     }
@@ -125,6 +101,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidName_Throws(string? name)
     {
+        // Act + Assert
         Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create(name!, "Living Room", DeviceType.Light));
     }
@@ -135,6 +112,7 @@ public class DeviceFactoryTests
     [InlineData("   ")]
     public void Create_InvalidLocation_Throws(string? location)
     {
+        // Act + Assert
         Assert.Throws<InvalidDomainArgumentException>(() =>
             Factory.Create("Test Light", location!, DeviceType.Light));
     }
