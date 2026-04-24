@@ -39,10 +39,10 @@ public interface ISceneService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes the scene with the specified identifier. Returns true when a matching
-    /// scene was found and deleted; otherwise false.
+    /// Deletes the scene with the specified identifier.
     /// </summary>
-    Task<bool> DeleteSceneAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <exception cref="ResourceNotFoundException">Thrown if no matching scene exists.</exception>
+    Task DeleteSceneAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a scene by resolving its actions into commands, running them in order,

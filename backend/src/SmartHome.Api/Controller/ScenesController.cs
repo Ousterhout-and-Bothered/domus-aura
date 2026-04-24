@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Scenes;
+using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Scene;
 
 namespace SmartHome.Api.Controller;
@@ -100,17 +101,10 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var removed = await sceneService.DeleteSceneAsync(id, cancellationToken);
-
-        if (!removed)
-        {
-            return Problem(
-                type: "https://domus-aura.com/problems/scene-not-found",
-                title: "Scene not found",
-                detail: $"No scene with id {id} exists.",
-                statusCode: StatusCodes.Status404NotFound);
-        }
-
+        // Service throws ResourceNotFoundException if missing, which the
+        // global handler maps to a 404 Problem Details response — same
+        // shape as the GetById/Update/Execute 404s.
+        await sceneService.DeleteSceneAsync(id, cancellationToken);
         return NoContent();
     }
 

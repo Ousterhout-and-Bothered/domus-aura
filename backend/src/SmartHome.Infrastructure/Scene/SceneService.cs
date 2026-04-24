@@ -58,14 +58,16 @@ public sealed class SceneService(
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteSceneAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteSceneAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var removed = await sceneRepository.RemoveByIdAsync(id, cancellationToken);
-        if (removed)
+
+        if (!removed)
         {
-            await sceneRepository.SaveChangesAsync(cancellationToken);
+            throw new ResourceNotFoundException($"No scene with id {id} exists.");
         }
-        return removed;
+
+        await sceneRepository.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />
