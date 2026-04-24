@@ -27,9 +27,7 @@ public sealed class DeviceScene
     /// and restored by the repository on load.
     /// </summary>
     public IReadOnlyList<SceneAction> Actions => _actions.OrderBy(a => a.OrderIndex).ToList();
-
-    // Required for EF Core rehydration.
-    private DeviceScene() { }
+    
 
     /// <summary>
     /// Creates a new scene with the given name and actions.
@@ -37,12 +35,14 @@ public sealed class DeviceScene
     /// <exception cref="Common.Exceptions.InvalidDomainArgumentException">
     /// Thrown if the name is null/whitespace or the action list is empty.
     /// </exception>
-    public DeviceScene(string name, IEnumerable<SceneAction> actions)
+    public DeviceScene(string name, IEnumerable<SceneAction>? actions)
     {
         Id = Guid.NewGuid();
         Name = Guard.NotNullOrWhitespace(name, "Scene name is required.");
 
-        var ordered = actions.ToList();
+        Guard.Against(actions is not null, "Scene actions are required.");
+
+        var ordered = actions!.ToList();
         Guard.Against(ordered.Count > 0, "A scene must contain at least one action.");
 
         RenumberAndStore(ordered);
@@ -63,9 +63,11 @@ public sealed class DeviceScene
     /// <exception cref="Common.Exceptions.InvalidDomainArgumentException">
     /// Thrown if the new action list is empty.
     /// </exception>
-    public void ReplaceActions(IEnumerable<SceneAction> newActions)
+    public void ReplaceActions(IEnumerable<SceneAction>? newActions)
     {
-        var ordered = newActions.ToList();
+        Guard.Against(newActions is not null, "Scene actions are required.");
+        
+        var ordered = newActions!.ToList();
         Guard.Against(ordered.Count > 0, "A scene must contain at least one action.");
 
         _actions.Clear();

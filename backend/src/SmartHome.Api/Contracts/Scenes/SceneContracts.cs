@@ -1,6 +1,4 @@
 ﻿using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Commands;
-using SmartHome.Domain.Scene;
 
 namespace SmartHome.Api.Contracts.Scenes;
 

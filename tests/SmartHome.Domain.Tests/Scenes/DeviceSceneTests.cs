@@ -145,4 +145,22 @@ public class DeviceSceneTests
         var orderIndices = scene.Actions.Select(a => a.OrderIndex).ToList();
         Assert.Equal(new[] { 0, 1, 2 }, orderIndices);
     }
+    
+    [Fact]
+    public void Constructor_NullActions_ThrowsInvalidDomainArgument()
+    {
+        // Act + Assert
+        Assert.Throws<InvalidDomainArgumentException>(() =>
+            new DeviceScene("Good Night", actions: null!));
+    }
+
+    [Fact]
+    public void ReplaceActions_NullCollection_ThrowsInvalidDomainArgument()
+    {
+        // Arrange
+        var scene = new DeviceScene("Good Night", [MakeGroupAction()]);
+
+        // Act + Assert
+        Assert.Throws<InvalidDomainArgumentException>(() => scene.ReplaceActions(null!));
+    }
 }

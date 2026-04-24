@@ -95,7 +95,14 @@ public sealed class SceneService(
 
             if (deviceId != Guid.Empty)
             {
-                var operationLabel = $"{result.Operation} (scene: {scene.Name})";
+                // Encode success/failure into the label so device history doesn't
+                // silently report a failed scene action as if it had succeeded.
+                // The structured success bit lives on SceneExecutionEntry; this
+                // string is the human-readable trace.
+                var operationLabel = result.Success
+                    ? $"{result.Operation} (scene: {scene.Name})"
+                    : $"{result.Operation} [FAILED: {result.Message}] (scene: {scene.Name})";
+
                 await deviceRepository.LogActionAsync(deviceId, operationLabel, cancellationToken);
             }
 
