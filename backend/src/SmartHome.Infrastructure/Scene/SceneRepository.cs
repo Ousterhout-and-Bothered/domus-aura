@@ -27,7 +27,7 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
     {
         // Tracked: callers may mutate via Rename/ReplaceActions and persist through SaveChangesAsync.
         return await dbContext.Scenes
-            .Include(s => s.Actions.OrderBy(a=> a.OrderIndex))
+            .Include(s => s.Actions)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
@@ -40,6 +40,14 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
     /// <inheritdoc />
     public Task UpdateAsync(DeviceScene scene, CancellationToken cancellationToken = default)
     {
+        foreach (var action in scene.Actions)
+        {
+            var entry = dbContext.Entry(action);
+            if (entry.State == EntityState.Detached)
+            {
+                entry.State = EntityState.Added;
+            }
+        }
         // The aggregate has already been mutated by the service layer. EF's change tracker,
         // combined with cascade-delete-orphans on the Actions navigation (see DbContext),
         // handles the wholesale replacement of actions when SaveChangesAsync is called.

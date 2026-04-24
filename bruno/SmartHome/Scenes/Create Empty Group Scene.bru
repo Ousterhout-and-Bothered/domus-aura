@@ -1,0 +1,46 @@
+meta {
+  name: Create Empty Group Scene
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/scenes
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Garage Lights Off (Empty Group)",
+    "actions": [
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": "Garage",
+        "operation": "SetPower",
+        "value": "Off"
+      },
+      {
+        "deviceId": null,
+        "deviceType": "DoorLock",
+        "location": null,
+        "operation": "Lock",
+        "value": null
+      }
+    ]
+  }
+}
+
+script:post-response {
+  bru.setVar("emptyGroupSceneId", res.body.id);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
