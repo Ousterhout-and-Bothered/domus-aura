@@ -7,7 +7,7 @@ namespace SmartHome.Domain.Tests.Scenes;
 public class DeviceSceneTests
 {
     private static SceneAction MakeGroupAction(string operation = "SetPower", string? value = "Off") =>
-        SceneAction.ForGroup(DeviceType.Light, "Living Room", operation, orderIndex: 0, value);
+        SceneAction.ForGroup(DeviceType.Light, "Living Room", operation, orderIndex: 0, value: value);
 
     private static SceneAction MakeDeviceAction(Guid? deviceId = null, string operation = "Lock") =>
         SceneAction.ForDevice(deviceId ?? Guid.NewGuid(), operation, orderIndex: 0);

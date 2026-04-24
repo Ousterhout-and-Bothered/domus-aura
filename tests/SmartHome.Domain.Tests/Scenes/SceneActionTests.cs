@@ -46,7 +46,7 @@ public class SceneActionTests
     public void ForGroup_NullLocation_AllowedAsAnyLocation()
     {
         // Act
-        var action = SceneAction.ForGroup(DeviceType.Light, location: null, "SetPower", orderIndex: 0);
+        var action = SceneAction.ForGroup(DeviceType.Light, location: null, operation: "SetPower", orderIndex: 0);
 
         // Assert
         Assert.Null(action.Location);
