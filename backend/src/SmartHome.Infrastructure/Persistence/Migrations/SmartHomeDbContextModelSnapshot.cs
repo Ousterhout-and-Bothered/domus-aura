@@ -70,6 +70,61 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("SmartHome.Domain.Scene.DeviceScene", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT COLLATE NOCASE");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Scenes", (string)null);
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Scene.SceneAction", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT COLLATE NOCASE");
+
+                    b.Property<string>("DeviceId")
+                        .HasColumnType("TEXT COLLATE NOCASE");
+
+                    b.Property<string>("DeviceType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SceneId")
+                        .IsRequired()
+                        .HasColumnType("TEXT COLLATE NOCASE");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SceneId", "OrderIndex");
+
+                    b.ToTable("SceneActions", (string)null);
+                });
+
             modelBuilder.Entity("SmartHome.Domain.Device.DoorLock.DoorLock", b =>
                 {
                     b.HasBaseType("SmartHome.Domain.Device.Device");
@@ -134,6 +189,20 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasDiscriminator().HasValue(3);
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Scene.SceneAction", b =>
+                {
+                    b.HasOne("SmartHome.Domain.Scene.DeviceScene", null)
+                        .WithMany("Actions")
+                        .HasForeignKey("SceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartHome.Domain.Scene.DeviceScene", b =>
+                {
+                    b.Navigation("Actions");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,9 +9,12 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="temperature">The target temperature value.</param>
 public sealed class SetDesiredTemperatureCommand(IThermostatControllable receiver, int temperature) : IDeviceCommand
 {
+    public string OperationName => $"SetDesiredTemperature({temperature})";
+    
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetDesiredTemperature(temperature);
+        return new CommandResult(OperationName, true);
     }
 }

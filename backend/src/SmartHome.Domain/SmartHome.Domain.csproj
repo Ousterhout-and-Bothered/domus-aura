@@ -10,7 +10,6 @@
     <Compile Remove="Device\Repository\ISceneRepository.cs" />
     <Compile Remove="Device\Scenes\SceneAction.cs" />
     <Compile Remove="Device\Scenes\Scene.cs" />
-    <Compile Remove="Scene\ISceneRepository.cs" />
     <Compile Remove="Device\Commands\IDeviceCommandProvider.cs" />
   </ItemGroup>
 

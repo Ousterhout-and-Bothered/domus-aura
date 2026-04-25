@@ -1,0 +1,46 @@
+meta {
+  name: Create Resolution Failure Scene
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/scenes
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Lock All Lights (Nonsense)",
+    "actions": [
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": null,
+        "operation": "Lock",
+        "value": null
+      },
+      {
+        "deviceId": null,
+        "deviceType": "DoorLock",
+        "location": null,
+        "operation": "Lock",
+        "value": null
+      }
+    ]
+  }
+}
+
+script:post-response {
+  bru.setVar("nonsenseSceneId", res.body.id);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
