@@ -22,8 +22,6 @@ using SmartHome.Api.Validation;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using SmartHome.Infrastructure.Device.Events;
-using SmartHome.Domain.Scene;
-using SmartHome.Infrastructure.Scene;
 
 /*
  * Domus Aura - Smart Home Simulation API
@@ -84,13 +82,13 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
     });
 
-// FluentValidation - register all AbstractValidator<T> implementations in this assembly.
+// FluentValidation — register all AbstractValidator<T> implementations in this assembly.
 // Combined with AddFluentValidationAutoValidation(), ASP.NET will invoke matching
 // validators automatically before a request body reaches the controller action.
 builder.Services.AddValidatorsFromAssemblyContaining<SetSimulationSpeedRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
-// SQLite Connection String and Directory Resolution
+// --- SQLite Connection String and Directory Resolution ---
 // This ensures that the SQLite database directory exists and the connection string 
 // uses an absolute path, fixing "SQLite Error 14: unable to open database file".
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -132,8 +130,7 @@ if (!string.IsNullOrEmpty(connectionString))
 else
 {
     // Fallback for development if not in appsettings
-    var infrastructurePath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SmartHome.Infrastructure"));
-    var dataDirectory = Path.Combine(infrastructurePath, "data");
+    var dataDirectory = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "data"));
     Directory.CreateDirectory(dataDirectory);
     var databasePath = Path.Combine(dataDirectory, "smarthome.db");
     connectionString = $"Data Source={databasePath};Cache=Shared;Default Timeout=30;";
@@ -151,19 +148,17 @@ builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
 builder.Services.AddSingleton<IThermostatStrategyProvider, ThermostatStrategyProvider>();
+builder.Services.AddSingleton<DeviceEventBroker>();
+builder.Services.AddSingleton<IDeviceEventPublisher>(sp =>
+    sp.GetRequiredService<DeviceEventBroker>());
+builder.Services.AddSingleton<IDeviceEventStream>(sp =>
+    sp.GetRequiredService<DeviceEventBroker>());
 
 // Register all device builders used by the factory
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, FanBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, DoorLockBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, ThermostatBuilder>();
-
-// Scene feature — CRUD, resolution, and execution against registered devices.
-// Scoped so each request gets a fresh unit of work tied to the per-request DbContext,
-// matching the rest of the persistence layer.
-builder.Services.AddScoped<ISceneRepository, SceneRepository>();
-builder.Services.AddScoped<ISceneResolver, SceneResolver>();
-builder.Services.AddScoped<ISceneService, SceneService>();
 
 // Simulation speed registry — the source of truth for permitted multipliers.
 // Singleton because allowed speeds are immutable for the app's lifetime.
@@ -179,12 +174,6 @@ builder.Services.AddScoped<ISimulationService, SimulationService>();
 // Runs the background loop that updates thermostat behavior over time
 builder.Services.AddHostedService<SimulationBackgroundService>();
 
-builder.Services.AddSingleton<DeviceEventBroker>();
-builder.Services.AddSingleton<IDeviceEventPublisher>(sp =>
-    sp.GetRequiredService<DeviceEventBroker>());
-builder.Services.AddSingleton<IDeviceEventStream>(sp =>
-    sp.GetRequiredService<DeviceEventBroker>());
-
 // Build the application pipeline
 var app = builder.Build();
 
@@ -194,7 +183,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
     // Scalar UI — interactive API docs at /scalar/v1
-    // Development only
+    // Development-only; don't expose API surface in production without auth.
     app.MapScalarApiReference();
     // Redirect root to the Scalar docs in development for a friendly landing page.
     // This endpoint is excluded from OpenAPI to prevent it from being treated as part of the API contract.

@@ -4,6 +4,7 @@ using SmartHome.Domain.Common;
 using SmartHome.Domain;
 using SmartHome.Domain.Simulation;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHome.Api.Controller;
 
@@ -11,6 +12,7 @@ namespace SmartHome.Api.Controller;
 /// Provides API endpoints for managing location-based simulation settings.
 /// </summary>
 /// <param name="simulationService">The service responsible for location-wide simulation logic.</param>
+[Authorize]
 [ApiController]
 [Route("api/locations")]
 [Produces("application/json")]

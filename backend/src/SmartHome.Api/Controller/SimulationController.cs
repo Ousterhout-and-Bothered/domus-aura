@@ -4,6 +4,7 @@ using SmartHome.Domain.Common;
 using SmartHome.Domain;
 using SmartHome.Domain.Simulation;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHome.Api.Controller;
 
@@ -12,6 +13,7 @@ namespace SmartHome.Api.Controller;
 /// including simulation speed, clock state, and system reset operations.
 /// </summary>
 /// <param name="simulationService">The service responsible for global simulation logic.</param>
+[Authorize]
 [ApiController]
 [Route("api/simulation")]
 [Produces("application/json")]

@@ -5,6 +5,7 @@ using SmartHome.Domain.Device.Repository;
 using System.Text.Json;
 using SmartHome.Infrastructure.Device.Events;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHome.Api.Controller;
 
@@ -12,6 +13,7 @@ namespace SmartHome.Api.Controller;
 /// API controller for managing smart home devices.
 /// Provides endpoints for device registration, discovery, state control, and history retrieval.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/devices")]
 public class DeviceController : ControllerBase
