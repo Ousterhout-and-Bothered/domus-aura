@@ -28,7 +28,9 @@ public sealed class DeviceScene
     /// </summary>
     public IReadOnlyList<SceneAction> Actions => _actions.OrderBy(a => a.OrderIndex).ToList();
     
-
+    // Required for EF Core
+    private DeviceScene() { }
+    
     /// <summary>
     /// Creates a new scene with the given name and actions.
     /// </summary>
