@@ -9,9 +9,13 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="mode">The target operating mode (e.g., Heat, Cool, Auto).</param>
 public sealed class SetModeCommand(IThermostatControllable receiver, ThermostatMode mode) : IDeviceCommand
 {
+    
+    public string OperationName => $"SetMode({mode})";
+    
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetMode(mode);
+        return new CommandResult(OperationName, true);
     }
 }

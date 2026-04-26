@@ -1,0 +1,16 @@
+meta {
+  name: Execute Resolution Failure Scene
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/scenes/{{nonsenseSceneId}}/execute
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

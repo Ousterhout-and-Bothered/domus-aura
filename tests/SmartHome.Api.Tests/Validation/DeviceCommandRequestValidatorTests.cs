@@ -1,12 +1,13 @@
 using SmartHome.Api.Contracts.Devices;
 using SmartHome.Api.Validation;
-using Xunit;
 
 namespace SmartHome.Api.Tests.Validation;
 
 public class DeviceCommandRequestValidatorTests
 {
     private readonly DeviceCommandRequestValidator _validator = new();
+
+    // --- SetBrightness ---
 
     [Theory]
     [InlineData("setBrightness", 5)]
@@ -15,8 +16,13 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setBrightness", null)]
     public void SetBrightness_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -26,18 +32,30 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setBrightness", 100)]
     public void SetBrightness_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
+
+    // --- SetPower ---
 
     [Theory]
     [InlineData("setPower", "invalid")]
     [InlineData("setPower", null)]
     public void SetPower_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -46,18 +64,30 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setPower", "Off")]
     public void SetPower_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
+
+    // --- SetSpeed ---
 
     [Theory]
     [InlineData("setSpeed", "invalid")]
     [InlineData("setSpeed", null)]
     public void SetSpeed_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -67,18 +97,30 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setSpeed", "High")]
     public void SetSpeed_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
+
+    // --- SetMode ---
 
     [Theory]
     [InlineData("setMode", "invalid")]
     [InlineData("setMode", null)]
     public void SetMode_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -88,10 +130,17 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setMode", "Auto")]
     public void SetMode_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
+
+    // --- SetDesiredTemperature ---
 
     [Theory]
     [InlineData("setDesiredTemperature", 59)]
@@ -100,8 +149,13 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setDesiredTemperature", null)]
     public void SetDesiredTemperature_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -111,10 +165,17 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setDesiredTemperature", 80)]
     public void SetDesiredTemperature_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
+
+    // --- SetColor ---
 
     [Theory]
     [InlineData("setColor", "red")]
@@ -123,8 +184,13 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setColor", null)]
     public void SetColor_InvalidValues_Fail(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.False(result.IsValid);
     }
 
@@ -133,8 +199,13 @@ public class DeviceCommandRequestValidatorTests
     [InlineData("setColor", "#aabbcc")]
     public void SetColor_ValidValues_Pass(string command, object? value)
     {
+        // Arrange
         var request = new DeviceCommandRequest(command, value);
+
+        // Act
         var result = _validator.Validate(request);
+
+        // Assert
         Assert.True(result.IsValid);
     }
 }

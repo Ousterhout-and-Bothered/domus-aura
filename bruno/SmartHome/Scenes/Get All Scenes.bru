@@ -1,0 +1,16 @@
+meta {
+  name: Get All Scenes
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/scenes
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

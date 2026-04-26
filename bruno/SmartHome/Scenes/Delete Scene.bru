@@ -1,0 +1,16 @@
+meta {
+  name: Delete Scene
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/scenes/{{sceneId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -9,9 +9,12 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="speed">The target fan speed (Low, Medium, High).</param>
 public sealed class SetSpeedCommand(IFanControllable receiver, FanSpeed speed) : IDeviceCommand
 {
+    public string OperationName => $"SetSpeed({speed})";
+    
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetSpeed(speed);
+        return new CommandResult(OperationName, true);
     }
 }
