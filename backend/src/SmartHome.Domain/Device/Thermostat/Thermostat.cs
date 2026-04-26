@@ -225,10 +225,10 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Returns <c>true</c> only when actively heating or cooling.
+    /// Returns <c>true</c> when the thermostat has been powered on, regardless of whether it's currently conditioning. Idle, Heating, and Cooling all count as on.
     /// </summary>
     public override bool IsOn() =>
-        State == ThermostatState.Heating || State == ThermostatState.Cooling;
+        State !=  ThermostatState.Off;
 
     /// <summary>
     /// Restores the thermostat to its default configuration and resets the

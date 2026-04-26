@@ -37,7 +37,7 @@ public class DeviceController : ControllerBase
     /// </summary>
     /// <param name="location">Optional filter by device location.</param>
     /// <param name="type">Optional filter by device type.</param>
-    /// <param name="state">Optional filter by power state ("on" or "off"). (Note: Thermostats in Idle are considered off).</param>
+    /// <param name="state">Optional filter by power state ("on" or "off").</param>
     /// <returns>A list of devices matching the specified filters.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Device>), StatusCodes.Status200OK)]
