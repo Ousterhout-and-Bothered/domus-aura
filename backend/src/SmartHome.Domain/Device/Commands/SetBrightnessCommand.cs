@@ -9,9 +9,12 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="brightness">The target brightness level ( 0-100).</param>
 public sealed class SetBrightnessCommand(IDimmable receiver, int brightness) : IDeviceCommand
 {
+    public string OperationName => $"SetBrightness({brightness})";
+    
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.SetBrightness(brightness);
+        return new CommandResult(OperationName, true);
     }
 }

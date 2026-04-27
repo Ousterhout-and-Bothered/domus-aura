@@ -1,0 +1,74 @@
+meta {
+  name: Create Scene
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/scenes
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Good Night",
+    "actions": [
+      {
+        "deviceId": null,
+        "deviceType": "DoorLock",
+        "location": null,
+        "operation": "Lock",
+        "value": null
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": "Living Room",
+        "operation": "SetPower",
+        "value": "Off"
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": "Kitchen",
+        "operation": "SetPower",
+        "value": "Off"
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": "Entryway",
+        "operation": "SetBrightness",
+        "value": "20"
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Fan",
+        "location": "Living Room",
+        "operation": "SetPower",
+        "value": "Off"
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Thermostat",
+        "location": "Bedroom",
+        "operation": "SetDesiredTemperature",
+        "value": "66"
+      }
+    ]
+  }
+}
+
+script:post-response {
+  bru.setVar("sceneId", res.body.id);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,4 +1,5 @@
 using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device.Events;
 
 namespace SmartHome.Domain.Device;
 
@@ -19,6 +20,10 @@ public interface IDeviceService
     /// <exception cref="DuplicateThermostatException">
     /// Thrown if a thermostat is registered in a location that already has one.
     /// </exception>
+    /// <remarks>
+    /// On success, a <see cref="DeviceChangeType.Created"/> event is published
+    /// so connected clients can update in real time via SSE.
+    /// </remarks>
     Task<Device> RegisterDeviceAsync(string name, string location, DeviceType type, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -30,5 +35,22 @@ public interface IDeviceService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated device.</returns>
     /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
+    /// <remarks>
+    /// Applies the command, persists the updated device state, and publishes an
+    /// <see cref="DeviceChangeType.Updated"/> event so connected SSE clients can stay synchronized.
+    /// </remarks>
     Task<Device> ExecuteCommandAsync(Guid deviceId, string commandName, string? value, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Removes a device from the system.
+    /// </summary>
+    /// <param name="deviceId">The unique identifier of the device.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
+    /// <remarks>
+    /// Persists the removal and publishes a <see cref="DeviceChangeType.Deleted"/> event
+    /// so connected SSE clients can remove the device from their UI in real time.
+    /// </remarks>
+    Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default);
 }

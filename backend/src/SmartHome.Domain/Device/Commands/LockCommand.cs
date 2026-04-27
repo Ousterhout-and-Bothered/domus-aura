@@ -8,9 +8,12 @@ namespace SmartHome.Domain.Device.Commands;
 /// <param name="receiver">The lockable device to operate on.</param>
 public sealed class LockCommand(ILockable receiver) : IDeviceCommand
 {
+    public string OperationName => "Lock";
+    
     /// <inheritdoc />
-    public void Execute()
+    public CommandResult Execute()
     {
         receiver.Lock();
+        return new CommandResult(OperationName, true);
     }
 }

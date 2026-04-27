@@ -1,6 +1,5 @@
 using SmartHome.Api.Controller;
 using System.Text.Json;
-using Xunit;
 
 namespace SmartHome.Api.Tests;
 

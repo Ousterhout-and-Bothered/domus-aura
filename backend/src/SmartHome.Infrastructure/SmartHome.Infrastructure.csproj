@@ -15,11 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Scene\Repository\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Scene\SceneService.cs" />
+    <Folder Include="data\" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -4,6 +4,7 @@ using SmartHome.Domain.Device.DoorLock;
 using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.Light;
 using SmartHome.Domain.Device.Thermostat;
+using SmartHome.Domain.Scene;
 using DomainDevice = SmartHome.Domain.Device.Device;
 
 namespace SmartHome.Infrastructure.Persistence;
@@ -52,6 +53,11 @@ public sealed class SmartHomeDbContext : DbContext
     /// Gets the set of all door lock devices.
     /// </summary>
     public DbSet<DoorLock> DoorLocks => Set<DoorLock>();
+    
+    /// <summary>
+    /// Gets the set of all scenes.
+    /// </summary>
+    public DbSet<DeviceScene> Scenes => Set<DeviceScene>();
 
     /// <summary>
     /// Configures the database model, including inheritance discriminators and indexes.
@@ -91,6 +97,61 @@ public sealed class SmartHomeDbContext : DbContext
             entity.Property(d => d.Id)
                 .HasConversion<string>()
                 .HasColumnType("TEXT COLLATE NOCASE");
+        });
+        
+        modelBuilder.Entity<DeviceScene>(entity =>
+        {
+            entity.ToTable("Scenes");
+            entity.HasKey(s => s.Id);
+
+            entity.Property(s => s.Id)
+                .HasConversion<string>()
+                .HasColumnType("TEXT COLLATE NOCASE");
+
+            entity.Property(s => s.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.HasMany(s => s.Actions)
+                .WithOne()
+                .HasForeignKey("SceneId")
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Metadata.FindNavigation(nameof(DeviceScene.Actions))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<SceneAction>(entity =>
+        {
+            entity.ToTable("SceneActions");
+            entity.HasKey(a => a.Id);
+
+            entity.Property(a => a.Id)
+                .HasConversion<string>()
+                .HasColumnType("TEXT COLLATE NOCASE");
+
+            entity.Property(a => a.DeviceId)
+                .HasConversion<string?>()
+                .HasColumnType("TEXT COLLATE NOCASE");
+
+            entity.Property(a => a.DeviceType)
+                .HasConversion<string?>();
+
+            entity.Property(a => a.Location)
+                .HasMaxLength(100);
+
+            entity.Property(a => a.Operation)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(a => a.Value)
+                .HasMaxLength(50);
+
+            entity.Property(a => a.OrderIndex)
+                .IsRequired();
+
+            entity.HasIndex("SceneId", nameof(SceneAction.OrderIndex));
         });
 
         // Explicitly include abstract intermediate classes in the model
