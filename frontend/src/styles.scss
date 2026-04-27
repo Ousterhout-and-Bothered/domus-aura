@@ -1,19 +1,63 @@
+// PrimeFlex must come first — @use rules before everything else.
+@use "primeflex/primeflex.scss";
+
 // PrimeIcons
 @import "primeicons/primeicons.css";
 
-// PrimeFlex
-@use "primeflex/primeflex.scss";
+/* ─────────────── Theme tokens ─────────────── */
 
-// Global styles
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+
+  /* Light theme (default) */
+  --aura-bg: #FAF7F2;
+  --aura-surface: #FFFFFF;
+  --aura-surface-muted: #F2EDE5;
+  --aura-text: #1A1614;
+  --aura-text-muted: #6B6660;
+  --aura-border: #E5DFD5;
+  --aura-accent: #C2410C;
+  --aura-accent-soft: #FED7AA;
+}
+
+html.dark-mode {
+  --aura-bg: #0F0E0D;
+  --aura-surface: #1A1816;
+  --aura-surface-muted: #232120;
+  --aura-text: #F5F0E8;
+  --aura-text-muted: #A8A29A;
+  --aura-border: #2D2A28;
+  --aura-accent: #FB923C;
+  --aura-accent-soft: #4A2A14;
+}
+
+/* ─────────────── Globals ─────────────── */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: var(--p-font-family), sans-serif;
-  background-color: var(--p-surface-ground);
-  color: var(--p-text-color);
+  font-family: var(--font-body);
+  background-color: var(--aura-bg);
+  color: var(--aura-text);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 

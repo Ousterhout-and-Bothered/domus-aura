@@ -1,2 +1,26 @@
-<router-outlet />
+<div class="aura-shell">
+  <header class="aura-header">
+    <a routerLink="/devices" class="aura-wordmark">
+      <img src="Domus Aura.png" alt="" class="aura-logo" />
+      <span>Domus Aura </span>
+    </a>
 
+    <nav class="aura-nav">
+      <a routerLink="/devices" routerLinkActive="active">Devices</a>
+      <a routerLink="/scenes" routerLinkActive="active">Scenes</a>
+    </nav>
+
+    <button
+      type="button"
+      class="aura-theme-toggle"
+      (click)="toggleTheme()"
+      [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <i [class]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"></i>
+    </button>
+  </header>
+
+  <main class="aura-main">
+    <router-outlet />
+  </main>
+</div>
