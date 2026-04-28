@@ -11,6 +11,7 @@ namespace SmartHome.Api.Controller;
 /// including simulation speed, clock state, and system reset operations.
 /// </summary>
 /// <param name="simulationService">The service responsible for global simulation logic.</param>
+/// <param name="registry">Provides the set of allowed simulation speeds.</param>
 [ApiController]
 [Route("api/simulation")]
 [Authorize]
@@ -47,6 +48,7 @@ public sealed class SimulationController(
     /// Sets the simulation speed.
     /// </summary>
     /// <param name="request">The desired simulation speed multiplier.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="204">Speed successfully updated.</response>
     /// <response code="400">The requested speed is invalid, or passed incorrectly in the URL instead of the body.</response>
     [HttpPut("speed")]
@@ -80,6 +82,7 @@ public sealed class SimulationController(
     /// <summary>
     /// Resets all devices in the simulation to their default states and resets the simulation clock.
     /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="204">All devices successfully reset.</response>
     [HttpPost("reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

@@ -21,6 +21,7 @@ public sealed class LocationsController(ISimulationService simulationService) : 
     /// </summary>
     /// <param name="location">The name of the location to update.</param>
     /// <param name="request">The request containing the new ambient temperature.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="200">Ambient temperature successfully updated.</response>
     /// <response code="400">Temperature out of range or malformed request.</response>
     /// <response code="409">No thermostats exist at the specified location.</response>

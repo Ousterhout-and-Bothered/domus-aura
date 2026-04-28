@@ -42,6 +42,7 @@ public class DeviceController : ControllerBase
     /// <param name="location">Optional filter by device location.</param>
     /// <param name="type">Optional filter by device type.</param>
     /// <param name="state">Optional filter by power state ("on" or "off"). (Note: Thermostats in Idle are considered off).</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>A list of devices matching the specified filters.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Device>), StatusCodes.Status200OK)]
@@ -67,6 +68,7 @@ public class DeviceController : ControllerBase
     /// Retrieves a specific device by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the device.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>The device details if found; otherwise, a 404 Not Found error.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]
@@ -81,6 +83,7 @@ public class DeviceController : ControllerBase
     /// Registers a new device in the system.
     /// </summary>
     /// <param name="request">The registration details.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>The newly created device, or a 409 Conflict if a thermostat already exists at the location.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(Device), StatusCodes.Status201Created)]
@@ -100,6 +103,7 @@ public class DeviceController : ControllerBase
     /// Removes a device from the system.
     /// </summary>
     /// <param name="id">The unique identifier of the device to remove.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>204 No Content on success, or 404 Not Found if the device does not exist.</returns>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -114,6 +118,7 @@ public class DeviceController : ControllerBase
     /// Retrieves the command history for a specific device.
     /// </summary>
     /// <param name="id">The unique identifier of the device.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>An ordered list of previously executed commands.</returns>
     [HttpGet("{id:guid}/history")]
     [ProducesResponseType(typeof(IEnumerable<CommandHistory>), StatusCodes.Status200OK)]
@@ -129,6 +134,7 @@ public class DeviceController : ControllerBase
     /// </summary>
     /// <param name="id">The unique identifier of the device.</param>
     /// <param name="request">The command details (command name and optional value).</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>The updated device state, or an error if the command is invalid for the device type.</returns>
     [HttpPut("{id:guid}/state")]
     [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]

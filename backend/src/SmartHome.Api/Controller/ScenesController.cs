@@ -20,6 +20,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// <summary>
     /// Retrieves all scenes.
     /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="200">The list of scenes.</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<SceneResponse>), StatusCodes.Status200OK)]
@@ -33,6 +34,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// Retrieves a specific scene by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the scene.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="200">The scene.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpGet("{id:guid}")]
@@ -50,6 +52,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// Creates a new scene.
     /// </summary>
     /// <param name="request">The scene definition.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="201">The newly created scene.</response>
     /// <response code="400">The request failed validation or a domain invariant.</response>
     [HttpPost]
@@ -73,6 +76,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// </summary>
     /// <param name="id">The unique identifier of the scene to update.</param>
     /// <param name="request">The new scene definition.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="200">The updated scene.</response>
     /// <response code="400">The request failed validation or a domain invariant.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
@@ -95,6 +99,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// Deletes a scene.
     /// </summary>
     /// <param name="id">The unique identifier of the scene to delete.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="204">The scene was deleted.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpDelete("{id:guid}")]
@@ -115,6 +120,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// abort the batch; per-action results are reported in the response.
     /// </summary>
     /// <param name="id">The unique identifier of the scene to execute.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <response code="200">The execution result with per-action outcomes.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpPost("{id:guid}/execute")]
