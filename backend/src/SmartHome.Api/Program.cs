@@ -20,6 +20,7 @@ using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.DoorLock;
 using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Simulation;
+using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
 using FluentValidation;
@@ -134,6 +135,7 @@ builder.Services.AddSingleton<IDeviceEventPublisher>(sp =>
     sp.GetRequiredService<DeviceEventBroker>());
 builder.Services.AddSingleton<IDeviceEventStream>(sp =>
     sp.GetRequiredService<DeviceEventBroker>());
+builder.Services.AddScoped<IDeviceEventNotifier, DeviceEventNotifier>();
 
 var app = builder.Build();
 
