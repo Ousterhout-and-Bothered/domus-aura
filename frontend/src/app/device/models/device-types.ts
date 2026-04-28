@@ -63,6 +63,7 @@ export interface DoorLock extends DeviceBase {
   lockState: DoorLockState;
 }
 
+
 /* ─────────────── Discriminated union ─────────────── */
 
 /**

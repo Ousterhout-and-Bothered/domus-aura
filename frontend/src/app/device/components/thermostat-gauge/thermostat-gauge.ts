@@ -24,9 +24,11 @@ const CX = 190;
 const CY = 178;            // pivot near the bottom of the viewbox so the half-circle has room above
 const OUTER_R = 160;       // outer edge of the band
 const INNER_R = 0;         // 0 = filled half-disc (no hollow center)
-const TICK_TEMPS = Array.from({ length: 20 }, (_, i) => 60 + (i * 20 / 19));
+const TICK_TEMPS = Array.from({ length: 21 }, (_, i) => 60 + i);
 const TICK_WIDTH = 3;
 const TICK_LENGTH = 14;
+const TICK_INNER_R = OUTER_R - 14;   // how far in the ticks/needle reach
+const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
 
 /**
  * Speedometer-style thermostat gauge. Renders a half-donut band whose
@@ -78,7 +80,11 @@ const TICK_LENGTH = 14;
               }
             </mask>
           </defs>
-
+          <path
+            class="gauge-backdrop"
+            [attr.d]="bandPath"
+            fill="#FBF8F3"
+          />
           <path
             class="band"
             [attr.d]="bandPath"
@@ -86,13 +92,26 @@ const TICK_LENGTH = 14;
             [attr.mask]="'url(#' + maskId + ')'"
           />
 
+          @for (tick of outerTicks(); track tick.temp) {
+            <line
+              [attr.x1]="tick.x1"
+              [attr.y1]="tick.y1"
+              [attr.x2]="tick.x2"
+              [attr.y2]="tick.y2"
+              stroke="#3a342b"
+              stroke-width="2"
+              stroke-linecap="round"
+              opacity="0.6"
+            />
+          }
+
           @if (ambientMarker(); as marker) {
             <circle
               [attr.cx]="marker.x"
               [attr.cy]="marker.y"
               r="5"
-              fill="var(--aura-text)"
-              opacity="0.4"
+              fill="#3a342b"
+              opacity="0.7"
             />
           }
 
@@ -103,10 +122,10 @@ const TICK_LENGTH = 14;
           >
             <path
               class="needle"
-              d="M 190 178 L 184 178 L 188 50 L 192 50 L 196 178 Z"
+              [attr.d]="needlePath()"
               [attr.fill]="theme().needleFill"
             />
-            <circle cx="190" cy="178" r="6" fill="var(--aura-text)" />
+            <circle [attr.cx]="CX" [attr.cy]="CY" r="6" fill="var(--aura-text)" />
           </g>
         </svg>
 
@@ -178,6 +197,8 @@ export class ThermostatGauge {
   readonly tickWidth = TICK_WIDTH;
   readonly tickLength = TICK_LENGTH;
   readonly bandPath = buildBandPath();
+  readonly CX = CX;
+  readonly CY = CY;
   readonly MODES: ThermostatMode[] = [
     'Heat' as ThermostatMode,
     'Cool' as ThermostatMode,
@@ -200,9 +221,30 @@ export class ThermostatGauge {
     })
   );
 
+  readonly outerTicks = computed(() =>
+    TICK_TEMPS.map((temp) => {
+      const angle = tempToAngle(temp);
+      const inner = angleToPoint(angle, TICK_INNER_R);
+      const outer = angleToPoint(angle, TICK_OUTER_R);
+      return { temp, angle, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y };
+    })
+  );
+
   readonly needleTransform = computed(() => {
     const angle = tempToAngle(this.desiredTemperature());
     return `rotate(${angle} ${CX} ${CY})`;
+  });
+
+  readonly needlePath = computed(() => {
+    const tipR = TICK_INNER_R;        // ← needle tip = inner end of ticks
+    const baseHalfWidth = 6;
+    const tipHalfWidth = 2;
+
+    return `M ${CX - baseHalfWidth} ${CY}
+          L ${CX - tipHalfWidth} ${CY - tipR}
+          L ${CX + tipHalfWidth} ${CY - tipR}
+          L ${CX + baseHalfWidth} ${CY}
+          Z`;
   });
 
   readonly ambientMarker = computed(() => {

@@ -19,7 +19,7 @@ import { RoomBlock } from '../room-block/room-block';
   template: `
     <section class="device-list">
       <header class="device-list-header">
-        <h1>Your home</h1>
+        <h1>Your Home</h1>
         @if (devices().length > 0) {
           <p class="device-list-summary">
             {{ devices().length }} devices · {{ rooms().length }} rooms · {{ activeCount() }} active

@@ -1,11 +1,6 @@
-﻿.lock-card {
-  background:
-    radial-gradient(
-        ellipse 80% 50% at 50% 30%,
-        var(--lock-glow, transparent) 0%,
-        transparent 70%
-    ),
-    var(--aura-surface);
+@charset "UTF-8";
+.lock-card {
+  background: radial-gradient(ellipse 80% 50% at 50% 30%, var(--lock-glow, transparent) 0%, transparent 70%), var(--aura-surface);
   border: 0.5px solid var(--aura-border);
   border-radius: 14px;
   padding: 1.5rem 1.5rem 1.75rem;
@@ -35,7 +30,6 @@
 }
 
 /* ─────────────── Lock visual ─────────────── */
-
 .lock-stage {
   position: relative;
   width: 100%;
@@ -57,20 +51,17 @@
   width: 100%;
   max-width: 240px;
   transition: transform 0.15s ease;
-
-  &:hover {
-    transform: scale(1.03);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--aura-accent);
-    outline-offset: 4px;
-    border-radius: 12px;
-  }
+}
+.lock-svg-button:hover {
+  transform: scale(1.03);
+}
+.lock-svg-button:active {
+  transform: scale(0.98);
+}
+.lock-svg-button:focus-visible {
+  outline: 2px solid var(--aura-accent);
+  outline-offset: 4px;
+  border-radius: 12px;
 }
 
 .lock-svg {
@@ -86,7 +77,6 @@
 }
 
 /* ─────────────── Shackle animation ─────────────── */
-
 .shackle {
   /* Pivot the rotation around the right anchor point of the shackle (where
      it stays attached to the body when "popped open") */
@@ -103,9 +93,7 @@
     transition: transform 0.2s linear;
   }
 }
-
 /* ─────────────── Readout ─────────────── */
-
 .lock-readout {
   text-align: center;
   margin-top: 1rem;
@@ -125,7 +113,6 @@
 }
 
 /* ─────────────── Controls ─────────────── */
-
 /* ─────────────── Toggle switch ─────────────── */
 .controls-row {
   margin-top: 1.25rem;
@@ -147,16 +134,14 @@
   font-family: inherit;
   color: var(--aura-text-muted);
   transition: color 0.2s ease;
-
-  &:hover {
-    color: var(--aura-text);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--aura-accent);
-    outline-offset: 6px;
-    border-radius: 12px;
-  }
+}
+.lock-toggle-switch:hover {
+  color: var(--aura-text);
+}
+.lock-toggle-switch:focus-visible {
+  outline: 2px solid var(--aura-accent);
+  outline-offset: 6px;
+  border-radius: 12px;
 }
 
 .toggle-track {
@@ -207,3 +192,4 @@
   }
 }
 
+/*# sourceMappingURL=door-lock.css.map */

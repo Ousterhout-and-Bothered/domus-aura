@@ -1,4 +1,5 @@
-﻿.fan-card {
+@charset "UTF-8";
+.fan-card {
   background: var(--aura-surface);
   border: 0.5px solid var(--aura-border);
   border-radius: 14px;
@@ -56,7 +57,6 @@
 }
 
 /* ─────────────── Blade animation ─────────────── */
-
 .fan-blades {
   transform-origin: 100px 100px;
   transition: filter 0.4s ease;
@@ -86,19 +86,20 @@
 }
 
 @keyframes fan-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .fan-blades.spinning {
     animation-duration: 6s !important;
     filter: none !important;
   }
 }
-
 /* ─────────────── Readout (matches gauge-state) ─────────────── */
-
 .fan-readout {
   text-align: center;
   margin-top: 1rem;
@@ -113,7 +114,6 @@
 }
 
 /* ─────────────── Controls row (matches thermostat) ─────────────── */
-
 .controls-row {
   margin-top: 1.25rem;
   display: flex;
@@ -133,21 +133,18 @@
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.15s ease;
-
-  &:hover {
-    color: var(--aura-text);
-    border-color: var(--aura-text-muted);
-  }
-
-  &.on {
-    background: var(--aura-accent-soft);
-    border-color: var(--aura-accent);
-    color: var(--aura-accent);
-  }
+}
+.power-btn:hover {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+.power-btn.on {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
 }
 
 /* ─────────────── Speed row (matches mode-row) ─────────────── */
-
 .speed-row {
   margin-top: 0.8rem;
   display: flex;
@@ -155,17 +152,15 @@
   align-items: center;
   gap: 0.5rem;
   transition: opacity 0.2s ease;
-
-  &.disabled {
-    opacity: 0.4;
-  }
-
-  label {
-    font-size: 0.85rem;
-    color: var(--aura-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+}
+.speed-row.disabled {
+  opacity: 0.4;
+}
+.speed-row label {
+  font-size: 0.85rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .speed-buttons {
@@ -185,19 +180,18 @@
   transition: all 0.15s ease;
   font-family: inherit;
   letter-spacing: 0.05em;
-
-  &:hover:not(:disabled) {
-    color: var(--aura-text);
-    border-color: var(--aura-text-muted);
-  }
-
-  &.active {
-    background: var(--aura-accent-soft);
-    border-color: var(--aura-accent);
-    color: var(--aura-accent);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
 }
+.speed-btn:hover:not(:disabled) {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+.speed-btn.active {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
+}
+.speed-btn:disabled {
+  cursor: not-allowed;
+}
+
+/*# sourceMappingURL=fan-spinning.css.map */

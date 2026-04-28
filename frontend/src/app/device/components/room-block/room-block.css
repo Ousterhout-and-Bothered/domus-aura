@@ -35,10 +35,9 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 500;
-
-  &.idle {
-    color: var(--aura-text-muted);
-  }
+}
+.room-block-active.idle {
+  color: var(--aura-text-muted);
 }
 
 .room-block-grid {
@@ -46,3 +45,5 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
 }
+
+/*# sourceMappingURL=room-block.css.map */

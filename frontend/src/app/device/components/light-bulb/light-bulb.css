@@ -1,11 +1,6 @@
-﻿.light-card {
-  background:
-    radial-gradient(
-        circle at 50% 30%,
-        var(--light-glow, transparent) 0%,
-        transparent 80%
-    ),
-    var(--aura-surface);
+@charset "UTF-8";
+.light-card {
+  background: radial-gradient(circle at 50% 30%, var(--light-glow, transparent) 0%, transparent 80%), var(--aura-surface);
   border: 0.5px solid var(--aura-border);
   border-radius: 14px;
   padding: 1.5rem 1.5rem 1.75rem;
@@ -15,13 +10,11 @@
   position: relative;
   overflow: hidden;
   transition: background 0.6s ease;
-
-
   /* Lift content above the glow */
-  > * {
-    position: relative;
-    z-index: 1;
-  }
+}
+.light-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .light-name {
@@ -42,7 +35,6 @@
 }
 
 /* ─────────────── Bulb stage ─────────────── */
-
 .bulb-stage {
   position: relative;
   width: 100%;
@@ -75,7 +67,6 @@
 }
 
 /* ─────────────── Readout ─────────────── */
-
 .light-readout {
   text-align: center;
   margin-top: 1rem;
@@ -90,7 +81,6 @@
 }
 
 /* ─────────────── Controls ─────────────── */
-
 .controls-row {
   margin-top: 1.25rem;
   display: flex;
@@ -108,55 +98,47 @@
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.15s ease;
-
-  &:hover {
-    color: var(--aura-text);
-    border-color: var(--aura-text-muted);
-  }
-
-  &.on {
-    background: var(--aura-accent-soft);
-    border-color: var(--aura-accent);
-    color: var(--aura-accent);
-  }
+}
+.power-btn:hover {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+.power-btn.on {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
 }
 
 /* ─────────────── Brightness ─────────────── */
-
 .brightness-row {
   margin-top: 1.25rem;
   display: flex;
   align-items: center;
   gap: 12px;
   transition: opacity 0.2s ease;
-
-  &.disabled {
-    opacity: 0.4;
-  }
-
-  label {
-    font-size: 1rem;
-    color: var(--aura-text-muted);
-    min-width: 90px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  input[type='range'] {
-    flex: 1.5;
-    accent-color: var(--aura-accent);
-  }
-
-  .val {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    min-width: 56px;
-    text-align: right;
-  }
+}
+.brightness-row.disabled {
+  opacity: 0.4;
+}
+.brightness-row label {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  min-width: 90px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.brightness-row input[type=range] {
+  flex: 1.5;
+  accent-color: var(--aura-accent);
+}
+.brightness-row .val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  min-width: 56px;
+  text-align: right;
 }
 
 /* ─────────────── Color swatches ─────────────── */
-
 .color-row {
   margin-top: 1rem;
   display: flex;
@@ -164,17 +146,15 @@
   align-items: center;
   gap: 0.5rem;
   transition: opacity 0.2s ease;
-
-  &.disabled {
-    opacity: 0.4;
-  }
-
-  label {
-    font-size: 0.85rem;
-    color: var(--aura-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+}
+.color-row.disabled {
+  opacity: 0.4;
+}
+.color-row label {
+  font-size: 0.85rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .color-swatches {
@@ -193,21 +173,18 @@
   cursor: pointer;
   padding: 0;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-
-  &:hover:not(:disabled) {
-    transform: scale(1.1);
-    border-color: var(--aura-text-muted);
-  }
-
-  &.active {
-    border-color: var(--aura-accent);
-    box-shadow: 0 0 0 2px var(--aura-accent-soft);
-    transform: scale(1.1);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
+}
+.color-swatch:hover:not(:disabled) {
+  transform: scale(1.1);
+  border-color: var(--aura-text-muted);
+}
+.color-swatch.active {
+  border-color: var(--aura-accent);
+  box-shadow: 0 0 0 2px var(--aura-accent-soft);
+  transform: scale(1.1);
+}
+.color-swatch:disabled {
+  cursor: not-allowed;
 }
 
 /* Reduced motion */
@@ -220,3 +197,5 @@
     transition: none !important;
   }
 }
+
+/*# sourceMappingURL=light-bulb.css.map */

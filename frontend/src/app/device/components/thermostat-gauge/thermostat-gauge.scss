@@ -10,14 +10,14 @@
 
 .thermo-name {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 2rem;
   font-weight: 500;
   margin: 0 0 0.15rem;
   text-align: center;
 }
 
 .thermo-loc {
-  font-size: 0.7rem;
+  font-size: 1rem;
   color: var(--aura-text-muted);
   text-align: center;
   margin: 0 0 1.25rem;
@@ -70,11 +70,11 @@
 }
 
 .gauge-state {
-  font-size: 0.7rem;
+  font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.5em;
   margin-top: 0.3rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .gauge-state-cooling { color: #1E40AF; }
@@ -93,6 +93,18 @@
   }
 }
 
+.gauge-svg-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  background-color: #FBF8F3;   // or #f5f0e8 — warm off-white that matches your other cards
+  border-radius: 999px 999px 0 0;  // top corners fully rounded, bottom flat
+  padding: 16px 16px 0;
+  margin: 0 auto 12px;
+  width: fit-content;          // don't stretch full width
+  max-width: 420px;
+}
+
 .controls-row {
   margin-top: 1.25rem;
   display: flex;
@@ -100,7 +112,7 @@
   gap: 12px;
 
   label {
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: var(--aura-text-muted);
     min-width: 70px;
     text-transform: uppercase;
@@ -108,7 +120,7 @@
   }
 
   input[type='range'] {
-    flex: 1;
+    flex: 1.5;
     accent-color: var(--aura-accent);
   }
 
@@ -116,7 +128,7 @@
     font-family: var(--font-display);
     font-size: 1.1rem;
     min-width: 48px;
-    text-align: right;
+    text-align: left;
   }
 }
 
@@ -133,7 +145,7 @@
   color: var(--aura-text-muted);
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
@@ -149,4 +161,5 @@
     border-color: var(--aura-accent);
     color: var(--aura-accent);
   }
+
 }
