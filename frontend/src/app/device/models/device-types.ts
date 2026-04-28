@@ -7,7 +7,7 @@ export interface Light extends DeviceBase {
   type: DeviceType.Light;
   powerState: PowerState;
   brightness: number; // 10-100
-  colorHex: string;   // e.g. '#FFFFFF'
+  colorHex: string;   // '#FFFFFF'
 }
 
 /* ─────────────── Fan ─────────────── */
@@ -43,10 +43,11 @@ export enum ThermostatState {
 export interface Thermostat extends DeviceBase {
   $type: DeviceType.Thermostat;
   type: DeviceType.Thermostat;
+  powerState: PowerState;        // inherited from PoweredDevice on the backend
   state: ThermostatState;
   mode: ThermostatMode;
-  desiredTemperature: number; // 60-80 °F
-  ambientTemperature: number;
+  desiredTemperature: number;    // 60-80 °F
+  ambientTemperature: number;    // -40 to 150 °F per validator
 }
 
 /* ─────────────── DoorLock ─────────────── */
@@ -66,16 +67,16 @@ export interface DoorLock extends DeviceBase {
 
 /**
  * Use this type wherever you accept "any device". Switch on `device.type`
- * to narrow to the specific shape. Example:
+ * (or `device.$type`) to narrow to the specific shape:
  *
  *   switch (device.type) {
- *     case DeviceType.Light: // device is Light here
+ *     case DeviceType.Light:      // device is Light here
  *     case DeviceType.Thermostat: // device is Thermostat here
  *   }
  */
 export type AnyDevice = Light | Fan | Thermostat | DoorLock;
 
-/* ─────────────── Type guards ─────────────── */
+/* ─────────────── Type guards (for use outside switches) ─────────────── */
 
 export const isLight = (d: AnyDevice): d is Light => d.type === DeviceType.Light;
 export const isFan = (d: AnyDevice): d is Fan => d.type === DeviceType.Fan;

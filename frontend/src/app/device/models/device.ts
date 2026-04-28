@@ -1,6 +1,8 @@
 /**
  * Device type discriminator. String values match the backend's $type
- * polymorphism config (Program.cs JsonDerivedType registration).
+ * polymorphism config (Program.cs JsonDerivedType registration) and
+ * the JsonStringEnumConverter that serializes the C# `Type` enum as
+ * a string on the wire.
  */
 export enum DeviceType {
   Light = 'Light',
@@ -19,8 +21,11 @@ export enum PowerState {
 }
 
 /**
- * Common shape for every device type. The `$type` field is the discriminator
- * the backend writes — TypeScript narrows the union via this field.
+ * Common shape for every device returned by the backend. The `$type`
+ * field is the JSON polymorphism discriminator; the `type` field is
+ * the underlying C# enum serialized as a string. Both are present
+ * and equal — `$type` for type narrowing in TypeScript, `type` for
+ * regular property access.
  */
 export interface DeviceBase {
   $type: DeviceType;
@@ -79,7 +84,7 @@ export interface CommandHistory {
   id: string;
   deviceId: string;
   action: string;
-  timestamp: string; // ISO 8601
+  timestamp: string; // ISO 8601 UTC
 }
 
 /**
@@ -99,9 +104,9 @@ export enum DeviceChangeType {
 }
 
 /**
- * SSE payload — a snapshot of the device after the change.
- * Same shape as the device list/detail responses, so reuse the AnyDevice union.
- * Defined as `unknown` here and narrowed at the consumption site to avoid a
- * circular import between this file and device-types.ts.
+ * SSE payload — a snapshot of the device after the change. Has the
+ * same shape as the device list/detail responses. Typed loosely here
+ * to avoid a circular import with device-types.ts; narrow at the
+ * consumption site by checking $type.
  */
 export type DeviceEventPayload = Record<string, unknown>;

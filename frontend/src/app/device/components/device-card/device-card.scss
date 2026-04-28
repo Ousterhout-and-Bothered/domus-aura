@@ -1,0 +1,28 @@
+.placeholder-card {
+  background: var(--aura-surface-muted);
+  border: 0.5px dashed var(--aura-border);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.placeholder-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--aura-text);
+}
+
+.placeholder-type {
+  font-size: 0.75rem;
+  color: var(--aura-text-muted);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
