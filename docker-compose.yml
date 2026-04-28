@@ -10,6 +10,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/smarthome.db
       - Authentication__Authority=http://keycloak:8080/realms/smarthome
       - Authentication__Audience=smarthome-spa
+      - Authentication__ValidIssuer=http://localhost:8080/realms/smarthome
+      - Authentication__RequireHttpsMetadata=false
     volumes:
       - ./data:/app/data
 
