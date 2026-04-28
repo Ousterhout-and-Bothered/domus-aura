@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Scalar.AspNetCore;
 using SmartHome.Infrastructure.Device.Repository;
 using SmartHome.Infrastructure.Device.Service;
@@ -88,12 +89,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.RequireHttpsMetadata =
             builder.Configuration.GetValue<bool?>("Authentication:RequireHttpsMetadata")
             ?? !builder.Environment.IsDevelopment();
-
         options.TokenValidationParameters.ValidIssuer =
             builder.Configuration["Authentication:ValidIssuer"];
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 // SQLite setup — resolves relative paths and ensures directory exists
 var connectionString = ResolveSqliteConnectionString(builder);

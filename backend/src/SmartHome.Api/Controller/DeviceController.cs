@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SmartHome.Api.Contracts.Devices;
-using SmartHome.Domain.Device;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using SmartHome.Api.Contracts.Devices;
+using SmartHome.Domain.Device;
 using SmartHome.Infrastructure.Device.Events;
 
 namespace SmartHome.Api.Controller;
@@ -13,6 +13,7 @@ namespace SmartHome.Api.Controller;
 /// </summary>
 [ApiController]
 [Route("api/devices")]
+[Authorize]
 public class DeviceController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
@@ -148,7 +149,6 @@ public class DeviceController : ControllerBase
     /// Subscribes the client to a real-time stream of device state changes using Server-Sent Events (SSE).
     /// Acts as an HTTP adapter over the device event stream and does not contain business logic.
     /// </summary>
-    [Authorize]
     [HttpGet("events")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]

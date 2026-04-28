@@ -14,6 +14,8 @@ services:
       - Authentication__RequireHttpsMetadata=false
     volumes:
       - ./data:/app/data
+    depends_on:
+      - keycloak
 
   frontend:
     build:

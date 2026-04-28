@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SmartHome.Api.Contracts.Scenes;
 using SmartHome.Domain.Scene;
 
@@ -12,6 +13,7 @@ namespace SmartHome.Api.Controller;
 /// <param name="sceneService">The service coordinating scene CRUD and execution.</param>
 [ApiController]
 [Route("api/scenes")]
+[Authorize]
 [Produces("application/json")]
 public sealed class ScenesController(ISceneService sceneService) : ControllerBase
 {

@@ -104,15 +104,18 @@ public sealed class DeviceService(
     /// <inheritdoc />
     /// <remarks>
     /// Removes a device from the system and publishes a <see cref="DeviceChangeType.Deleted"/>
-    /// event after the deletion succeeds.
+    /// event only after the deletion succeeds.
     ///
     /// The device state is captured before deletion so a final snapshot can be included
     /// in the event payload. This allows clients to remove the device from local state
     /// without requiring a full refresh.
+    ///
+    /// If the device is deleted between the snapshot read and the delete operation,
+    /// the method throws <see cref="ResourceNotFoundException"/> and does not publish
+    /// a deletion event.
     /// </remarks>
     public async Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default)
     {
-        // Load a read-only snapshot so we can publish a final Deleted payload.
         var device = await repository.GetByIdReadOnlyAsync(deviceId, cancellationToken);
 
         if (device is null)
@@ -121,9 +124,14 @@ public sealed class DeviceService(
         }
 
         var payload = DeviceEventPayloadFactory.Create(device);
-        
-        await repository.RemoveByIdAsync(deviceId, cancellationToken);
-        
+
+        var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
+
+        if (!removed)
+        {
+            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
+        }
+
         await deviceEventPublisher.PublishAsync(
             new DeviceChangedEvent(
                 deviceId,
@@ -133,7 +141,7 @@ public sealed class DeviceService(
     }
     
     /// <inheritdoc />
-    ///Ensures controllers do not access the repository directly.
+    /// Ensures controllers do not access the repository directly.
     public async Task<IReadOnlyList<Domain.Device.Device>> GetAllDevicesAsync(
         string? location,
         DeviceType? type,

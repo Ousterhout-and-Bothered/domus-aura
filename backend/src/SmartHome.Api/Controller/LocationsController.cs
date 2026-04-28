@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SmartHome.Domain.Common;
 using SmartHome.Domain.Simulation;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHome.Api.Controller;
 
