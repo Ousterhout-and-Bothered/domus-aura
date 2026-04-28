@@ -29,7 +29,14 @@
       "emailVerified": true,
       "firstName": "Demo",
       "lastName": "User",
-      "email": "demo@example.com"
+      "email": "demo@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "TheAnswerIs42!",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

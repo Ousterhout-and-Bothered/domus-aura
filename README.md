@@ -128,9 +128,10 @@ http://localhost:8080
 
 Admin credentials:
 
+// Dev-only credentials
 ```text
 username: admin
-password: admin
+password: admin 
 ```
 
 ### Test User for Grading
@@ -141,15 +142,6 @@ Use the following account to log in via the frontend:
 username: demouser
 password: TheAnswerIs42!
 ```
-
-> Note: Passwords are not stored in version control. The test user is created without credentials in the Keycloak realm export; set the password manually in the Keycloak admin UI if needed.
-
-### Setting the Test User Password
-
-1. Open Keycloak admin console: http://localhost:8080
-2. Navigate to Users → demouser
-3. Set password to: `TheAnswerIs42!`
-4. Disable “Temporary” so it persists
 
 ### API Authentication
 

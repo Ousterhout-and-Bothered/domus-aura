@@ -34,12 +34,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 // JSON config — keep enums readable and handle device polymorphism
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    options.SerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
-});
-
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -146,10 +140,11 @@ var app = builder.Build();
 // Dev-only API UI
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 
     app.MapGet("/", () => Results.Redirect("/scalar/v1"))
+        .AllowAnonymous()
         .ExcludeFromDescription();
 }
 
@@ -194,19 +189,22 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
 
     var parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries);
 
+    const string dataSourcePrefix = "Data Source=";
+
     var dataSource = parts.FirstOrDefault(p =>
-        p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase));
+        p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
 
-    if (dataSource == null) return connectionString;
-
-    var path = dataSource.Split('=')[1].Trim();
+    if (dataSource is null) return connectionString;
+    
+    var path = dataSource[dataSourcePrefix.Length..].Trim();
 
     if (Path.IsPathRooted(path)) return connectionString;
 
     var absolute = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, path));
     Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
 
-    var others = parts.Where(p => !p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase));
+    var others = parts.Where(p =>
+        !p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
 
     return $"Data Source={absolute};{string.Join(';', others)}";
 }
