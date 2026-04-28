@@ -17,15 +17,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SmartHome.Domain\SmartHome.Domain.csproj" />
     <ProjectReference Include="..\SmartHome.Infrastructure\SmartHome.Infrastructure.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="data\" />
-  </ItemGroup>
-
+  
 </Project>

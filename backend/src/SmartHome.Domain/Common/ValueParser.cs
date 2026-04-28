@@ -31,7 +31,9 @@ public static class ValueParser
     public static object? Normalize(object? value)
     {
         if (value is not JsonElement element)
+        {
             return value;
+        }
 
         return element.ValueKind switch
         {
@@ -44,15 +46,11 @@ public static class ValueParser
         };
     }
 
-    private static int? ParseJsonElement(JsonElement element) => element.ValueKind switch
+    private static int? TryConvert(object? value)
     {
-        JsonValueKind.Number when element.TryGetInt32(out var intValue) => intValue,
-        JsonValueKind.String when int.TryParse(element.GetString(), out var stringValue) => stringValue,
-        _ => null
-    };
+        if (value is null)
+            return null;
 
-    private static int? TryConvert(object value)
-    {
         try
         {
             return Convert.ToInt32(value);

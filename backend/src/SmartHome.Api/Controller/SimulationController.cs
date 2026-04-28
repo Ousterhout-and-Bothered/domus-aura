@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SmartHome.Api.Contracts;
 using SmartHome.Domain.Common;
-using SmartHome.Domain;
 using SmartHome.Domain.Simulation;
-using System.Text.Json;
 
 namespace SmartHome.Api.Controller;
 
@@ -14,9 +13,15 @@ namespace SmartHome.Api.Controller;
 /// <param name="simulationService">The service responsible for global simulation logic.</param>
 [ApiController]
 [Route("api/simulation")]
+[Authorize]
 [Produces("application/json")]
-public sealed class SimulationController(ISimulationService simulationService) : ControllerBase
+public sealed class SimulationController(
+    ISimulationService simulationService,
+    ISimulationSpeedRegistry registry) : ControllerBase
 {
+    private readonly ISimulationService _simulationService = simulationService;
+    private readonly ISimulationSpeedRegistry _registry = registry;
+    
     /// <summary>
     /// Retrieves the current simulation state — active speed and simulation clock.
     /// </summary>
@@ -25,8 +30,8 @@ public sealed class SimulationController(ISimulationService simulationService) :
     [ProducesResponseType(typeof(SimulationStateResponse), StatusCodes.Status200OK)]
     public ActionResult<SimulationStateResponse> GetSimulationState() =>
         Ok(new SimulationStateResponse(
-            (int)simulationService.Speed,
-            simulationService.SimulationClock));
+            (int)_simulationService.Speed,
+            _simulationService.SimulationClock));
 
     /// <summary>
     /// Lists the speeds permitted by the current simulation speed registry.
@@ -35,9 +40,8 @@ public sealed class SimulationController(ISimulationService simulationService) :
     /// <response code="200">The set of permitted simulation speeds.</response>
     [HttpGet("allowed-speeds")]
     [ProducesResponseType(typeof(AllowedSpeedsResponse), StatusCodes.Status200OK)]
-    public ActionResult<AllowedSpeedsResponse> GetAllowedSpeeds(
-        [FromServices] ISimulationSpeedRegistry registry) =>
-        Ok(new AllowedSpeedsResponse(registry.AllowedSpeeds.Select(s => (int)s).Order().ToList()));
+    public ActionResult<AllowedSpeedsResponse> GetAllowedSpeeds() =>
+        Ok(new AllowedSpeedsResponse(_registry.AllowedSpeeds.Select(s => (int)s).Order().ToList()));
 
     /// <summary>
     /// Sets the simulation speed.
@@ -55,7 +59,7 @@ public sealed class SimulationController(ISimulationService simulationService) :
         var speedValue = request.GetSpeedValue()!.Value;
         var speed = (SimulationSpeed)speedValue;
 
-        await simulationService.SetSpeedAsync(speed, cancellationToken);
+        await _simulationService.SetSpeedAsync(speed, cancellationToken);
         return NoContent();
     }
 
@@ -81,7 +85,7 @@ public sealed class SimulationController(ISimulationService simulationService) :
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Reset(CancellationToken cancellationToken)
     {
-        await simulationService.ResetAllDevicesAsync(cancellationToken);
+        await _simulationService.ResetAllDevicesAsync(cancellationToken);
         return NoContent();
     }
 }

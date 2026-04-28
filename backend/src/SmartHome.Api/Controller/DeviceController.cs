@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using SmartHome.Api.Contracts.Devices;
 using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Repository;
-using System.Text.Json;
 using SmartHome.Infrastructure.Device.Events;
-using Microsoft.Extensions.Options;
 
 namespace SmartHome.Api.Controller;
 
@@ -14,22 +13,27 @@ namespace SmartHome.Api.Controller;
 /// </summary>
 [ApiController]
 [Route("api/devices")]
+[Authorize]
 public class DeviceController : ControllerBase
 {
-    private readonly IDeviceRepository _deviceRepository;
     private readonly IDeviceService _deviceService;
-
+    private readonly IDeviceEventStream _deviceEventStream;
+    private readonly IOptions<JsonOptions> _jsonOptions;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceController"/> class.
     /// </summary>
-    /// <param name="deviceRepository">The repository for device persistence and retrieval.</param>
-    /// <param name="deviceService">The service for managing device business logic.</param>
+    /// <param name="deviceService">The service responsible for device business logic and orchestration.</param>
+    /// <param name="deviceEventStream">The event stream used to subscribe to real-time device change notifications (SSE).</param>
+    /// <param name="jsonOptions">The configured JSON serialization options used when streaming event payloads.</param>
     public DeviceController(
-        IDeviceRepository deviceRepository,
-        IDeviceService deviceService)
+        IDeviceService deviceService,
+        IDeviceEventStream deviceEventStream,
+        IOptions<JsonOptions> jsonOptions)
     {
-        _deviceRepository = deviceRepository;
         _deviceService = deviceService;
+        _deviceEventStream = deviceEventStream;
+        _jsonOptions = jsonOptions;
     }
 
     /// <summary>
@@ -55,7 +59,7 @@ public class DeviceController : ControllerBase
             _ => null
         };
 
-        var devices = await _deviceRepository.GetAllAsync(location, type, isOn, cancellationToken);
+        var devices = await _deviceService.GetAllDevicesAsync(location, type, isOn, cancellationToken);
         return Ok(devices);
     }
 
@@ -69,13 +73,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Device>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
-
-        if (device is null)
-        {
-            return DeviceNotFound(id);
-        }
-
+        var device = await _deviceService.GetDeviceByIdAsync(id, cancellationToken);
         return Ok(device);
     }
 
@@ -122,14 +120,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<CommandHistory>>> GetHistory(Guid id, CancellationToken cancellationToken)
     {
-        var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
-
-        if (device is null)
-        {
-            return DeviceNotFound(id);
-        }
-
-        var history = await _deviceRepository.GetHistoryAsync(id, cancellationToken);
+        var history = await _deviceService.GetDeviceHistoryAsync(id, cancellationToken);
         return Ok(history);
     }
 
@@ -153,61 +144,26 @@ public class DeviceController : ControllerBase
 
         return Ok(device);
     }
-
-    private ObjectResult DeviceNotFound(Guid id)
-    {
-        return Problem(
-            type: "https://domus-aura.com/problems/device-not-found",
-            title: "Device not found",
-            detail: $"No device with id {id} exists.",
-            statusCode: StatusCodes.Status404NotFound);
-    }
     
     /// <summary>
     /// Subscribes the client to a real-time stream of device state changes using Server-Sent Events (SSE).
+    /// Acts as an HTTP adapter over the device event stream and does not contain business logic.
     /// </summary>
-    /// <remarks>
-    /// This endpoint establishes a long-lived HTTP connection that continuously streams events
-    /// whenever any device state changes.
-    ///
-    /// Each event contains:
-    /// - deviceId: the affected device
-    /// - changeType: Created, Updated, or Deleted
-    /// - payload: a snapshot of the device's current state
-    ///
-    /// The payload structure depends on the device type but always includes:
-    /// - id
-    /// - name
-    /// - location
-    /// - type
-    ///
-    /// Additional fields are included based on device type:
-    /// - Light: powerState, brightness, colorHex
-    /// - Fan: powerState, speed
-    /// - Thermostat: state, mode, desiredTemperature, ambientTemperature
-    /// - DoorLock: lockState
-    ///
-    /// Clients should use the browser's EventSource API to consume this stream.
-    /// The browser automatically attempts to reconnect if the connection is interrupted.
-    /// </remarks>
-    /// <returns>
-    /// A continuous text/event-stream connection. The response remains open and streams events over time.
-    /// </returns>
     [HttpGet("events")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task GetEvents(
-        [FromServices] IDeviceEventStream deviceEventStream,
-        [FromServices] IOptions<JsonOptions> jsonOptions,
-        CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task GetEvents(CancellationToken cancellationToken)
     {
         Response.ContentType = "text/event-stream";
         Response.Headers.Append("Cache-Control", "no-cache");
         Response.Headers.Append("Connection", "keep-alive");
 
-        await foreach (var deviceEvent in deviceEventStream.SubscribeAsync(cancellationToken))
+        await foreach (var deviceEvent in _deviceEventStream.SubscribeAsync(cancellationToken))
         {
-            var json = JsonSerializer.Serialize(deviceEvent, jsonOptions.Value.JsonSerializerOptions);
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                deviceEvent,
+                _jsonOptions.Value.JsonSerializerOptions);
 
             await Response.WriteAsync("event: deviceChanged\n", cancellationToken);
             await Response.WriteAsync($"data: {json}\n\n", cancellationToken);

@@ -1,9 +1,18 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Scalar.AspNetCore;
+using SmartHome.Infrastructure.Device.Repository;
+using SmartHome.Infrastructure.Device.Service;
+using SmartHome.Infrastructure.Device.Events;
+using SmartHome.Infrastructure.Persistence;
+using SmartHome.Infrastructure.Simulation;
+using SmartHome.Infrastructure.Simulation.Clock;
+using SmartHome.Infrastructure.Persistence.Seed;
+using SmartHome.Infrastructure.Scene;
+using SmartHome.Domain.Scene;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Device;
-using SmartHome.Infrastructure.Device.Repository;
-using SmartHome.Infrastructure.Persistence;
-using SmartHome.Infrastructure.Persistence.Seed;
 using SmartHome.Domain.Device.Registration;
 using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Device.Light;
@@ -11,72 +20,20 @@ using SmartHome.Domain.Device.Fan;
 using SmartHome.Domain.Device.DoorLock;
 using SmartHome.Domain.Device.Thermostat;
 using SmartHome.Domain.Simulation;
-using SmartHome.Infrastructure.Simulation;
-using SmartHome.Infrastructure.Simulation.Clock;
-using SmartHome.Infrastructure.Device.Service;
 using SmartHome.Api.Middleware;
+using SmartHome.Api.Validation;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Scalar.AspNetCore;
-using SmartHome.Api.Validation;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using SmartHome.Infrastructure.Device.Events;
-using SmartHome.Domain.Scene;
-using SmartHome.Infrastructure.Scene;
 
-/*
- * Domus Aura - Smart Home Simulation API
- * 
- * This file serves as the entry point for the Web API. It is responsible for:
- * 1. Configuring the Dependency Injection (DI) container.
- * 2. Setting up the request processing pipeline (middleware).
- * 3. Initializing infrastructure such as SQLite and automatic database seeding.
- */
 
-// Create the application builder and load configuration/services
 var builder = WebApplication.CreateBuilder(args);
 
-// Register OpenAPI support
+// OpenAPI for local exploration (Scalar UI enabled in dev only)
 builder.Services.AddOpenApi();
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    options.SerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
-
-        if (allowedOrigins.Length > 0)
-        {
-            policy.WithOrigins(allowedOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        }
-        else if (builder.Environment.IsDevelopment())
-        {
-            // Fallback to localhost during development if no origins are configured
-            policy.WithOrigins("http://localhost:4200")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        }
-        // If not in Development and no origins are configured, the policy will remain closed
-        // to prevent accidental exposure.
-    });
-});
-
-builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
-builder.Services.AddProblemDetails();
-
-// Register MVC controllers with enum-as-string JSON serialization and
-// polymorphic device serialization. Polymorphism config is layered separately
-// from the domain entity (no [JsonDerivedType] attributes on Device) so the
-// domain remains framework-agnostic.
+// JSON config — keep enums readable and handle device polymorphism
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -84,177 +41,194 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.TypeInfoResolver = ConfigureDevicePolymorphism();
     });
 
-// FluentValidation - register all AbstractValidator<T> implementations in this assembly.
-// Combined with AddFluentValidationAutoValidation(), ASP.NET will invoke matching
-// validators automatically before a request body reaches the controller action.
+// CORS — allow frontend during dev, otherwise rely on config
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var origins = builder.Configuration
+            .GetSection("AllowedOrigins")
+            .Get<string[]>() ?? Array.Empty<string>();
+
+        if (origins.Length > 0)
+        {
+            policy.WithOrigins(origins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
+});
+
+// Centralized error handling (RFC 9457 ProblemDetails)
+builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
+builder.Services.AddProblemDetails();
+
+// Request validation at the API boundary
 builder.Services.AddValidatorsFromAssemblyContaining<SetSimulationSpeedRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
-// SQLite Connection String and Directory Resolution
-// This ensures that the SQLite database directory exists and the connection string 
-// uses an absolute path, fixing "SQLite Error 14: unable to open database file".
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-if (!string.IsNullOrEmpty(connectionString))
-{
-    // Resolve "Data Source" or "DataSource" path
-    var parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-    var dataSourcePart = parts.FirstOrDefault(p =>
-        p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) ||
-        p.TrimStart().StartsWith("DataSource=", StringComparison.OrdinalIgnoreCase));
-
-    if (dataSourcePart != null)
+// JWT auth (Keycloak)
+// Authority/Audience come from config (docker-compose or appsettings)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        var dbPath = dataSourcePart.Split('=', 2)[1].Trim();
+        options.Authority = builder.Configuration["Authentication:Authority"];
+        options.Audience = builder.Configuration["Authentication:Audience"];
+        options.RequireHttpsMetadata =
+            builder.Configuration.GetValue<bool?>("Authentication:RequireHttpsMetadata")
+            ?? !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters.ValidIssuer =
+            builder.Configuration["Authentication:ValidIssuer"];
+    });
 
-        // If the path is relative, resolve it against the application root
-        if (!string.IsNullOrEmpty(dbPath) && !Path.IsPathRooted(dbPath))
-        {
-            var absoluteDbPath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, dbPath));
-
-            // Ensure the directory exists
-            var directory = Path.GetDirectoryName(absoluteDbPath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            // Rebuild the connection string with the absolute path
-            var otherParts = parts
-                .Where(p => !p.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) &&
-                            !p.TrimStart().StartsWith("DataSource=", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            connectionString = $"Data Source={absoluteDbPath};{string.Join(';', otherParts)}";
-        }
-    }
-}
-else
+builder.Services.AddAuthorization(options =>
 {
-    // Fallback for development if not in appsettings
-    var infrastructurePath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SmartHome.Infrastructure"));
-    var dataDirectory = Path.Combine(infrastructurePath, "data");
-    Directory.CreateDirectory(dataDirectory);
-    var databasePath = Path.Combine(dataDirectory, "smarthome.db");
-    connectionString = $"Data Source={databasePath};Cache=Shared;Default Timeout=30;";
-}
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
-// Register EF Core DbContext using SQLite persistence
+// SQLite setup — resolves relative paths and ensures directory exists
+var connectionString = ResolveSqliteConnectionString(builder);
+
 builder.Services.AddDbContext<SmartHomeDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// Register persistence and seeding services
+// Repositories and persistence
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<SmartHomeDbSeeder>();
+builder.Services.AddScoped<ISceneRepository, SceneRepository>();
+
+// Domain services
 builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
-builder.Services.AddSingleton<IThermostatStrategyProvider, ThermostatStrategyProvider>();
+builder.Services.AddScoped<ISceneResolver, SceneResolver>();
+builder.Services.AddScoped<ISceneService, SceneService>();
 
-// Register all device builders used by the factory
+// Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, FanBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, DoorLockBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, ThermostatBuilder>();
 
-// Scene feature — CRUD, resolution, and execution against registered devices.
-// Scoped so each request gets a fresh unit of work tied to the per-request DbContext,
-// matching the rest of the persistence layer.
-builder.Services.AddScoped<ISceneRepository, SceneRepository>();
-builder.Services.AddScoped<ISceneResolver, SceneResolver>();
-builder.Services.AddScoped<ISceneService, SceneService>();
+// Strategy provider (thermostat behavior)
+builder.Services.AddSingleton<IThermostatStrategyProvider, ThermostatStrategyProvider>();
 
-// Simulation speed registry — the source of truth for permitted multipliers.
-// Singleton because allowed speeds are immutable for the app's lifetime.
+// Simulation
 builder.Services.AddSingleton<ISimulationSpeedRegistry, DefaultSimulationSpeedRegistry>();
-
-// Simulation clock owns mutable simulation state (current time, active speed).
-// Singleton so state persists across request scopes and background ticks.
 builder.Services.AddSingleton<ISimulationClock, SimulationClock>();
-
-// Register simulation service
 builder.Services.AddScoped<ISimulationService, SimulationService>();
-
-// Runs the background loop that updates thermostat behavior over time
 builder.Services.AddHostedService<SimulationBackgroundService>();
 
+// Event system (SSE support)
 builder.Services.AddSingleton<DeviceEventBroker>();
 builder.Services.AddSingleton<IDeviceEventPublisher>(sp =>
     sp.GetRequiredService<DeviceEventBroker>());
 builder.Services.AddSingleton<IDeviceEventStream>(sp =>
     sp.GetRequiredService<DeviceEventBroker>());
 
-// Build the application pipeline
 var app = builder.Build();
 
+// Dev-only API UI
 if (app.Environment.IsDevelopment())
 {
-    // Expose OpenAPI document in development
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 
-    // Scalar UI — interactive API docs at /scalar/v1
-    // Development only
-    app.MapScalarApiReference();
-    // Redirect root to the Scalar docs in development for a friendly landing page.
-    // This endpoint is excluded from OpenAPI to prevent it from being treated as part of the API contract.
     app.MapGet("/", () => Results.Redirect("/scalar/v1"))
+        .AllowAnonymous()
         .ExcludeFromDescription();
 }
 
-// Exception handler MUST be registered before other middleware so it catches
-// exceptions thrown anywhere downstream in the pipeline.
+// Middleware Pipeline
 app.UseExceptionHandler();
-
-// Enable CORS before mapping controllers
 app.UseCors();
-
-// Redirect HTTP requests to HTTPS
 app.UseHttpsRedirection();
 
-// Log resolved connection string for debugging startup issues (masking potential sensitive info if needed, but SQLite is local)
-app.Logger.LogDebug("Using Connection String: {ConnectionString}", connectionString);
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Apply migrations and seed on startup
+app.Logger.LogInformation("Using SQLite connection string: {ConnectionString}", connectionString);
 
 using (var scope = app.Services.CreateScope())
 {
-    // Resolve DbContext for startup migration
-    var dbContext = scope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
+    await db.Database.MigrateAsync();
 
-    // Apply any pending EF Core migrations automatically on startup
-    await dbContext.Database.MigrateAsync();
-
-    // Seed initial smart home data if database is empty
     var seeder = scope.ServiceProvider.GetRequiredService<SmartHomeDbSeeder>();
     await seeder.SeedAsync();
 }
 
+app.MapControllers();
+
+await app.RunAsync();
+
+
+// Helpers
+
+static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        var dataDir = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "data"));
+        Directory.CreateDirectory(dataDir);
+
+        return $"Data Source={Path.Combine(dataDir, "smarthome.db")};";
+    }
+
+    var parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+    const string dataSourcePrefix = "Data Source=";
+
+    var dataSource = parts.FirstOrDefault(p =>
+        p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
+
+    if (dataSource is null) return connectionString;
+    
+    var path = dataSource[dataSourcePrefix.Length..].Trim();
+
+    if (Path.IsPathRooted(path)) return connectionString;
+
+    var absolute = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, path));
+    Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
+
+    var others = parts.Where(p =>
+        !p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
+
+    return $"Data Source={absolute};{string.Join(';', others)}";
+}
+
 static DefaultJsonTypeInfoResolver ConfigureDevicePolymorphism() =>
-    new DefaultJsonTypeInfoResolver
+    new()
     {
         Modifiers =
         {
             typeInfo =>
             {
-                if (typeInfo.Type == typeof(Device))
+                if (typeInfo.Type != typeof(Device)) return;
+
+                typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
                 {
-                    typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+                    TypeDiscriminatorPropertyName = "$type",
+                    DerivedTypes =
                     {
-                        TypeDiscriminatorPropertyName = "$type",
-                        DerivedTypes =
-                        {
-                            new JsonDerivedType(typeof(Light), "Light"),
-                            new JsonDerivedType(typeof(Fan), "Fan"),
-                            new JsonDerivedType(typeof(Thermostat), "Thermostat"),
-                            new JsonDerivedType(typeof(DoorLock), "DoorLock")
-                        }
-                    };
-                }
+                        new JsonDerivedType(typeof(Light), "Light"),
+                        new JsonDerivedType(typeof(Fan), "Fan"),
+                        new JsonDerivedType(typeof(Thermostat), "Thermostat"),
+                        new JsonDerivedType(typeof(DoorLock), "DoorLock")
+                    }
+                };
             }
         }
     };
-
-// Map attribute-routed API controllers
-app.MapControllers();
-
-// Start the web application
-app.Run();

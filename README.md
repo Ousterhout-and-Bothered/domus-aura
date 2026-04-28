@@ -13,9 +13,18 @@ Full-stack smart home simulator. Control lights, fans, thermostats, and door loc
 
 ## Status
 
-Scaffold is done. We're starting feature development this week.
+Backend core functionality is implemented, including:
 
-------
+- EF Core + SQLite persistence
+- Device APIs (CRUD + commands)
+- Simulation engine (thermostat ticking, ambient temperature)
+- Scenes and command execution
+- Server-Sent Events (event streaming)
+- JWT authentication via Keycloak
+
+Frontend integration and UI polish are in progress.
+
+---
 
 ## Project Structure
 
@@ -30,7 +39,7 @@ domus-aura/
 ├── tests/
 │   ├── SmartHome.Api.Tests/
 │   └── SmartHome.Domain.Tests/
-├── data/                             # SQLite db + seed data
+├── data/                             # SQLite db and seed data
 ├── bruno/                            # API test collection
 └── docker-compose.yml
 ```
@@ -89,6 +98,70 @@ dotnet test
 cd frontend
 ng test
 ```
+
+------
+
+## Authentication (JWT via Keycloak)
+
+This application uses Keycloak as an external identity provider. The API is protected using JWT bearer tokens.
+
+### Running the full stack
+
+Run the application with Docker Compose:
+
+```bash
+docker compose up
+```
+
+This will start:
+- Backend API
+- Frontend
+- Keycloak identity provider
+
+### Keycloak Access
+
+Open Keycloak admin console:
+
+```text
+http://localhost:8080
+```
+
+Admin credentials:
+
+// Dev-only credentials
+```text
+username: admin
+password: admin 
+```
+
+### Test User for Grading
+
+Use the following account to log in via the frontend:
+
+```text
+username: demouser
+password: TheAnswerIs42!
+```
+
+### API Authentication
+
+All API endpoints require a JWT:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+Unauthenticated requests return:
+
+```text
+401 Unauthorized
+```
+
+### Notes
+
+- The frontend handles authentication using OpenID Connect Authorization Code Flow with PKCE.
+- The backend validates JWTs issued by Keycloak.
+- All API endpoints are protected and require a valid token.
 
 ------
 

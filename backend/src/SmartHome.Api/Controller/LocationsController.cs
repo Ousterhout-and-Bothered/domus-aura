@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SmartHome.Domain.Common;
-using SmartHome.Domain;
 using SmartHome.Domain.Simulation;
-using System.Text.Json;
 
 namespace SmartHome.Api.Controller;
 
@@ -11,6 +9,7 @@ namespace SmartHome.Api.Controller;
 /// Provides API endpoints for managing location-based simulation settings.
 /// </summary>
 /// <param name="simulationService">The service responsible for location-wide simulation logic.</param>
+[Authorize]
 [ApiController]
 [Route("api/locations")]
 [Produces("application/json")]
@@ -37,6 +36,7 @@ public sealed class LocationsController(ISimulationService simulationService) : 
         var temperatureValue = request.GetTemperatureValue()!.Value;
 
         await simulationService.SetAmbientTemperatureAsync(location, temperatureValue, cancellationToken);
+
         return Ok(new SetAmbientTemperatureResponse(location, temperatureValue));
     }
 }
