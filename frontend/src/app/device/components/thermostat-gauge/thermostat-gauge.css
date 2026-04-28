@@ -42,10 +42,9 @@
 
 .needle-group {
   cursor: grab;
-
-  &:active {
-    cursor: grabbing;
-  }
+}
+.needle-group:active {
+  cursor: grabbing;
 }
 
 .gauge-readout {
@@ -77,31 +76,38 @@
   font-weight: 600;
 }
 
-.gauge-state-cooling { color: #1E40AF; }
-.gauge-state-heating { color: #C2410C; }
-.gauge-state-idle    { color: var(--aura-text-muted); }
+.gauge-state-cooling {
+  color: #1E40AF;
+}
+
+.gauge-state-heating {
+  color: #C2410C;
+}
+
+.gauge-state-idle {
+  color: var(--aura-text-muted);
+}
 
 .ambient-readout {
   text-align: center;
   margin-top: 1rem;
   font-size: 2rem;
   color: var(--aura-text-muted);
-
-  strong {
-    color: var(--aura-text);
-    font-weight: 500;
-  }
+}
+.ambient-readout strong {
+  color: var(--aura-text);
+  font-weight: 500;
 }
 
 .gauge-svg-wrapper {
   position: relative;
   display: flex;
   justify-content: center;
-  background-color: #FBF8F3;   // or #f5f0e8 — warm off-white that matches your other cards
-  border-radius: 999px 999px 0 0;  // top corners fully rounded, bottom flat
+  background-color: #FBF8F3;
+  border-radius: 999px 999px 0 0;
   padding: 16px 16px 0;
   margin: 0 auto 12px;
-  width: fit-content;          // don't stretch full width
+  width: fit-content;
   max-width: 420px;
 }
 
@@ -110,26 +116,23 @@
   display: flex;
   align-items: center;
   gap: 12px;
-
-  label {
-    font-size: 1rem;
-    color: var(--aura-text-muted);
-    min-width: 70px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  input[type='range'] {
-    flex: 1.5;
-    accent-color: var(--aura-accent);
-  }
-
-  .val {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    min-width: 48px;
-    text-align: left;
-  }
+}
+.controls-row label {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  min-width: 70px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.controls-row input[type=range] {
+  flex: 1.5;
+  accent-color: var(--aura-accent);
+}
+.controls-row .val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  min-width: 48px;
+  text-align: left;
 }
 
 .mode-row {
@@ -150,16 +153,15 @@
   transition: all 0.15s ease;
   font-family: inherit;
   letter-spacing: 0.05em;
-
-  &:hover {
-    color: var(--aura-text);
-    border-color: var(--aura-text-muted);
-  }
-
-  &.active {
-    background: var(--aura-accent-soft);
-    border-color: var(--aura-accent);
-    color: var(--aura-accent);
-  }
-
 }
+.mode-btn:hover {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+.mode-btn.active {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
+}
+
+/*# sourceMappingURL=thermostat-gauge.css.map */

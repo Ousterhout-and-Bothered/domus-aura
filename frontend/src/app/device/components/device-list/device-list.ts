@@ -1,16 +1,36 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { DeviceApiService } from '../../services/device-api.service';
+import { DeviceEventService } from '../../services/device-event.service';
 import { AnyDevice } from '../../models/device-types';
+import { DeviceChangeType, DeviceChangedEvent } from '../../models/device';
 import { RoomBlock } from '../room-block/room-block';
 
 /**
  * The /devices route. Fetches every device on init, groups them by
  * location, and renders one RoomBlock per room.
  *
- * Live updates (SSE) are intentionally not wired yet. Once the static
- * render is solid, hook DeviceEventService into here and update the
- * `devices` signal on each event.
+ * Live updates flow in via DeviceEventService. SSE acts as a "something
+ * changed" signal — for Updated events we re-fetch the device by id
+ * rather than trusting the payload shape, so the canonical wire format
+ * stays GET /api/devices/{id}. Created and Deleted events use the
+ * payload directly (Created has no other source; Deleted only needs
+ * the id).
+ *
+ * If/when the backend payload contract is locked down (every event
+ * carries a complete, $type-tagged device snapshot), flip
+ * USE_PAYLOAD_DIRECTLY to true to skip the refetch.
  */
+const USE_PAYLOAD_DIRECTLY = false;
+
 @Component({
   selector: 'aura-device-list',
   standalone: true,
@@ -23,6 +43,11 @@ import { RoomBlock } from '../room-block/room-block';
         @if (devices().length > 0) {
           <p class="device-list-summary">
             {{ devices().length }} devices · {{ rooms().length }} rooms · {{ activeCount() }} active
+            <span
+              class="live-dot"
+              [class.connected]="events.connected()"
+              [title]="events.connected() ? 'Live updates connected' : 'Live updates disconnected'"
+            ></span>
           </p>
         }
       </header>
@@ -44,14 +69,14 @@ import { RoomBlock } from '../room-block/room-block';
   `,
   styleUrl: './device-list.scss',
 })
-export class DeviceList implements OnInit {
+export class DeviceList implements OnInit, OnDestroy {
   private readonly deviceApi = inject(DeviceApiService);
+  protected readonly events = inject(DeviceEventService);
 
   readonly devices = signal<AnyDevice[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
-  /** Devices grouped by location, sorted alphabetically by room name. */
   readonly rooms = computed(() => {
     const byLocation = new Map<string, AnyDevice[]>();
     for (const device of this.devices()) {
@@ -64,12 +89,22 @@ export class DeviceList implements OnInit {
       .sort((a, b) => a.location.localeCompare(b.location));
   });
 
-  /** How many devices are currently active across the whole home. */
   readonly activeCount = computed(() =>
     this.devices().filter((d) => isDeviceActive(d)).length
   );
 
-  /** Replace the matching device in the signal with the latest server snapshot. */
+  constructor() {
+    // Reactively merge every SSE event into the devices signal.
+    // OnPush + immutable replacement means only the affected card
+    // re-renders, not the whole list.
+    effect(() => {
+      const evt = this.events.lastEvent();
+      if (!evt) return;
+      this.applyEvent(evt);
+    });
+  }
+
+  /** Optimistic local update from a successful PUT response. */
   onDeviceUpdated(updated: AnyDevice): void {
     this.devices.update((current) =>
       current.map((d) => (d.id === updated.id ? updated : d))
@@ -81,6 +116,9 @@ export class DeviceList implements OnInit {
       next: (devices) => {
         this.devices.set(devices);
         this.loading.set(false);
+        // Connect AFTER the first snapshot lands so we never apply an
+        // event for a device the list hasn't seen yet.
+        this.events.connect();
       },
       error: (err) => {
         this.error.set('Could not load devices. Is the API running?');
@@ -89,14 +127,60 @@ export class DeviceList implements OnInit {
       },
     });
   }
+
+  ngOnDestroy(): void {
+    this.events.disconnect();
+  }
+
+  private applyEvent(evt: DeviceChangedEvent): void {
+    switch (evt.changeType) {
+      case DeviceChangeType.Created:
+        // Created has no prior state to merge with — the payload IS
+        // the new device, so use it directly. The factory's omission
+        // of $type isn't fatal here because nothing in the rendering
+        // path uses $type today; if/when it does, this is the line
+        // that'll start lying.
+        this.devices.update((current) => [
+          ...current,
+          evt.payload as unknown as AnyDevice,
+        ]);
+        break;
+
+      case DeviceChangeType.Updated:
+        if (USE_PAYLOAD_DIRECTLY) {
+          this.devices.update((current) =>
+            current.map((d) =>
+              d.id === evt.deviceId ? (evt.payload as unknown as AnyDevice) : d
+            )
+          );
+        } else {
+          // Use the SSE event as a "this id changed" signal and
+          // refetch the canonical shape. Insulates us from any
+          // payload-shape drift on the backend.
+          this.deviceApi.getById(evt.deviceId).subscribe({
+            next: (fresh) => {
+              this.devices.update((current) =>
+                current.map((d) => (d.id === fresh.id ? fresh : d))
+              );
+            },
+            error: (err) => {
+              // 404 is expected if the device was deleted between the
+              // SSE event firing and the GET landing — drop silently.
+              if (err?.status !== 404) console.error('Refetch failed', err);
+            },
+          });
+        }
+        break;
+
+      case DeviceChangeType.Deleted:
+        this.devices.update((current) =>
+          current.filter((d) => d.id !== evt.deviceId)
+        );
+        break;
+    }
+  }
 }
 
-/**
- * Returns true if a device should be counted as "active" in the home summary.
- * - Light/Fan: powered on
- * - Thermostat: actively heating or cooling (idle is NOT active per spec §1.1.3)
- * - DoorLock: never counted as active (it's always doing its job)
- */
 function isDeviceActive(d: AnyDevice): boolean {
   switch (d.type) {
     case 'Light':
@@ -109,6 +193,4 @@ function isDeviceActive(d: AnyDevice): boolean {
     default:
       return false;
   }
-
-
 }

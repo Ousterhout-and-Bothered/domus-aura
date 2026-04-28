@@ -31,4 +31,22 @@
   &.error {
     color: #C2410C;
   }
+
+  .live-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    margin-left: 0.6rem;
+    vertical-align: middle;
+    background: var(--aura-text-muted);
+    opacity: 0.4;
+    transition: background 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+
+    &.connected {
+      background: #16a34a; // tailwind green-600 — swap for your token if you have one
+      opacity: 1;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+    }
+  }
 }
