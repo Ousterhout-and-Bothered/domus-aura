@@ -13,9 +13,18 @@ Full-stack smart home simulator. Control lights, fans, thermostats, and door loc
 
 ## Status
 
-Scaffold is done. We're starting feature development this week.
+Backend core functionality is implemented, including:
 
-------
+- EF Core + SQLite persistence
+- Device APIs (CRUD + commands)
+- Simulation engine (thermostat ticking, ambient temperature)
+- Scenes and command execution
+- Server-Sent Events (event streaming)
+- JWT authentication via Keycloak
+
+Frontend integration and UI polish are in progress.
+
+---
 
 ## Project Structure
 
@@ -30,7 +39,7 @@ domus-aura/
 ├── tests/
 │   ├── SmartHome.Api.Tests/
 │   └── SmartHome.Domain.Tests/
-├── data/                             # SQLite db + seed data
+├── data/                             # SQLite db and seed data
 ├── bruno/                            # API test collection
 └── docker-compose.yml
 ```
@@ -129,9 +138,18 @@ password: admin
 Use the following account to log in via the frontend:
 
 ```text
-username: reviewer
-password: Password123!
+username: demouser
+password: TheAnswerIs42!
 ```
+
+> Note: Passwords are not stored in version control. The test user is created without credentials in the Keycloak realm export; set the password manually in the Keycloak admin UI if needed.
+
+### Setting the Test User Password
+
+1. Open Keycloak admin console: http://localhost:8080
+2. Navigate to Users → demouser
+3. Set password to: `TheAnswerIs42!`
+4. Disable “Temporary” so it persists
 
 ### API Authentication
 

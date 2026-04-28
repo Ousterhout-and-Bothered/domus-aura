@@ -24,9 +24,5 @@
     <ProjectReference Include="..\SmartHome.Domain\SmartHome.Domain.csproj" />
     <ProjectReference Include="..\SmartHome.Infrastructure\SmartHome.Infrastructure.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="data\" />
-  </ItemGroup>
-
+  
 </Project>

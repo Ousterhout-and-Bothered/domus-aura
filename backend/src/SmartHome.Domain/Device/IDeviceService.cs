@@ -1,5 +1,6 @@
 using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.Events;
+using SmartHome.Domain.Device.Commands;
 
 namespace SmartHome.Domain.Device;
 
@@ -53,4 +54,52 @@ public interface IDeviceService
     /// so connected SSE clients can remove the device from their UI in real time.
     /// </remarks>
     Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Retrieves all devices, optionally filtered by location, type, and power state.
+    /// </summary>
+    /// <param name="location">
+    /// Optional location filter. When provided, only devices in the specified location are returned.
+    /// </param>
+    /// <param name="type">
+    /// Optional device type filter. When provided, only devices of the specified type are returned.
+    /// </param>
+    /// <param name="isOn">
+    /// Optional power-state filter. When <c>true</c>, only devices considered "on" are returned.
+    /// When <c>false</c>, only powered devices that are off are returned. When <c>null</c>, no state filtering is applied.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>
+    /// A read-only list of devices matching the provided filters.
+    /// </returns>
+    /// <remarks>
+    /// This method coordinates device retrieval and filtering at the service layer,
+    /// ensuring the API remains decoupled from persistence concerns. Latch devices
+    /// (e.g., door locks) are always considered "on" for filtering purposes.
+    /// </remarks>
+    Task<IReadOnlyList<Device>> GetAllDevicesAsync(
+        string? location,
+        DeviceType? type,
+        bool? isOn,
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Retrieves a device by its unique identifier.
+    /// </summary>
+    /// <param name="deviceId">The unique identifier of the device.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The matching device.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
+    Task<Device> GetDeviceByIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Retrieves the command history for a device after verifying the device exists.
+    /// </summary>
+    /// <param name="deviceId">The unique identifier of the device.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The command history entries for the device.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
+    Task<IReadOnlyList<CommandHistory>> GetDeviceHistoryAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default);
 }

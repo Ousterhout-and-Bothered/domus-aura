@@ -24,19 +24,12 @@
   ],
   "users": [
     {
-      "username": "jadkisson",
+      "username": "demouser",
       "enabled": true,
       "emailVerified": true,
-      "firstName": "Jeff",
-      "lastName": "Adkisson",
-      "email": "jad@example.com",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "TheAnswerIs42!",
-          "temporary": false
-        }
-      ]
+      "firstName": "Demo",
+      "lastName": "User",
+      "email": "demo@example.com"
     }
   ]
 }

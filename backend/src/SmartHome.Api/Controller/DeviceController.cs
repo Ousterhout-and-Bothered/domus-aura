@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Devices;
 using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.Repository;
-using SmartHome.Domain.Device.Commands;
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using SmartHome.Infrastructure.Device.Events;
 
 namespace SmartHome.Api.Controller;
 
@@ -15,24 +15,24 @@ namespace SmartHome.Api.Controller;
 [Route("api/devices")]
 public class DeviceController : ControllerBase
 {
-    private readonly IDeviceRepository _deviceRepository;
     private readonly IDeviceService _deviceService;
-    private readonly IDeviceCommandFactory _commandFactory;
-
+    private readonly IDeviceEventStream _deviceEventStream;
+    private readonly IOptions<JsonOptions> _jsonOptions;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceController"/> class.
     /// </summary>
-    /// <param name="deviceRepository">The repository for device persistence and retrieval.</param>
-    /// <param name="deviceService">The service for managing device business logic.</param>
-    /// <param name="commandFactory">The factory for resolving device-specific commands.</param>
+    /// <param name="deviceService">The service responsible for device business logic and orchestration.</param>
+    /// <param name="deviceEventStream">The event stream used to subscribe to real-time device change notifications (SSE).</param>
+    /// <param name="jsonOptions">The configured JSON serialization options used when streaming event payloads.</param>
     public DeviceController(
-        IDeviceRepository deviceRepository,
         IDeviceService deviceService,
-        IDeviceCommandFactory commandFactory)
+        IDeviceEventStream deviceEventStream,
+        IOptions<JsonOptions> jsonOptions)
     {
-        _deviceRepository = deviceRepository;
         _deviceService = deviceService;
-        _commandFactory = commandFactory;
+        _deviceEventStream = deviceEventStream;
+        _jsonOptions = jsonOptions;
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public class DeviceController : ControllerBase
             _ => null
         };
 
-        var devices = await _deviceRepository.GetAllAsync(location, type, isOn, cancellationToken);
+        var devices = await _deviceService.GetAllDevicesAsync(location, type, isOn, cancellationToken);
         return Ok(devices);
     }
 
@@ -72,13 +72,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Device>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
-
-        if (device is null)
-        {
-            return DeviceNotFound(id);
-        }
-
+        var device = await _deviceService.GetDeviceByIdAsync(id, cancellationToken);
         return Ok(device);
     }
 
@@ -111,13 +105,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var removed = await _deviceRepository.RemoveByIdAsync(id, cancellationToken);
-
-        if (!removed)
-        {
-            return DeviceNotFound(id);
-        }
-
+        await _deviceService.RemoveDeviceAsync(id, cancellationToken);
         return NoContent();
     }
 
@@ -131,14 +119,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<CommandHistory>>> GetHistory(Guid id, CancellationToken cancellationToken)
     {
-        var device = await _deviceRepository.GetByIdAsync(id, cancellationToken);
-
-        if (device is null)
-        {
-            return DeviceNotFound(id);
-        }
-
-        var history = await _deviceRepository.GetHistoryAsync(id, cancellationToken);
+        var history = await _deviceService.GetDeviceHistoryAsync(id, cancellationToken);
         return Ok(history);
     }
 
@@ -162,13 +143,31 @@ public class DeviceController : ControllerBase
 
         return Ok(device);
     }
-
-    private ObjectResult DeviceNotFound(Guid id)
+    
+    /// <summary>
+    /// Subscribes the client to a real-time stream of device state changes using Server-Sent Events (SSE).
+    /// Acts as an HTTP adapter over the device event stream and does not contain business logic.
+    /// </summary>
+    [Authorize]
+    [HttpGet("events")]
+    [Produces("text/event-stream")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task GetEvents(CancellationToken cancellationToken)
     {
-        return Problem(
-            type: "https://domus-aura.com/problems/device-not-found",
-            title: "Device not found",
-            detail: $"No device with id {id} exists.",
-            statusCode: StatusCodes.Status404NotFound);
+        Response.ContentType = "text/event-stream";
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("Connection", "keep-alive");
+
+        await foreach (var deviceEvent in _deviceEventStream.SubscribeAsync(cancellationToken))
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                deviceEvent,
+                _jsonOptions.Value.JsonSerializerOptions);
+
+            await Response.WriteAsync("event: deviceChanged\n", cancellationToken);
+            await Response.WriteAsync($"data: {json}\n\n", cancellationToken);
+            await Response.Body.FlushAsync(cancellationToken);
+        }
     }
 }

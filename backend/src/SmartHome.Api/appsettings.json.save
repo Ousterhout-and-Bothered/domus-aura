@@ -4,10 +4,10 @@
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning"
     }
-  },
-  "AllowedHosts": "*",
+  },"DefaultConnection": "Data Source=../../../data/smarthome.db;Cache=Shared;Default Timeout=30;"  
+"AllowedHosts": "*",
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=../../../data/smarthome.db;Cache=Shared;Default Timeout=30;"
+    "DefaultConnection": "Data Source=../SmartHome.Infrastructure/data/smarthome.db;Cache=Shared;Default Timeout=30;"
   },
   "AllowedOrigins": [ "http://localhost:4200" ],
   "Authentication": {

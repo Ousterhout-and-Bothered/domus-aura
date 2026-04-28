@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Scenes;
-using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Scene;
 
 namespace SmartHome.Api.Controller;

@@ -1,9 +1,6 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Domain.Common;
-using SmartHome.Domain;
 using SmartHome.Domain.Simulation;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHome.Api.Controller;
@@ -39,6 +36,7 @@ public sealed class LocationsController(ISimulationService simulationService) : 
         var temperatureValue = request.GetTemperatureValue()!.Value;
 
         await simulationService.SetAmbientTemperatureAsync(location, temperatureValue, cancellationToken);
+
         return Ok(new SetAmbientTemperatureResponse(location, temperatureValue));
     }
 }

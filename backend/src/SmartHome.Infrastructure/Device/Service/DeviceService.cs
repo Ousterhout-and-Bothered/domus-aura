@@ -121,19 +121,55 @@ public sealed class DeviceService(
         }
 
         var payload = DeviceEventPayloadFactory.Create(device);
-
-        var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
-
-        if (!removed)
-        {
-            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
-        }
-
+        
+        await repository.RemoveByIdAsync(deviceId, cancellationToken);
+        
         await deviceEventPublisher.PublishAsync(
             new DeviceChangedEvent(
                 deviceId,
                 DeviceChangeType.Deleted,
                 payload),
             cancellationToken);
+    }
+    
+    /// <inheritdoc />
+    ///Ensures controllers do not access the repository directly.
+    public async Task<IReadOnlyList<Domain.Device.Device>> GetAllDevicesAsync(
+        string? location,
+        DeviceType? type,
+        bool? isOn,
+        CancellationToken cancellationToken = default)
+    {
+        return await repository.GetAllAsync(location, type, isOn, cancellationToken);
+    }
+    
+    /// <inheritdoc />
+    public async Task<Domain.Device.Device> GetDeviceByIdAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default)
+    {
+        var device = await repository.GetByIdAsync(deviceId, cancellationToken);
+
+        if (device is null)
+        {
+            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
+        }
+
+        return device;
+    }
+    
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CommandHistory>> GetDeviceHistoryAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default)
+    {
+        var device = await repository.GetByIdAsync(deviceId, cancellationToken);
+
+        if (device is null)
+        {
+            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
+        }
+
+        return await repository.GetHistoryAsync(deviceId, cancellationToken);
     }
 }
