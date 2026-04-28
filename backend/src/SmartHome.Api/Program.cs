@@ -152,12 +152,11 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseCors();
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Apply migrations and seed on startup
-app.Logger.LogInformation("Using SQLite connection string: {ConnectionString}", connectionString);
+app.Logger.LogInformation("SQLite database configured.");
 
 using (var scope = app.Services.CreateScope())
 {
