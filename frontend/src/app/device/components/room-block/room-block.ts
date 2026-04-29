@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { AnyDevice } from '../../models/device-types';
 import { DeviceCard } from '../device-card/device-card';
+import { isDeviceOn } from '../../services/filter';
 
 @Component({
   selector: 'aura-room-block',
@@ -21,7 +22,11 @@ import { DeviceCard } from '../device-card/device-card';
 
       <div class="room-block-grid">
         @for (device of devices(); track device.id) {
-          <aura-device-card [device]="device" (deviceUpdated)="deviceUpdated.emit($event)" />
+          <aura-device-card
+            [device]="device"
+            (deviceUpdated)="deviceUpdated.emit($event)"
+            (deviceRemoved)="deviceRemoved.emit($event)"
+          />
         }
       </div>
     </section>
@@ -33,12 +38,9 @@ export class RoomBlock {
   readonly devices = input.required<AnyDevice[]>();
 
   readonly deviceUpdated = output<AnyDevice>();
+  readonly deviceRemoved = output<string>();
 
   readonly activeCount = computed(() =>
-    this.devices().filter((d) => {
-      if (d.type === 'Light' || d.type === 'Fan') return d.powerState === 'On';
-      if (d.type === 'Thermostat') return d.state === 'Heating' || d.state === 'Cooling';
-      return false;
-    }).length
+    this.devices().filter(isDeviceOn).length
   );
 }

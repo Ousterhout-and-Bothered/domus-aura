@@ -2,17 +2,21 @@
 /* ─────────────── PrimeNG p-card overrides ─────────────── */
 :host ::ng-deep .lock-card {
   background: radial-gradient(ellipse 80% 50% at 50% 30%, var(--lock-glow, transparent) 0%, transparent 70%), var(--p-card-background, var(--aura-surface));
-  overflow: hidden;
-  transition: background 0.6s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 :host ::ng-deep .lock-card .p-card-body {
-  padding: 1.25rem 1.5rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-:host ::ng-deep .lock-card .p-card-header {
-  padding: 0;
-}
-:host ::ng-deep .lock-card .p-card-content {
-  padding: 0;
+
+.p-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* ─────────────── Header ─────────────── */

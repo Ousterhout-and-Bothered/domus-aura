@@ -2,20 +2,25 @@
 
 :host ::ng-deep .fan-card {
   background: var(--p-card-background, var(--aura-surface));
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  height: 100%;
 
   .p-card-body {
-    padding: 1.25rem 1.5rem 1.5rem;
-  }
-
-  .p-card-header {
-    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .p-card-content {
-    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 }
+
 
 /* ─────────────── Header ─────────────── */
 
@@ -41,20 +46,20 @@
 
 /* ─────────────── Fan stage (SVG) ─────────────── */
 
+/* Fixed slot — SVG shrinks to fit, card height is no longer driven by content. */
 .fan-stage {
   position: relative;
   width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
+  height: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .fan-svg {
-  width: 100%;
-  max-width: 240px;
-  height: auto;
+  max-height: 100%;
+  width: auto;
   display: block;
   user-select: none;
 }
@@ -110,7 +115,13 @@
   color: var(--aura-text-muted);
 }
 
-/* ─────────────── Control rows ─────────────── */
+/* ─────────────── Controls block ─────────────── */
+
+/* margin-top: auto pins the entire control stack to the bottom of the
+   flex column, so any extra card height absorbs above it. */
+.controls {
+  margin-top: auto;
+}
 
 .control-row {
   margin-top: 1.25rem;
@@ -167,7 +178,7 @@
     color: var(--aura-text-muted);
     padding: 0.45rem 0.9rem;
     border-radius: 999px;
-    font-size: 6rem;
+    font-size: 1.1rem;
     letter-spacing: 0.05em;
     transition: all 0.15s ease;
 

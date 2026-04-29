@@ -2,16 +2,22 @@
 /* ─────────────── PrimeNG p-card overrides ─────────────── */
 :host ::ng-deep .light-card {
   background: radial-gradient(circle at 50% 30%, var(--light-glow, transparent) 0%, transparent 80%), var(--p-card-background, var(--aura-surface));
-  transition: background 0.6s ease;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 :host ::ng-deep .light-card .p-card-body {
-  padding: 1.25rem 1.5rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* push header up, controls down */
 }
-:host ::ng-deep .light-card .p-card-header {
+
+.p-card-header {
   padding: 0;
 }
-:host ::ng-deep .light-card .p-card-content {
+
+.p-card-content {
   padding: 0;
 }
 

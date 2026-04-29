@@ -14,6 +14,10 @@ import { AnyDevice } from '../../models/device-types';
 import { DeviceChangeType, DeviceChangedEvent } from '../../models/device';
 import { RoomBlock } from '../room-block/room-block';
 import { DeviceFiltersComponent } from '../device-filter/device-filter';
+import { RegisterDeviceDialog } from '../register-device-dialog/register-device-dialog';
+import { ButtonModule } from 'primeng/button';
+import { SimulationControls } from '../../../simulation/components/simulation-controls/simulation-controls';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   DeviceFilters,
   DEFAULT_FILTERS,
@@ -26,39 +30,46 @@ import {
  * The /devices route. Fetches every device on init, applies the active
  * filters, groups results by location, and renders one RoomBlock per room.
  *
- * Owns the filter state.
- *
- * Live updates flow in via DeviceEventService. SSE acts as a "something
- * changed" signal — for Updated events we re-fetch the device by id
- * rather than trusting the payload shape, so the canonical wire format
- * stays GET /api/devices/{id}. Created and Deleted events use the
- * payload directly (Created has no other source; Deleted only needs
- * the id).
+ * Owns the filter state. The DeviceFilters bar is a controlled child —
+ * it receives the current filter object and emits changes; we hold the
+ * canonical signal and recompute the visible room list reactively.
  */
 const USE_PAYLOAD_DIRECTLY = false;
 
 @Component({
   selector: 'aura-device-list',
   standalone: true,
-  imports: [RoomBlock, DeviceFiltersComponent],
+  imports: [RoomBlock, DeviceFiltersComponent, RegisterDeviceDialog, SimulationControls, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="device-list">
       <header class="device-list-header">
-        <h1>Your Home</h1>
-        @if (devices().length > 0) {
-          <p class="device-list-summary">
-            {{ devices().length }} devices · {{ allLocations().length }} rooms · {{ activeCount() }} active
-            <span
-              class="live-dot"
-              [class.connected]="events.connected()"
-              [title]="events.connected() ? 'Live updates connected' : 'Live updates disconnected'"
-            ></span>
-          </p>
-        }
+        <div class="device-list-titles">
+          <h1>Your Home</h1>
+          @if (devices().length > 0) {
+            <p class="device-list-summary">
+              {{ devices().length }} devices · {{ allLocations().length }} rooms · {{ activeCount() }} active
+              <span
+                class="live-dot"
+                [class.connected]="events.connected()"
+                [title]="events.connected() ? 'Live updates connected' : 'Live updates disconnected'"
+              ></span>
+            </p>
+          }
+        </div>
+        <p-button
+          label="Add Device"
+          icon="pi pi-plus"
+          (onClick)="onOpenRegisterDialog()"
+        />
       </header>
 
       @if (devices().length > 0) {
+        <aura-simulation-controls
+          [devices]="devices()"
+          (simulationReset)="onSimulationReset()"
+        />
+
         <aura-device-filters
           [filters]="filters()"
           [locations]="allLocations()"
@@ -74,15 +85,27 @@ const USE_PAYLOAD_DIRECTLY = false;
         <p class="device-list-status muted">
           No devices match the current filters.
         </p>
+      } @else if (rooms().length === 0) {
+        <p class="device-list-status muted">
+          No devices yet. Click "Add Device" to register your first one.
+        </p>
       } @else {
         @for (room of rooms(); track room.location) {
           <aura-room-block
             [location]="room.location"
             [devices]="room.devices"
             (deviceUpdated)="onDeviceUpdated($event)"
+            (deviceRemoved)="onDeviceRemoved($event)"
           />
         }
       }
+
+      <aura-register-device-dialog
+        [visible]="registerDialogVisible()"
+        [existingLocations]="allLocations()"
+        (visibleChange)="registerDialogVisible.set($event)"
+        (deviceCreated)="onDeviceCreated($event)"
+      />
     </section>
   `,
   styleUrl: './device-list.scss',
@@ -100,6 +123,9 @@ export class DeviceList implements OnInit, OnDestroy {
   /** Active filter state. Mutated only via onFiltersChange. */
   readonly filters = signal<DeviceFilters>(DEFAULT_FILTERS);
 
+  /** Whether the Add Device dialog is open. */
+  readonly registerDialogVisible = signal<boolean>(false);
+
   /* ─────────────── Derived signals ─────────────── */
 
   /** All distinct locations from the unfiltered device list — feeds the Location dropdown. */
@@ -112,7 +138,7 @@ export class DeviceList implements OnInit, OnDestroy {
 
   /**
    * Filtered devices grouped by location and sorted alphabetically.
-   * The room list excludes locations that have no matching devices —
+   * The room list excludes locations that have no matching devices
    * if you filter to "On + Lights", a room with only an off lamp
    * disappears entirely (rather than rendering an empty room block).
    */
@@ -133,15 +159,11 @@ export class DeviceList implements OnInit, OnDestroy {
   );
 
   constructor() {
-    // Reactively merge every SSE event into the devices signal.
-    // OnPush + immutable replacement means only the affected card
-    // re-renders, not the whole list.
-    effect(() => {
-      const evt = this.events.lastEvent();
-      if (!evt) return;
-      this.applyEvent(evt);
-    });
+    this.events.events$
+      .pipe(takeUntilDestroyed())
+      .subscribe((evt) => this.applyEvent(evt));
   }
+
 
   onDeviceUpdated(updated: AnyDevice): void {
     this.devices.update((current) =>
@@ -149,8 +171,37 @@ export class DeviceList implements OnInit, OnDestroy {
     );
   }
 
+
   onFiltersChange(next: DeviceFilters): void {
     this.filters.set(next);
+  }
+
+  /** Open the Add Device dialog. */
+  onOpenRegisterDialog(): void {
+    this.registerDialogVisible.set(true);
+  }
+
+
+  onDeviceCreated(created: AnyDevice): void {
+    this.devices.update((current) => {
+      if (current.some((d) => d.id === created.id)) return current;
+      return [...current, created];
+    });
+  }
+
+  onDeviceRemoved(deviceId: string): void {
+    this.devices.update((current) => current.filter((d) => d.id !== deviceId));
+  }
+
+  /**
+   * Reset doesn't change the device set — names, locations, and IDs are
+   * preserved — so refetch device state rather than reloading the page.
+   */
+  onSimulationReset(): void {
+    this.deviceApi.getAll().subscribe({
+      next: (fresh) => this.devices.set(fresh),
+      error: (err) => console.error('Refetch after reset failed', err),
+    });
   }
 
   ngOnInit(): void {
@@ -174,12 +225,17 @@ export class DeviceList implements OnInit, OnDestroy {
 
   private applyEvent(evt: DeviceChangedEvent): void {
     switch (evt.changeType) {
-      case DeviceChangeType.Created:
-        this.devices.update((current) => [
-          ...current,
-          evt.payload as unknown as AnyDevice,
-        ]);
+      case DeviceChangeType.Created: {
+        // Dedup on id — the optimistic insert from onDeviceCreated may
+        // have already added this device.
+        const incoming = evt.payload as unknown as AnyDevice;
+        this.devices.update((current) =>
+          current.some((d) => d.id === incoming.id)
+            ? current
+            : [...current, incoming]
+        );
         break;
+      }
 
       case DeviceChangeType.Updated:
         if (USE_PAYLOAD_DIRECTLY) {

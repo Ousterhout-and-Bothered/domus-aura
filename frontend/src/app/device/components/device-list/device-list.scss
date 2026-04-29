@@ -5,6 +5,16 @@
 
 .device-list-header {
   margin: 0 0 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.device-list-titles {
+  flex: 1 1 auto;
+  min-width: 0;
 
   h1 {
     font-family: var(--font-display);
@@ -32,21 +42,38 @@
     color: #C2410C;
   }
 
-  .live-dot {
-    display: inline-block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    margin-left: 0.6rem;
-    vertical-align: middle;
-    background: var(--aura-text-muted);
-    opacity: 0.4;
-    transition: background 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  &.muted {
+    color: var(--aura-text-muted);
+  }
+}
 
-    &.connected {
-      background: #16a34a; // tailwind green-600 — swap for your token if you have one
-      opacity: 1;
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+.live-dot {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  background: var(--aura-text-muted);
+  opacity: 0.4;
+  transition: background 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+
+  &.connected {
+    background: #16a34a;
+    opacity: 1;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+  }
+}
+
+/* ─────────────── Mobile ─────────────── */
+
+@media (max-width: 600px) {
+  .device-list-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    h1 {
+      font-size: 2.25rem;
     }
   }
 }

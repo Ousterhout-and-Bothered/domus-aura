@@ -28,13 +28,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'simulation',
-        loadComponent: () =>
-          import(
-            './simulation/components/simulation-controls/simulation-controls'
-            ).then((m) => m.SimulationControls),
-      },
-      {
         path: 'scenes',
         loadComponent: () =>
           import('./scene/components/scene-list/scene-list').then(

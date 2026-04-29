@@ -15,6 +15,9 @@
 }
 :host ::ng-deep .filter-toolbar .p-toolbar-group-end {
   margin-left: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
 }
 
 /* ─────────────── Filter groups (label + control pair) ─────────────── */

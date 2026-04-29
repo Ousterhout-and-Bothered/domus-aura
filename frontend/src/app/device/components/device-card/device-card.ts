@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 
 import { DeviceType } from '../../models/device';
 import {
@@ -27,78 +28,91 @@ import { DoorLock } from '../door-lock/door-lock';
 @Component({
   selector: 'aura-device-card',
   standalone: true,
-  imports: [ThermostatGauge, FanSpinning, LightBulb, DoorLock],
+  imports: [ThermostatGauge, FanSpinning, LightBulb, DoorLock, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @switch (device().type) {
-      @case (DeviceType.Thermostat) {
-        @if (isThermostat(device())) {
-          @let t = asThermostat(device());
-          <aura-thermostat-gauge
-            [name]="t.name"
-            [location]="t.location"
-            [desiredTemperature]="t.desiredTemperature"
-            [ambientTemperature]="t.ambientTemperature"
-            [mode]="t.mode"
-            [state]="t.state"
-            (stateChange)="onSetThermostatState(t, $event)"
-            (desiredTemperatureChange)="onSetDesiredTemperature(t, $event)"
-            (modeChange)="onSetMode(t, $event)"
-          />
-        }
-      }
-      @case (DeviceType.Light) {
-        @if (isLight(device())) {
-          @let l = asLight(device());
-          <aura-light-bulb
-            [name]="l.name"
-            [location]="l.location"
-            [powerState]="l.powerState"
-            [brightness]="l.brightness"
-            [colorHex]="l.colorHex"
-            (powerStateChange)="onSetLightPower(l, $event)"
-            (brightnessChange)="onSetLightBrightness(l, $event)"
-            (colorHexChange)="onSetLightColor(l, $event)"
-          />
-        }
-      }
-      @case (DeviceType.Fan) {
-        @if (isFan(device())) {
-          @let f = asFan(device());
-          <aura-fan-spinning
-            [name]="f.name"
-            [location]="f.location"
-            [powerState]="f.powerState"
-            [speed]="f.speed"
-            (powerStateChange)="onSetFanPower(f, $event)"
-            (speedChange)="onSetFanSpeed(f, $event)"
-          />
-        }
-      }
+    <div class="device-card-host">
+      <button
+        type="button"
+        class="device-card-remove"
+        [attr.aria-label]="'Remove ' + device().name"
+        (click)="onRequestRemove($event)"
+      >
+        <i class="pi pi-times"></i>
+      </button>
 
-      @case (DeviceType.DoorLock) {
-        @if (isDoorLock(device())) {
-          @let dl = asDoorLock(device());
-          <aura-door-lock
-            [name]="dl.name"
-            [location]="dl.location"
-            [lockState]="dl.lockState"
-            (lockStateChange)="onSetLockState(dl, $event)"
-          />
+      @switch (device().type) {
+        @case (DeviceType.Thermostat) {
+          @if (isThermostat(device())) {
+            @let t = asThermostat(device());
+            <aura-thermostat-gauge
+              [name]="t.name"
+              [location]="t.location"
+              [desiredTemperature]="t.desiredTemperature"
+              [ambientTemperature]="t.ambientTemperature"
+              [mode]="t.mode"
+              [state]="t.state"
+              (stateChange)="onSetThermostatState(t, $event)"
+              (desiredTemperatureChange)="onSetDesiredTemperature(t, $event)"
+              (modeChange)="onSetMode(t, $event)"
+            />
+          }
+        }
+        @case (DeviceType.Light) {
+          @if (isLight(device())) {
+            @let l = asLight(device());
+            <aura-light-bulb
+              [name]="l.name"
+              [location]="l.location"
+              [powerState]="l.powerState"
+              [brightness]="l.brightness"
+              [colorHex]="l.colorHex"
+              (powerStateChange)="onSetLightPower(l, $event)"
+              (brightnessChange)="onSetLightBrightness(l, $event)"
+              (colorHexChange)="onSetLightColor(l, $event)"
+            />
+          }
+        }
+        @case (DeviceType.Fan) {
+          @if (isFan(device())) {
+            @let f = asFan(device());
+            <aura-fan-spinning
+              [name]="f.name"
+              [location]="f.location"
+              [powerState]="f.powerState"
+              [speed]="f.speed"
+              (powerStateChange)="onSetFanPower(f, $event)"
+              (speedChange)="onSetFanSpeed(f, $event)"
+            />
+          }
+        }
+
+        @case (DeviceType.DoorLock) {
+          @if (isDoorLock(device())) {
+            @let dl = asDoorLock(device());
+            <aura-door-lock
+              [name]="dl.name"
+              [location]="dl.location"
+              [lockState]="dl.lockState"
+              (lockStateChange)="onSetLockState(dl, $event)"
+            />
+          }
         }
       }
-    }
+    </div>
   `,
   styleUrl: './device-card.scss',
 })
 export class DeviceCard {
   private readonly deviceApi = inject(DeviceApiService);
   private readonly messages = inject(MessageService);
+  private readonly confirms = inject(ConfirmationService);
 
   readonly device = input.required<AnyDevice>();
 
-  /** Emitted when the device state changes (after a command succeeds). */
   readonly deviceUpdated = output<AnyDevice>();
+
+  readonly deviceRemoved = output<string>();
 
   readonly DeviceType = DeviceType;
   readonly isThermostat = isThermostat;
@@ -138,12 +152,6 @@ export class DeviceCard {
     }).subscribe({
       next: (updated) => {
         this.deviceUpdated.emit(updated);
-        this.messages.add({
-          severity: 'success',
-          summary: thermostat.name,
-          detail: `Set point ${value}°F`,
-          life: 2000,
-        });
       },
       error: (err) => this.commandFailed(thermostat.name, 'temperature', err),
     });
@@ -167,7 +175,7 @@ export class DeviceCard {
     });
   }
 
-  /* ─────────────── Fan (toasts wired) ─────────────── */
+  /* ─────────────── Fan ─────────────── */
 
   onSetFanPower(fan: Fan, powerState: PowerState): void {
     this.deviceApi.executeCommand(fan.id, {
@@ -205,7 +213,7 @@ export class DeviceCard {
     });
   }
 
-  /* ─────────────── Light (toasts wired) ──────────────  */
+  /* ─────────────── Light ───────────────*/
 
   onSetLightPower(light: Light, powerState: PowerState): void {
     this.deviceApi.executeCommand(light.id, {
@@ -281,7 +289,54 @@ export class DeviceCard {
     });
   }
 
-  /* ─────────────── Shared error toast ─────────────── */
+  /* ─────────────── Removal ─────────────── */
+
+  onRequestRemove(event: MouseEvent): void {
+    // target the confirm popup at the × button so the popover anchors visibly
+    this.confirms.confirm({
+      target: event.currentTarget as HTMLElement,
+      header: 'Remove device',
+      message: `Remove "${this.device().name}"? This cannot be undone.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Remove',
+      rejectLabel: 'Cancel',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', text: true },
+      accept: () => this.executeRemove(),
+    });
+  }
+
+  private executeRemove(): void {
+    const device = this.device();
+    this.deviceApi.remove(device.id).subscribe({
+      next: () => {
+        this.deviceRemoved.emit(device.id);
+        this.messages.add({
+          severity: 'success',
+          summary: device.name,
+          detail: 'Removed',
+          life: 2500,
+        });
+      },
+      error: (err) => {
+        console.error(`Failed to remove ${device.name}`, err);
+        this.messages.add({
+          severity: 'error',
+          summary: device.name,
+          detail: 'Could not remove. Please try again.',
+          life: 4000,
+        });
+      },
+    });
+  }
+
+  /* ─────────────── Shared error toast ───────────────
+   *
+   * Temporary home for the error path. When we lift this to an HTTP
+   * interceptor (the Lecture 16 pattern), this method goes away and
+   * every command's error callback collapses to console.error or
+   * just nothing.
+   */
   private commandFailed(deviceName: string, action: string, err: unknown): void {
     console.error(`Failed to set ${action} on ${deviceName}`, err);
     this.messages.add({

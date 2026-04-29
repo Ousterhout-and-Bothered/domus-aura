@@ -75,7 +75,7 @@ import {
             [showClear]="true"
             optionLabel="label"
             optionValue="value"
-            styleClass="filter-location"
+            class="filter-location"
           />
         </div>
 

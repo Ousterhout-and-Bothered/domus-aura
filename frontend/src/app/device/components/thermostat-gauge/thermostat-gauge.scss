@@ -2,20 +2,18 @@
 
 :host ::ng-deep .thermo-card {
   background: var(--p-card-background, var(--aura-surface));
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   .p-card-body {
-    padding: 1.25rem 1.5rem 1.5rem;
-  }
-
-  .p-card-header {
-    padding: 0;
-  }
-
-  .p-card-content {
-    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* push header up, controls down */
   }
 }
+
 
 /* ─────────────── Header ─────────────── */
 

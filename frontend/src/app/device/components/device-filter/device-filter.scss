@@ -16,6 +16,9 @@
 
   .p-toolbar-group-end {
     margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
   }
 }
 

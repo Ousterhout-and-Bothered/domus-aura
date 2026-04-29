@@ -1,4 +1,4 @@
-<div class="aura-shell">
+<<div class="aura-shell">
   @if (isAuthenticated()) {
     <header class="aura-header">
       <a routerLink="/devices" class="aura-wordmark">
@@ -41,4 +41,7 @@
   <main class="aura-main" [class.aura-main--full]="!isAuthenticated()">
     <router-outlet />
   </main>
+
+  <p-toast position="top-right" />
+  <p-confirmdialog />
 </div>
