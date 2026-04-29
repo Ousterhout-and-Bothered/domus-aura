@@ -6,6 +6,12 @@
   output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { CardModule } from 'primeng/card';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SelectButtonModule } from 'primeng/selectbutton';
+
 import { FanSpeed } from '../../models/device-types';
 import { PowerState } from '../../models/device';
 
@@ -18,17 +24,35 @@ const BACKDROP_R = 90;
 const HUB_R = 12;
 const BLADE_COUNT = 3;
 
+/**
+ * Animated three-blade ceiling fan. The blades spin via CSS animation
+ * whose duration shortens with speed; at High the blades blur slightly
+ * to evoke motion.
+ *
+ * Power is a ToggleSwitch; speed is a SelectButton (Low/Medium/High) —
+ * the textbook three-option-pick-one use case for SelectButton. Speed
+ * controls disable when powered off; the toggle stays available so
+ * the user can power back on.
+ */
 @Component({
   selector: 'aura-fan-spinning',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ToggleSwitchModule,
+    SelectButtonModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="fan-card">
-      <header>
-        <h3 class="fan-name">{{ name() }}</h3>
-        <p class="fan-loc">{{ location() }}</p>
-      </header>
+    <p-card styleClass="fan-card">
+      <ng-template pTemplate="header">
+        <div class="fan-card-head">
+          <h3 class="fan-name">{{ name() }}</h3>
+          <p class="fan-loc">{{ location() }}</p>
+        </div>
+      </ng-template>
 
       <div class="fan-stage">
         <svg
@@ -37,15 +61,12 @@ const BLADE_COUNT = 3;
           [attr.aria-label]="'Fan. Power ' + powerState() + ', speed ' + speed()"
           role="img"
         >
-          <!-- Light backdrop -->
           <circle
             [attr.cx]="CX"
             [attr.cy]="CY"
             [attr.r]="BACKDROP_R"
             fill="#FBF8F3"
           />
-
-          <!-- Outer grille ring (decorative) -->
           <circle
             [attr.cx]="CX"
             [attr.cy]="CY"
@@ -55,8 +76,6 @@ const BLADE_COUNT = 3;
             stroke-width="1.5"
             opacity="0.3"
           />
-
-          <!-- Spinning blade group -->
           <g
             class="fan-blades"
             [class.spinning]="isOn()"
@@ -74,8 +93,6 @@ const BLADE_COUNT = 3;
               />
             }
           </g>
-
-          <!-- Center hub (does not spin) -->
           <circle
             [attr.cx]="CX"
             [attr.cy]="CY"
@@ -95,39 +112,33 @@ const BLADE_COUNT = 3;
           <div class="fan-state-label">{{ stateLabel() }}</div>
         </div>
       </div>
-
-      <div class="controls-row">
-        <button
-          type="button"
-          class="power-btn"
-          [class.on]="isOn()"
-          (click)="onPowerClick()"
-        >
-          {{ isOn() ? 'On' : 'Off' }}
-        </button>
+      <div class="control-row power-row">
+        <label [attr.for]="powerId" class="control-label">Power</label>
+        <p-toggleswitch
+          [inputId]="powerId"
+          [ngModel]="isOn()"
+          (ngModelChange)="onPowerToggle($event)"
+        />
+        <span class="control-value">{{ isOn() ? 'On' : 'Off' }}</span>
       </div>
-
-      <div class="speed-row" [class.disabled]="!isOn()">
-        <label>Speed</label>
-        <div class="speed-buttons">
-          @for (s of SPEEDS; track s) {
-            <button
-              type="button"
-              class="speed-btn"
-              [class.active]="speed() === s"
-              [disabled]="!isOn()"
-              (click)="onSpeedClick(s)"
-            >
-              {{ s }}
-            </button>
-          }
-        </div>
+      <div class="control-row speed-row" [class.is-disabled]="!isOn()">
+        <label class="control-label">Speed</label>
+        <p-selectbutton
+          [options]="speedOptions"
+          [ngModel]="speed()"
+          (onChange)="onSpeedChange($event.value)"
+          [disabled]="!isOn()"
+          [allowEmpty]="false"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="speed-select"></p-selectbutton>
       </div>
-    </article>
+    </p-card>
   `,
   styleUrl: './fan-spinning.scss',
 })
 export class FanSpinning {
+
   /* ─────────────── Inputs / outputs ─────────────── */
 
   readonly name = input.required<string>();
@@ -146,15 +157,22 @@ export class FanSpinning {
   readonly BACKDROP_R = BACKDROP_R;
   readonly HUB_R = HUB_R;
   readonly blades = Array.from({ length: BLADE_COUNT }, (_, i) => i);
-  readonly SPEEDS: FanSpeed[] = [
-    'Low' as FanSpeed,
-    'Medium' as FanSpeed,
-    'High' as FanSpeed,
+
+
+  readonly speedOptions = [
+    { label: 'Low', value: FanSpeed.Low },
+    { label: 'Medium', value: FanSpeed.Medium },
+    { label: 'High', value: FanSpeed.High },
   ];
+
+  /* ─────────────── Unique IDs ─────────────── */
+
+  private readonly _uid = Math.random().toString(36).slice(2, 9);
+  readonly powerId = `fan-power-${this._uid}`;
 
   /* ─────────────── Computed visual state ─────────────── */
 
-  readonly isOn = computed(() => this.powerState() === 'On');
+  readonly isOn = computed(() => this.powerState() === PowerState.On);
 
   readonly speedClass = computed(() => {
     if (!this.isOn()) return 'off';
@@ -172,16 +190,12 @@ export class FanSpinning {
 
   /* ─────────────── Blade shape ─────────────── */
 
-  /**
-   * Builds an asymmetric, gently curved blade. The blade attaches at the hub
-   * and extends to ~80% of the backdrop radius. Asymmetry implies direction
-   * of rotation when stationary.
-   */
+
   bladePath(): string {
-    const tipR = BACKDROP_R - 18;     // how far tip extends from center
-    const baseHalfWidth = 8;           // half-width at hub
-    const tipHalfWidth = 14;           // half-width at tip (wider tip = scoop shape)
-    const offset = 6;                  // asymmetric offset gives a subtle blade twist
+    const tipR = BACKDROP_R - 18;
+    const baseHalfWidth = 8;
+    const tipHalfWidth = 14;
+    const offset = 6;
 
     return `M ${CX - baseHalfWidth} ${CY}
             Q ${CX - baseHalfWidth - offset} ${CY - tipR / 2} ${CX - tipHalfWidth} ${CY - tipR}
@@ -192,12 +206,11 @@ export class FanSpinning {
 
   /* ─────────────── Event handlers ─────────────── */
 
-  onPowerClick(): void {
-    const next = this.isOn() ? 'Off' : 'On';
-    this.powerStateChange.emit(next as PowerState);
+  onPowerToggle(next: boolean): void {
+    this.powerStateChange.emit(next ? PowerState.On : PowerState.Off);
   }
 
-  onSpeedClick(speed: FanSpeed): void {
+  onSpeedChange(speed: FanSpeed): void {
     if (!this.isOn()) return;
     if (speed !== this.speed()) {
       this.speedChange.emit(speed);

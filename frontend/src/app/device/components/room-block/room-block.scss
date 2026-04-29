@@ -42,7 +42,13 @@
 }
 
 .room-block-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
+
+  > * {
+    flex: 0 1 320px;
+    min-width: 260px;
+  }
 }

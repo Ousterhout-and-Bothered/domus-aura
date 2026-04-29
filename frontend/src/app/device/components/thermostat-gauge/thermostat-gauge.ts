@@ -9,6 +9,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { CardModule } from 'primeng/card';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectButtonModule } from 'primeng/selectbutton';
+
 import { ThermostatMode, ThermostatState } from '../../models/device-types';
 
 /* ─────────────── Geometry constants ─────────────── */
@@ -16,7 +24,7 @@ import { ThermostatMode, ThermostatState } from '../../models/device-types';
 const TEMP_MIN = 60;       // matches Domain Thermostat MinTemperature
 const TEMP_MAX = 80;       // matches Domain Thermostat MaxTemperature
 const ARC_START = 270;     // 9 o'clock (left edge)
-const ARC_END = 90;       // 3 o'clock (right edge) — together with START makes a half circle going over the top
+const ARC_END = 90;        // 3 o'clock (right edge) — together with START makes a half circle going over the top
 const ARC_SPAN = 180;      // ARC_END - ARC_START
 const VIEWBOX_W = 380;
 const VIEWBOX_H = 220;
@@ -36,9 +44,16 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
  * desired temperature, embedded tick marks at every 5°F, and a center
  * readout for desired temp + state label.
  *
- * The needle is draggable along the arc; a slider below provides
- * keyboard/precise input. Mode buttons emit a separate event for
- * setting Heat/Cool/Auto.
+ * The needle is draggable along the arc for primary interaction.
+ * A p-inputnumber below provides keyboard-accessible ±1°F nudging.
+ * Mode is set via a SelectButton (Heat/Cool/Auto), and the on/off
+ * ToggleSwitch transitions the underlying state machine between Off
+ * and Idle. When state is Off, mode and
+ * setpoint controls are disabled; the toggle remains available so
+ * the user can power back on.
+ *
+ * Note: Thermostat does NOT implement IPowerable. Its on/off semantics
+ * live in the state machine itself — `state === Off` means powered off.
  *
  * Temperature ranges match the backend authoritatively:
  *   - Desired:  60-80°F (Domain clamp + DeviceCommandRequestValidator)
@@ -48,25 +63,38 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
 @Component({
   selector: 'aura-thermostat-gauge',
   standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule, // p-toggleswitch, p-inputnumber, p-selectbutton use ngModel
+    CardModule,
+    ToggleSwitchModule,
+    InputNumberModule,
+    SelectButtonModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="thermo-card">
-      <header>
-        <h3 class="thermo-name">{{ name() }}</h3>
-        <p class="thermo-loc">{{ location() }}</p>
-      </header>
+    <p-card styleClass="thermo-card">
+      <ng-template pTemplate="header">
+        <div class="thermo-card-head">
+          <h3 class="thermo-name">{{ name() }}</h3>
+          <p class="thermo-loc">{{ location() }}</p>
+        </div>
+      </ng-template>
 
-      <div class="gauge-stage">
+      <div class="gauge-stage" [class.is-off]="!isOn()">
         <svg
           #svgEl
           class="gauge-svg"
           [attr.viewBox]="'0 0 ' + viewBoxW + ' ' + viewBoxH"
-          [attr.aria-label]="'Thermostat dial. Desired ' + desiredTemperature() + ' degrees, currently ' + activeState()"
+          [attr.aria-label]="
+            'Thermostat dial. Desired ' + desiredTemperature() +
+            ' degrees, currently ' + activeState()
+          "
           role="img"
         >
           <defs>
             <mask [attr.id]="maskId">
-              <rect [attr.x]="0" [attr.y]="0" [attr.width]="viewBoxW" [attr.height]="viewBoxH" fill="white" />
+              <rect [attr.x]="0" [attr.y]="0" [attr.width]="viewBoxW" [attr.height]="viewBoxH" fill="white"/>
               @for (tick of ticks(); track tick.temp) {
                 <rect
                   [attr.x]="tick.x - tickWidth / 2"
@@ -117,6 +145,7 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
 
           <g
             class="needle-group"
+            [class.is-disabled]="!isOn()"
             [attr.transform]="needleTransform()"
             (pointerdown)="onNeedlePointerDown($event)"
           >
@@ -125,7 +154,7 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
               [attr.d]="needlePath()"
               [attr.fill]="theme().needleFill"
             />
-            <circle [attr.cx]="CX" [attr.cy]="CY" r="6" fill="var(--aura-text)" />
+            <circle [attr.cx]="CX" [attr.cy]="CY" r="6" fill="var(--aura-text)"/>
           </g>
         </svg>
 
@@ -145,33 +174,55 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
         · {{ ambientContext() }}
       </p>
 
-      <div class="controls-row">
-        <label [attr.for]="setpointId">Set point</label>
-        <input
-          type="range"
-          [id]="setpointId"
-          [min]="TEMP_MIN"
-          [max]="TEMP_MAX"
-          step="1"
-          [value]="desiredTemperature()"
-          (input)="onSetpointInput($event)"
+      <!-- Power: PrimeNG ToggleSwitch — drives state Off/Idle transition -->
+      <div class="control-row power-row">
+        <label [attr.for]="powerId" class="control-label">Power</label>
+        <p-toggleswitch
+          [inputId]="powerId"
+          [ngModel]="isOn()"
+          (ngModelChange)="onPowerToggle($event)"
         />
-        <span class="val">{{ desiredTemperature() }}°</span>
+        <span class="control-value">{{ isOn() ? 'On' : 'Off' }}</span>
       </div>
 
-      <div class="mode-row">
-        @for (m of MODES; track m) {
-          <button
-            type="button"
-            class="mode-btn"
-            [class.active]="mode() === m"
-            (click)="onModeClick(m)"
-          >
-            {{ m }}
-          </button>
-        }
+      <!--
+        Setpoint: PrimeNG InputNumber with ±1°F buttons.
+        Discrete numeric input that complements the needle drag.
+        showButtons="true" + buttonLayout="horizontal" gives a clean
+        "[ - ] [70] [ + ]" trio.
+      -->
+      <div class="control-row setpoint-row" [class.is-disabled]="!isOn()">
+        <label [attr.for]="setpointId" class="control-label">Set point</label>
+        <p-inputnumber
+          [inputId]="setpointId"
+          [ngModel]="desiredTemperature()"
+          (ngModelChange)="onSetpointChange($event)"
+          [min]="TEMP_MIN"
+          [max]="TEMP_MAX"
+          [step]="1"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          suffix="°F"
+          [disabled]="!isOn()"
+          styleClass="setpoint-input"></p-inputnumber>
       </div>
-    </article>
+
+      <!-- Mode: 3 options, disabled when thermostat is Off -->
+      <div class="control-row mode-row" [class.is-disabled]="!isOn()">
+        <label class="control-label">Mode</label>
+        <p-selectbutton
+          [options]="modeOptions"
+          [ngModel]="mode()"
+          (onChange)="onModeChange($event.value)"
+          [disabled]="!isOn()"
+          [allowEmpty]="false"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="mode-select"></p-selectbutton>
+      </div>
+    </p-card>
   `,
   styleUrl: './thermostat-gauge.scss',
 })
@@ -185,6 +236,13 @@ export class ThermostatGauge {
   readonly mode = input.required<ThermostatMode>();
   readonly state = input.required<ThermostatState>();
 
+  /**
+   * Fires the on/off transition. Toggling on emits Idle (the natural
+   * post-power-on state); toggling off emits Off. The downstream
+   * Heating/Cooling transitions happen on the backend automatically
+   * based on ambient vs. desired temp — those aren't user-driven.
+   */
+  readonly stateChange = output<ThermostatState>();
   readonly desiredTemperatureChange = output<number>();
   readonly modeChange = output<ThermostatMode>();
 
@@ -199,17 +257,32 @@ export class ThermostatGauge {
   readonly bandPath = buildBandPath();
   readonly CX = CX;
   readonly CY = CY;
-  readonly MODES: ThermostatMode[] = [
-    'Heat' as ThermostatMode,
-    'Cool' as ThermostatMode,
-    'Auto' as ThermostatMode,
+
+  /**
+   * SelectButton needs {label, value} pairs. Using enum values directly
+   * so === comparison with mode() works without string coercion.
+   */
+  readonly modeOptions = [
+    { label: 'Heat', value: ThermostatMode.Heat },
+    { label: 'Cool', value: ThermostatMode.Cool },
+    { label: 'Auto', value: ThermostatMode.Auto },
   ];
 
   /* ─────────────── Unique IDs ─────────────── */
 
   private readonly _uid = Math.random().toString(36).slice(2, 9);
   readonly maskId = `band-mask-${this._uid}`;
+  readonly powerId = `thermo-power-${this._uid}`;
   readonly setpointId = `setpoint-${this._uid}`;
+
+  /* ─────────────── Power gating ───────────────
+   *
+   * The thermostat's "off" is encoded as ThermostatState.Off — there is
+   * no separate power flag. When state === Off, the gauge is grayed,
+   * the needle drag is suppressed, and child controls are disabled.
+   * The ambient readout stays visible because it's read-only data.
+   */
+  readonly isOn = computed(() => this.state() !== ThermostatState.Off);
 
   /* ─────────────── Computed visual state ─────────────── */
 
@@ -236,7 +309,7 @@ export class ThermostatGauge {
   });
 
   readonly needlePath = computed(() => {
-    const tipR = TICK_INNER_R;        // ← needle tip = inner end of ticks
+    const tipR = TICK_INNER_R;
     const baseHalfWidth = 6;
     const tipHalfWidth = 2;
 
@@ -260,17 +333,19 @@ export class ThermostatGauge {
    */
   readonly activeState = computed<'heating' | 'cooling' | 'idle'>(() => {
     const s = this.state();
-    if (s === 'Heating') return 'heating';
-    if (s === 'Cooling') return 'cooling';
+    if (s === ThermostatState.Heating) return 'heating';
+    if (s === ThermostatState.Cooling) return 'cooling';
     return 'idle';
   });
 
   readonly activeStateLabel = computed(() => {
+    if (!this.isOn()) return 'Off';
     const s = this.activeState();
     return s.charAt(0).toUpperCase() + s.slice(1);
   });
 
   readonly ambientContext = computed(() => {
+    if (!this.isOn()) return 'system off';
     switch (this.activeState()) {
       case 'heating': return 'warming the room';
       case 'cooling': return 'cooling the room';
@@ -279,6 +354,7 @@ export class ThermostatGauge {
   });
 
   readonly theme = computed(() => {
+    if (!this.isOn()) return { bandFill: '#E8E5DD', needleFill: '#9B9893' };
     switch (this.activeState()) {
       case 'heating': return { bandFill: '#FED7AA', needleFill: '#C2410C' };
       case 'cooling': return { bandFill: '#DBEAFE', needleFill: '#3B82F6' };
@@ -293,6 +369,9 @@ export class ThermostatGauge {
   private _activePointerId: number | null = null;
 
   onNeedlePointerDown(event: PointerEvent): void {
+    // Block needle drag entirely when powered off — matches the disabled
+    // visual state and prevents commands fired against an Off thermostat.
+    if (!this.isOn()) return;
     event.preventDefault();
     const target = event.currentTarget as SVGElement;
     target.setPointerCapture(event.pointerId);
@@ -322,16 +401,34 @@ export class ThermostatGauge {
     this._activePointerId = null;
   }
 
-  /* ─────────────── Slider + mode buttons ─────────────── */
+  /* ─────────────── Event handlers ─────────────── */
 
-  onSetpointInput(event: Event): void {
-    const value = parseInt((event.target as HTMLInputElement).value, 10);
-    if (!Number.isNaN(value) && value !== this.desiredTemperature()) {
+  /**
+   * Toggle on  → emit Idle (state machine transitions further to
+   *              Heating/Cooling automatically based on ambient vs desired)
+   *
+   * Toggle off → emit Off (allowed from any state per §1.1.3)
+   *
+   * The backend accepts setState=Off regardless of current state, so
+   * the user can power down even mid-Heating or mid-Cooling.
+   */
+  onPowerToggle(next: boolean): void {
+    this.stateChange.emit(next ? ThermostatState.Idle : ThermostatState.Off);
+  }
+
+  /**
+   * InputNumber's ngModelChange fires on every keystroke + button click.
+   * No drag-vs-commit distinction needed (each event is a discrete
+   * intentional change), unlike the slider in the Light component.
+   */
+  onSetpointChange(value: number | null): void {
+    if (value == null || Number.isNaN(value)) return;
+    if (value !== this.desiredTemperature()) {
       this.desiredTemperatureChange.emit(value);
     }
   }
 
-  onModeClick(mode: ThermostatMode): void {
+  onModeChange(mode: ThermostatMode): void {
     if (mode !== this.mode()) {
       this.modeChange.emit(mode);
     }
@@ -365,12 +462,7 @@ function buildBandPath(): string {
 /**
  * Convert SVG pointer position to integer temperature, clamped to range.
  * Used during needle drag.
- */
-/**
- * Convert SVG pointer position to integer temperature, clamped to range.
- * Used during needle drag.
  *
- * Handles dial layouts where ARC crosses 0°/360° (e.g. ARC_START=270, ARC_END=90).
  */
 function pointToTemp(svgX: number, svgY: number): number {
   const dx = svgX - CX;
@@ -389,7 +481,6 @@ function pointToTemp(svgX: number, svgY: number): number {
 
   // Snap to nearest end if cursor falls outside the arc span.
   if (relative > ARC_SPAN) {
-    // Closer to the end or to the start?
     const distFromEnd = relative - ARC_SPAN;
     const distFromStart = 360 - relative;
     relative = distFromEnd < distFromStart ? ARC_SPAN : 0;

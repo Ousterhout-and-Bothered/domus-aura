@@ -1,26 +1,44 @@
 <div class="aura-shell">
-  <header class="aura-header">
-    <a routerLink="/devices" class="aura-wordmark">
-      <img src="Domus Aura.png" alt="" class="aura-logo" />
-      <span>Domus Aura </span>
-    </a>
+  @if (isAuthenticated()) {
+    <header class="aura-header">
+      <a routerLink="/devices" class="aura-wordmark">
+        <img src="Domus Aura.png" alt="" class="aura-logo" />
+        <span>Domus Aura </span>
+      </a>
 
-    <nav class="aura-nav">
-      <a routerLink="/devices" routerLinkActive="active">Devices</a>
-      <a routerLink="/scenes" routerLinkActive="active">Scenes</a>
-    </nav>
+      <nav class="aura-nav">
+        <a routerLink="/devices" routerLinkActive="active">Devices</a>
+        <a routerLink="/scenes" routerLinkActive="active">Scenes</a>
+      </nav>
 
-    <button
-      type="button"
-      class="aura-theme-toggle"
-      (click)="toggleTheme()"
-      [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-    >
-      <i [class]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"></i>
-    </button>
-  </header>
+      <div class="aura-header-actions">
+        @if (userName(); as name) {
+          <span class="aura-user" [title]="name">{{ name }}</span>
+        }
 
-  <main class="aura-main">
+        <button
+          type="button"
+          class="aura-icon-button"
+          (click)="logout()"
+          aria-label="Sign out"
+          title="Sign out"
+        >
+          <i class="pi pi-sign-out"></i>
+        </button>
+
+        <button
+          type="button"
+          class="aura-icon-button"
+          (click)="toggleTheme()"
+          [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        >
+          <i [class]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"></i>
+        </button>
+      </div>
+    </header>
+  }
+
+  <main class="aura-main" [class.aura-main--full]="!isAuthenticated()">
     <router-outlet />
   </main>
 </div>

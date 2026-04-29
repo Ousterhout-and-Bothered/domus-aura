@@ -2,10 +2,19 @@
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { CardModule } from 'primeng/card';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SliderModule } from 'primeng/slider';
+import { ColorPickerModule } from 'primeng/colorpicker';
+
 import { PowerState } from '../../models/device';
 
 /* ─────────────── Constants ─────────────── */
@@ -15,19 +24,6 @@ const CX = 100;
 const CY = 100;
 const BULB_R = 38;
 const GLOW_RING_COUNT = 4;
-
-/** Curated palette — quick-pick swatches. Custom hex still works via the input. */
-const COLOR_PRESETS = [
-  '#FFE4B5', // warm white
-  '#FFD580', // amber
-  '#FF8800', // orange
-  '#FF4D4D', // red
-  '#FF66CC', // pink
-  '#9B59FF', // purple
-  '#5EB0FF', // sky blue
-  '#5EFFC9', // mint
-  '#A8FF66', // lime
-];
 
 /**
  * Convert a hex color (#RRGGBB) to an rgba() string with the given alpha.
@@ -46,38 +42,50 @@ function hexWithAlpha(hex: string, alpha: number): string {
 @Component({
   selector: 'aura-light-bulb',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ToggleSwitchModule,
+    SliderModule,
+    ColorPickerModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="light-card" [style.--light-glow]="cardGlowColor()">
-      <header>
-        <h3 class="light-name">{{ name() }}</h3>
-        <p class="light-loc">{{ location() }}</p>
-      </header>
+    <p-card styleClass="light-card" [style.--light-glow]="cardGlowColor()">
+      <ng-template pTemplate="header">
+        <div class="light-card-head">
+          <h3 class="light-name">{{ name() }}</h3>
+          <p class="light-loc">{{ location() }}</p>
+        </div>
+      </ng-template>
 
       <div class="bulb-stage">
         <svg
           class="bulb-svg"
           [attr.viewBox]="'0 0 ' + viewBox + ' ' + viewBox"
-          [attr.aria-label]="'Light. Power ' + powerState() + ', brightness ' + brightness() + '%, color ' + colorHex()"
+          [attr.aria-label]="
+            'Light. Power ' + powerState() +
+            ', brightness ' + brightness() + '%, color ' + colorHex()
+          "
           role="img"
         >
           <defs>
             <radialGradient [attr.id]="bulbGradientId" cx="0.5" cy="0.5" r="0.5">
-              <stop offset="0%" [attr.stop-color]="centerColor()" />
-              <stop offset="60%" [attr.stop-color]="colorHex()" />
-              <stop offset="100%" [attr.stop-color]="edgeColor()" />
+              <stop offset="0%" [attr.stop-color]="centerColor()"/>
+              <stop offset="60%" [attr.stop-color]="colorHex()"/>
+              <stop offset="100%" [attr.stop-color]="edgeColor()"/>
             </radialGradient>
           </defs>
 
           <defs>
             <linearGradient [attr.id]="roomGradientId" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" [attr.stop-color]="roomTopColor()" />
-              <stop offset="100%" [attr.stop-color]="roomBottomColor()" />
+              <stop offset="0%" [attr.stop-color]="roomTopColor()"/>
+              <stop offset="100%" [attr.stop-color]="roomBottomColor()"/>
             </linearGradient>
           </defs>
 
-          <!-- Concentric glow rings (only when on) -->
+
           @if (isOn()) {
             @for (ring of glowRings(); track ring.index) {
               <circle
@@ -91,7 +99,6 @@ function hexWithAlpha(hex: string, alpha: number): string {
             }
           }
 
-          <!-- Pendant cord -->
           <line
             [attr.x1]="CX"
             [attr.y1]="0"
@@ -102,7 +109,6 @@ function hexWithAlpha(hex: string, alpha: number): string {
             opacity="0.5"
           />
 
-          <!-- Bulb itself -->
           <circle
             class="bulb"
             [class.bulb-on]="isOn()"
@@ -112,50 +118,48 @@ function hexWithAlpha(hex: string, alpha: number): string {
             [attr.fill]="isOn() ? 'url(#' + bulbGradientId + ')' : '#D4D0C8'"
           />
 
-          <!-- Edison filament (decorative) — visible only when on -->
           @if (isOn()) {
             <g class="filament" [attr.opacity]="filamentOpacity()">
               <path
-                [attr.d]="'M ' + (CX - 14) + ' ' + (CY - 4) + ' Q ' + CX + ' ' + (CY + 14) + ' ' + (CX + 14) + ' ' + (CY - 4)"
+                [attr.d]="
+                  'M ' + (CX - 14) + ' ' + (CY - 4) +
+                  ' Q ' + CX + ' ' + (CY + 14) + ' ' +
+                  (CX + 14) + ' ' + (CY - 4)
+                "
                 fill="none"
                 stroke="#FFF8E0"
                 stroke-width="5"
                 stroke-linecap="round"
               />
-              <line [attr.x1]="CX - 16" [attr.y1]="CY - 4" [attr.x2]="CX - 14" [attr.y2]="CY - 4"
-                    stroke="#FFF8E0" stroke-width="2" stroke-linecap="round" />
-              <line [attr.x1]="CX + 14" [attr.y1]="CY - 4" [attr.x2]="CX + 16" [attr.y2]="CY - 4"
-                    stroke="#FFF8E0" stroke-width="2" stroke-linecap="round" />
+              <line
+                [attr.x1]="CX - 16" [attr.y1]="CY - 4"
+                [attr.x2]="CX - 14" [attr.y2]="CY - 4"
+                stroke="#FFF8E0" stroke-width="2" stroke-linecap="round"
+              />
+              <line
+                [attr.x1]="CX + 14" [attr.y1]="CY - 4"
+                [attr.x2]="CX + 16" [attr.y2]="CY - 4"
+                stroke="#FFF8E0" stroke-width="2" stroke-linecap="round"
+              />
             </g>
           }
 
-          <!-- Bulb base (the screw cap) -->
           <rect
             class="bulb-base"
             [attr.x]="CX - 14"
             [attr.y]="CY + BULB_R - 6"
-            width="28"
-            height="14"
-            rx="2"
+            width="28" height="14" rx="2"
             fill="#3a342b"
           />
           <rect
-            [attr.x]="CX - 12"
-            [attr.y]="CY + BULB_R + 8"
-            width="24"
-            height="3"
-            rx="1"
-            fill="#3a342b"
-            opacity="0.6"
+            [attr.x]="CX - 12" [attr.y]="CY + BULB_R + 8"
+            width="24" height="3" rx="1"
+            fill="#3a342b" opacity="0.6"
           />
           <rect
-            [attr.x]="CX - 12"
-            [attr.y]="CY + BULB_R + 13"
-            width="24"
-            height="3"
-            rx="1"
-            fill="#3a342b"
-            opacity="0.6"
+            [attr.x]="CX - 12" [attr.y]="CY + BULB_R + 13"
+            width="24" height="3" rx="1"
+            fill="#3a342b" opacity="0.6"
           />
         </svg>
 
@@ -164,52 +168,43 @@ function hexWithAlpha(hex: string, alpha: number): string {
         </div>
       </div>
 
-      <!-- Power button -->
-      <div class="controls-row">
-        <button
-          type="button"
-          class="power-btn"
-          [class.on]="isOn()"
-          (click)="onPowerClick()"
-        >
-          {{ isOn() ? 'On' : 'Off' }}
-        </button>
-      </div>
-
-      <!-- Brightness slider -->
-      <div class="brightness-row" [class.disabled]="!isOn()">
-        <label [attr.for]="brightnessId">Brightness</label>
-        <input
-          type="range"
-          [id]="brightnessId"
-          min="10"
-          max="100"
-          step="1"
-          [value]="brightness()"
-          [disabled]="!isOn()"
-          (input)="onBrightnessInput($event)"
+      <div class="control-row power-row">
+        <label [attr.for]="powerId" class="control-label">Power</label>
+        <p-toggleswitch
+          [inputId]="powerId"
+          [ngModel]="isOn()"
+          (ngModelChange)="onPowerToggle($event)"
         />
-        <span class="val">{{ brightness() }}%</span>
+        <span class="control-value">{{ isOn() ? 'On' : 'Off' }}</span>
       </div>
 
-      <!-- Color preset swatches -->
-      <div class="color-row" [class.disabled]="!isOn()">
-        <label>Color</label>
-        <div class="color-swatches">
-          @for (preset of COLOR_PRESETS; track preset) {
-            <button
-              type="button"
-              class="color-swatch"
-              [class.active]="colorHex().toUpperCase() === preset.toUpperCase()"
-              [style.background-color]="preset"
-              [disabled]="!isOn()"
-              [attr.aria-label]="'Set color to ' + preset"
-              (click)="onColorClick(preset)"
-            ></button>
-          }
-        </div>
+      <div class="control-row brightness-row" [class.is-disabled]="!isOn()">
+        <span class="control-label">Brightness</span>
+        <p-slider
+          [min]="10"
+          [max]="100"
+          [step]="1"
+          [disabled]="!isOn()"
+          [ngModel]="localBrightness()"
+          (ngModelChange)="onBrightnessDrag($event)"
+          (onSlideEnd)="onBrightnessCommit($event)"
+          styleClass="brightness-slider"
+        />
+        <span class="control-value">{{ localBrightness() }}%</span>
       </div>
-    </article>
+
+      <!-- Color: just the picker, sized prominently to match the cinematic aesthetic -->
+      <div class="control-row color-row" [class.is-disabled]="!isOn()">
+        <span class="control-label">Color</span>
+        <p-colorpicker
+          format="hex"
+          [ngModel]="colorHex()"
+          (onChange)="onColorCustom($event)"
+          [disabled]="!isOn()"
+          appendTo="body"></p-colorpicker>
+        <span class="control-value">{{ colorHex().toUpperCase() }}</span>
+      </div>
+    </p-card>
   `,
   styleUrl: './light-bulb.scss',
 })
@@ -232,18 +227,33 @@ export class LightBulb {
   readonly CX = CX;
   readonly CY = CY;
   readonly BULB_R = BULB_R;
-  readonly COLOR_PRESETS = COLOR_PRESETS;
 
   /* ─────────────── Unique IDs ─────────────── */
 
   private readonly _uid = Math.random().toString(36).slice(2, 9);
   readonly bulbGradientId = `bulb-grad-${this._uid}`;
   readonly roomGradientId = `room-grad-${this._uid}`;
-  readonly brightnessId = `brightness-${this._uid}`;
+  readonly powerId = `power-${this._uid}`;
+
+  /* ─────────────── Local slider state ───────────────
+   *
+   * The slider drags at high frequency. We mirror the input value into
+   * a writable signal so the readout updates with the thumb in real time,
+   * but only emit upstream (firing a PUT) when the user lets go.
+   */
+  private readonly _localBrightness = signal(0);
+  readonly localBrightness = this._localBrightness.asReadonly();
+
+  constructor() {
+    // Sync local ← input whenever input changes.
+    effect(() => {
+      this._localBrightness.set(this.brightness());
+    });
+  }
 
   /* ─────────────── Computed visual state ─────────────── */
 
-  readonly isOn = computed(() => this.powerState() === 'On');
+  readonly isOn = computed(() => this.powerState() === PowerState.On);
 
   readonly stateLabel = computed(() => {
     if (!this.isOn()) return 'Off';
@@ -258,11 +268,6 @@ export class LightBulb {
     this.isOn() ? '#C9A878' : '#9B7843'
   );
 
-  /**
-   * Concentric glow rings outward from the bulb.
-   * Each ring's opacity scales with brightness — at low brightness, only the
-   * inner rings are visible; at full brightness, all rings glow softly.
-   */
   readonly glowRings = computed(() => {
     const intensity = this.brightness() / 100;
     const rings = [];
@@ -279,7 +284,7 @@ export class LightBulb {
 
   readonly centerColor = computed(() => {
     const intensity = this.brightness() / 100;
-    const alpha = 0.3 + intensity * 0.7;  // ranges from 0.3 (at 0%) to 1.0 (at 100%)
+    const alpha = 0.3 + intensity * 0.7;
     if (this.brightness() > 70) {
       return hexWithAlpha('#FFFFFF', alpha);
     }
@@ -287,45 +292,45 @@ export class LightBulb {
   });
 
   readonly edgeColor = computed(() => {
-    // Edge fades more aggressively than center
     const intensity = this.brightness() / 100;
     return hexWithAlpha(this.colorHex(), intensity * 0.7);
   });
 
-  /** Filament glows brighter when brightness is higher. */
-  readonly filamentOpacity = computed(() => {
-    return Math.min(1, this.brightness() / 100 + 0.2);
-  });
+  readonly filamentOpacity = computed(() =>
+    Math.min(1, this.brightness() / 100 + 0.2)
+  );
 
-  /**
-   * Card glow color — used as a CSS variable for a subtle radial halo
-   * inside the card. Empty string when off so the halo disappears.
-   */
   readonly cardGlowColor = computed(() => {
     if (!this.isOn()) return 'transparent';
-    // Convert hex to rgba with brightness-driven alpha
     const intensity = this.brightness() / 100;
     return hexWithAlpha(this.colorHex(), intensity * 0.5);
   });
 
   /* ─────────────── Event handlers ─────────────── */
 
-  onPowerClick(): void {
-    const next = this.isOn() ? 'Off' : 'On';
-    this.powerStateChange.emit(next as PowerState);
+  onPowerToggle(next: boolean): void {
+    // PowerState is an enum, not a string union — must use enum members.
+    this.powerStateChange.emit(next ? PowerState.On : PowerState.Off);
   }
 
-  onBrightnessInput(event: Event): void {
-    const value = parseInt((event.target as HTMLInputElement).value, 10);
+  onBrightnessDrag(value: number): void {
+    this._localBrightness.set(value);
+  }
+
+  onBrightnessCommit(event: { value?: number }): void {
+    const value = event.value ?? this._localBrightness();
     if (!Number.isNaN(value) && value !== this.brightness()) {
       this.brightnessChange.emit(value);
     }
   }
 
-  onColorClick(hex: string): void {
+  onColorCustom(event: { value: string | object | null }): void {
     if (!this.isOn()) return;
+    const raw = event.value;
+    if (!raw || typeof raw !== 'string') return;
+    const hex = raw.startsWith('#') ? raw : `#${raw}`;
     if (hex.toUpperCase() !== this.colorHex().toUpperCase()) {
-      this.colorHexChange.emit(hex);
+      this.colorHexChange.emit(hex.toUpperCase());
     }
   }
 }

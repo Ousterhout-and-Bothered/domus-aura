@@ -1,12 +1,23 @@
 @charset "UTF-8";
-.fan-card {
-  background: var(--aura-surface);
-  border: 0.5px solid var(--aura-border);
-  border-radius: 14px;
-  padding: 1.5rem 1.5rem 1.75rem;
-  font-family: var(--font-body);
-  color: var(--aura-text);
-  display: block;
+/* ─────────────── PrimeNG p-card overrides ─────────────── */
+:host ::ng-deep .fan-card {
+  background: var(--p-card-background, var(--aura-surface));
+  overflow: hidden;
+}
+:host ::ng-deep .fan-card .p-card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+:host ::ng-deep .fan-card .p-card-header {
+  padding: 0;
+}
+:host ::ng-deep .fan-card .p-card-content {
+  padding: 0;
+}
+
+/* ─────────────── Header ─────────────── */
+.fan-card-head {
+  padding: 1.25rem 1.5rem 0;
+  text-align: center;
 }
 
 .fan-name {
@@ -14,38 +25,25 @@
   font-size: 2rem;
   font-weight: 500;
   margin: 0 0 0.15rem;
-  text-align: center;
 }
 
 .fan-loc {
   font-size: 1rem;
   color: var(--aura-text-muted);
-  text-align: center;
-  margin: 0 0 1.25rem;
+  margin: 0;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+/* ─────────────── Fan stage (SVG) ─────────────── */
 .fan-stage {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 320px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.fan-svg-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  background-color: #FBF8F3;
-  border-radius: 50%;
-  padding: 16px;
-  margin: 0 auto;
-  width: fit-content;
-  max-width: 320px;
 }
 
 .fan-svg {
@@ -99,7 +97,7 @@
     filter: none !important;
   }
 }
-/* ─────────────── Readout (matches gauge-state) ─────────────── */
+/* ─────────────── Readout ─────────────── */
 .fan-readout {
   text-align: center;
   margin-top: 1rem;
@@ -113,85 +111,101 @@
   color: var(--aura-text-muted);
 }
 
-/* ─────────────── Controls row (matches thermostat) ─────────────── */
-.controls-row {
+/* ─────────────── Control rows ─────────────── */
+.control-row {
   margin-top: 1.25rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-}
-
-.power-btn {
-  background: transparent;
-  border: 1px solid var(--aura-border);
-  color: var(--aura-text-muted);
-  padding: 0.4rem 1.5rem;
-  border-radius: 999px;
-  font-size: 1rem;
-  font-family: inherit;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.power-btn:hover {
-  color: var(--aura-text);
-  border-color: var(--aura-text-muted);
-}
-.power-btn.on {
-  background: var(--aura-accent-soft);
-  border-color: var(--aura-accent);
-  color: var(--aura-accent);
-}
-
-/* ─────────────── Speed row (matches mode-row) ─────────────── */
-.speed-row {
-  margin-top: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
   transition: opacity 0.2s ease;
 }
-.speed-row.disabled {
-  opacity: 0.4;
+.control-row.is-disabled {
+  opacity: 0.5;
 }
-.speed-row label {
-  font-size: 0.85rem;
+
+.control-label {
+  font-size: 1rem;
   color: var(--aura-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-.speed-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+.control-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  min-width: 56px;
+  text-align: left;
+  color: var(--aura-text);
 }
 
-.speed-btn {
+.power-row p-toggleswitch {
+  justify-self: start;
+  --p-toggleswitch-width: 4rem;
+  --p-toggleswitch-height: 2rem;
+  --p-toggleswitch-handle-size: 1.5rem;
+  --p-toggleswitch-border-radius: 999px;
+}
+
+/* ─────────────── Speed SelectButton ─────────────── */
+.speed-row {
+  grid-template-columns: 90px 1fr;
+}
+
+:host ::ng-deep .speed-select {
+  display: flex;
+  gap: 10px;
+}
+:host ::ng-deep .speed-select .p-button,
+:host ::ng-deep .speed-select .p-togglebutton,
+:host ::ng-deep .speed-select .p-selectbutton-option {
+  flex: 1;
   background: transparent;
   border: 1px solid var(--aura-border);
   color: var(--aura-text-muted);
-  padding: 0.4rem 0.9rem;
+  padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
+  font-size: 6rem;
   letter-spacing: 0.05em;
+  transition: all 0.15s ease;
 }
-.speed-btn:hover:not(:disabled) {
+:host ::ng-deep .speed-select .p-button:hover:not(:disabled),
+:host ::ng-deep .speed-select .p-togglebutton:hover:not(:disabled),
+:host ::ng-deep .speed-select .p-selectbutton-option:hover:not(:disabled) {
   color: var(--aura-text);
   border-color: var(--aura-text-muted);
 }
-.speed-btn.active {
+:host ::ng-deep .speed-select .p-button.p-highlight, :host ::ng-deep .speed-select .p-button[aria-pressed=true],
+:host ::ng-deep .speed-select .p-togglebutton.p-highlight,
+:host ::ng-deep .speed-select .p-togglebutton[aria-pressed=true],
+:host ::ng-deep .speed-select .p-selectbutton-option.p-highlight,
+:host ::ng-deep .speed-select .p-selectbutton-option[aria-pressed=true] {
   background: var(--aura-accent-soft);
   border-color: var(--aura-accent);
   color: var(--aura-accent);
 }
-.speed-btn:disabled {
+:host ::ng-deep .speed-select .p-button:disabled,
+:host ::ng-deep .speed-select .p-togglebutton:disabled,
+:host ::ng-deep .speed-select .p-selectbutton-option:disabled {
   cursor: not-allowed;
+}
+
+/* ─────────────── Mobile (< 480px) ─────────────── */
+@media (max-width: 480px) {
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  .control-value {
+    text-align: center;
+  }
+  .power-row p-toggleswitch {
+    justify-self: center;
+  }
+  :host ::ng-deep .speed-select {
+    justify-self: center;
+  }
 }
 
 /*# sourceMappingURL=fan-spinning.css.map */

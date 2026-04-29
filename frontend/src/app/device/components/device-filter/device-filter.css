@@ -1,0 +1,98 @@
+@charset "UTF-8";
+/* ─────────────── PrimeNG Toolbar overrides ─────────────── */
+:host ::ng-deep .filter-toolbar {
+  background: var(--aura-surface);
+  border: 0.5px solid var(--aura-border);
+  border-radius: 14px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+}
+:host ::ng-deep .filter-toolbar .p-toolbar-group-start {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: center;
+}
+:host ::ng-deep .filter-toolbar .p-toolbar-group-end {
+  margin-left: auto;
+}
+
+/* ─────────────── Filter groups (label + control pair) ─────────────── */
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─────────────── Power SelectButton — same look as Mode/Speed ─────────────── */
+:host ::ng-deep .filter-power {
+  display: flex;
+  gap: 6px;
+}
+:host ::ng-deep .filter-power .p-button,
+:host ::ng-deep .filter-power .p-togglebutton,
+:host ::ng-deep .filter-power .p-selectbutton-option {
+  background: transparent;
+  border: 1px solid var(--aura-border);
+  color: var(--aura-text-muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+:host ::ng-deep .filter-power .p-button:hover:not(:disabled),
+:host ::ng-deep .filter-power .p-togglebutton:hover:not(:disabled),
+:host ::ng-deep .filter-power .p-selectbutton-option:hover:not(:disabled) {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+:host ::ng-deep .filter-power .p-button.p-highlight, :host ::ng-deep .filter-power .p-button[aria-pressed=true],
+:host ::ng-deep .filter-power .p-togglebutton.p-highlight,
+:host ::ng-deep .filter-power .p-togglebutton[aria-pressed=true],
+:host ::ng-deep .filter-power .p-selectbutton-option.p-highlight,
+:host ::ng-deep .filter-power .p-selectbutton-option[aria-pressed=true] {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
+}
+
+/* ─────────────── Location p-select ─────────────── */
+:host ::ng-deep .filter-location {
+  min-width: 180px;
+}
+
+/* ─────────────── Type p-multiselect ─────────────── */
+:host ::ng-deep .filter-types {
+  min-width: 220px;
+}
+
+/* ─────────────── Mobile (< 600px) ─────────────── */
+@media (max-width: 600px) {
+  :host ::ng-deep .filter-toolbar .p-toolbar-group-start {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  :host ::ng-deep .filter-toolbar .p-toolbar-group-end {
+    margin: 0.5rem 0 0;
+    width: 100%;
+  }
+  .filter-group {
+    width: 100%;
+  }
+  :host ::ng-deep .filter-location,
+  :host ::ng-deep .filter-types {
+    width: 100%;
+  }
+}
+
+/*# sourceMappingURL=device-filter.css.map */

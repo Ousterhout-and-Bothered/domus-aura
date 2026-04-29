@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { MessageService } from 'primeng/api';
+
 import { DeviceType } from '../../models/device';
 import {
   AnyDevice,
@@ -9,6 +11,7 @@ import {
   Light,
   Thermostat,
   ThermostatMode,
+  ThermostatState,
   isDoorLock,
   isFan,
   isLight,
@@ -38,8 +41,9 @@ import { DoorLock } from '../door-lock/door-lock';
             [ambientTemperature]="t.ambientTemperature"
             [mode]="t.mode"
             [state]="t.state"
-            (desiredTemperatureChange)="onSetDesiredTemperature(t.id, $event)"
-            (modeChange)="onSetMode(t.id, $event)"
+            (stateChange)="onSetThermostatState(t, $event)"
+            (desiredTemperatureChange)="onSetDesiredTemperature(t, $event)"
+            (modeChange)="onSetMode(t, $event)"
           />
         }
       }
@@ -52,9 +56,9 @@ import { DoorLock } from '../door-lock/door-lock';
             [powerState]="l.powerState"
             [brightness]="l.brightness"
             [colorHex]="l.colorHex"
-            (powerStateChange)="onSetLightPower(l.id, $event)"
-            (brightnessChange)="onSetLightBrightness(l.id, $event)"
-            (colorHexChange)="onSetLightColor(l.id, $event)"
+            (powerStateChange)="onSetLightPower(l, $event)"
+            (brightnessChange)="onSetLightBrightness(l, $event)"
+            (colorHexChange)="onSetLightColor(l, $event)"
           />
         }
       }
@@ -66,8 +70,8 @@ import { DoorLock } from '../door-lock/door-lock';
             [location]="f.location"
             [powerState]="f.powerState"
             [speed]="f.speed"
-            (powerStateChange)="onSetFanPower(f.id, $event)"
-            (speedChange)="onSetFanSpeed(f.id, $event)"
+            (powerStateChange)="onSetFanPower(f, $event)"
+            (speedChange)="onSetFanSpeed(f, $event)"
           />
         }
       }
@@ -79,7 +83,7 @@ import { DoorLock } from '../door-lock/door-lock';
             [name]="dl.name"
             [location]="dl.location"
             [lockState]="dl.lockState"
-            (lockStateChange)="onSetLockState(dl.id, $event)"
+            (lockStateChange)="onSetLockState(dl, $event)"
           />
         }
       }
@@ -89,6 +93,7 @@ import { DoorLock } from '../door-lock/door-lock';
 })
 export class DeviceCard {
   private readonly deviceApi = inject(DeviceApiService);
+  private readonly messages = inject(MessageService);
 
   readonly device = input.required<AnyDevice>();
 
@@ -101,99 +106,189 @@ export class DeviceCard {
   readonly isLight = isLight;
   readonly isDoorLock = isDoorLock;
 
-  asThermostat(d: AnyDevice): Thermostat {
-    return d as Thermostat;
+  asThermostat(d: AnyDevice): Thermostat { return d as Thermostat; }
+  asFan(d: AnyDevice): Fan { return d as Fan; }
+  asLight(d: AnyDevice): Light { return d as Light; }
+  asDoorLock(d: AnyDevice): DoorLockDevice { return d as DoorLockDevice; }
+
+  /* ─────────────── Thermostat ─────────────── */
+
+  onSetThermostatState(thermostat: Thermostat, state: ThermostatState): void {
+    this.deviceApi.executeCommand(thermostat.id, {
+      command: 'setPower',
+      value: state === ThermostatState.Off ? 'Off' : 'On',
+    }).subscribe({
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: thermostat.name,
+          detail: state === ThermostatState.Off ? 'Turned off' : 'Turned on',
+          life: 2500,
+        });
+      },
+      error: (err) => this.commandFailed(thermostat.name, 'state', err),
+    });
   }
 
-  asFan(d: AnyDevice): Fan {
-    return d as Fan;
-  }
-
-  asLight(d: AnyDevice): Light {
-    return d as Light;
-  }
-
-  asDoorLock(d: AnyDevice): DoorLockDevice {
-    return d as DoorLockDevice;
-  }
-
-  onSetDesiredTemperature(deviceId: string, value: number): void {
-    this.deviceApi.executeCommand(deviceId, {
+  onSetDesiredTemperature(thermostat: Thermostat, value: number): void {
+    this.deviceApi.executeCommand(thermostat.id, {
       command: 'setDesiredTemperature',
       value,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set temperature', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: thermostat.name,
+          detail: `Set point ${value}°F`,
+          life: 2000,
+        });
+      },
+      error: (err) => this.commandFailed(thermostat.name, 'temperature', err),
     });
   }
 
-  onSetMode(deviceId: string, mode: ThermostatMode): void {
-    this.deviceApi.executeCommand(deviceId, {
+  onSetMode(thermostat: Thermostat, mode: ThermostatMode): void {
+    this.deviceApi.executeCommand(thermostat.id, {
       command: 'setMode',
       value: mode,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set mode', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: thermostat.name,
+          detail: `Mode ${mode}`,
+          life: 2000,
+        });
+      },
+      error: (err) => this.commandFailed(thermostat.name, 'mode', err),
     });
   }
 
-  onSetFanPower(deviceId: string, powerState: PowerState): void {
-    this.deviceApi.executeCommand(deviceId, {
+  /* ─────────────── Fan (toasts wired) ─────────────── */
+
+  onSetFanPower(fan: Fan, powerState: PowerState): void {
+    this.deviceApi.executeCommand(fan.id, {
       command: 'setPower',
       value: powerState,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set fan power', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: fan.name,
+          detail: powerState === PowerState.On ? 'Turned on' : 'Turned off',
+          life: 2500,
+        });
+      },
+      error: (err) => this.commandFailed(fan.name, 'power', err),
     });
   }
 
-  onSetFanSpeed(deviceId: string, speed: FanSpeed): void {
-    this.deviceApi.executeCommand(deviceId, {
+  onSetFanSpeed(fan: Fan, speed: FanSpeed): void {
+    this.deviceApi.executeCommand(fan.id, {
       command: 'setSpeed',
       value: speed,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set fan speed', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: fan.name,
+          detail: `Speed ${speed}`,
+          life: 2000,
+        });
+      },
+      error: (err) => this.commandFailed(fan.name, 'speed', err),
     });
   }
 
-  onSetLightPower(deviceId: string, powerState: PowerState): void {
-    this.deviceApi.executeCommand(deviceId, {
+  /* ─────────────── Light (toasts wired) ──────────────  */
+
+  onSetLightPower(light: Light, powerState: PowerState): void {
+    this.deviceApi.executeCommand(light.id, {
       command: 'setPower',
       value: powerState,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set light power', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: light.name,
+          detail: powerState === PowerState.On ? 'Turned on' : 'Turned off',
+          life: 2500,
+        });
+      },
+      error: (err) => this.commandFailed(light.name, 'power', err),
     });
   }
 
-  onSetLightBrightness(deviceId: string, brightness: number): void {
-    this.deviceApi.executeCommand(deviceId, {
+  onSetLightBrightness(light: Light, brightness: number): void {
+    this.deviceApi.executeCommand(light.id, {
       command: 'setBrightness',
       value: brightness,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set brightness', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: light.name,
+          detail: `Brightness ${brightness}%`,
+          life: 2000,
+        });
+      },
+      error: (err) => this.commandFailed(light.name, 'brightness', err),
     });
   }
 
-  onSetLightColor(deviceId: string, colorHex: string): void {
-    this.deviceApi.executeCommand(deviceId, {
+  onSetLightColor(light: Light, colorHex: string): void {
+    this.deviceApi.executeCommand(light.id, {
       command: 'setColor',
       value: colorHex,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set color', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: light.name,
+          detail: `Color ${colorHex.toUpperCase()}`,
+          life: 2000,
+        });
+      },
+      error: (err) => this.commandFailed(light.name, 'color', err),
     });
   }
 
-  onSetLockState(deviceId: string, state: DoorLockState): void {
-    const command = state === 'Locked' ? 'lock' : 'unlock';
-    this.deviceApi.executeCommand(deviceId, {
+  /* ─────────────── Door Lock (toasts wired) ─────────────── */
+
+  onSetLockState(lock: DoorLockDevice, state: DoorLockState): void {
+    const command = state === DoorLockState.Locked ? 'lock' : 'unlock';
+    this.deviceApi.executeCommand(lock.id, {
       command,
     }).subscribe({
-      next: (updated) => this.deviceUpdated.emit(updated),
-      error: (err) => console.error('Failed to set lock state', err),
+      next: (updated) => {
+        this.deviceUpdated.emit(updated);
+        this.messages.add({
+          severity: 'success',
+          summary: lock.name,
+          detail: state === DoorLockState.Locked ? 'Locked' : 'Unlocked',
+          life: 2500,
+        });
+      },
+      error: (err) => this.commandFailed(lock.name, 'lock state', err),
+    });
+  }
+
+  /* ─────────────── Shared error toast ─────────────── */
+  private commandFailed(deviceName: string, action: string, err: unknown): void {
+    console.error(`Failed to set ${action} on ${deviceName}`, err);
+    this.messages.add({
+      severity: 'error',
+      summary: deviceName,
+      detail: `Could not update ${action}. Please try again.`,
+      life: 4000,
     });
   }
 }

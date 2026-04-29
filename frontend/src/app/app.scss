@@ -52,7 +52,23 @@
     }
   }
 
-  .aura-theme-toggle {
+  .aura-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .aura-user {
+    color: #A8A29A;
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aura-icon-button {
     background: transparent;
     border: 1px solid #2D2A28;
     color: #F5F0E8;
@@ -64,8 +80,6 @@
     align-items: center;
     justify-content: center;
     transition: background 0.2s ease, border-color 0.2s ease;
-    align-self: center;
-
 
     &:hover {
       background: #232120;
@@ -100,4 +114,8 @@
 .aura-main {
   flex: 1;
   padding: 2.5rem 3rem;
+
+  &--full {
+    padding: 0;
+  }
 }

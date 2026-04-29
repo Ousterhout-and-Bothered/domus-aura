@@ -1,20 +1,24 @@
 @charset "UTF-8";
-.light-card {
-  background: radial-gradient(circle at 50% 30%, var(--light-glow, transparent) 0%, transparent 80%), var(--aura-surface);
-  border: 0.5px solid var(--aura-border);
-  border-radius: 14px;
-  padding: 1.5rem 1.5rem 1.75rem;
-  font-family: var(--font-body);
-  color: var(--aura-text);
-  display: block;
-  position: relative;
-  overflow: hidden;
+/* ─────────────── PrimeNG p-card overrides ─────────────── */
+:host ::ng-deep .light-card {
+  background: radial-gradient(circle at 50% 30%, var(--light-glow, transparent) 0%, transparent 80%), var(--p-card-background, var(--aura-surface));
   transition: background 0.6s ease;
-  /* Lift content above the glow */
+  overflow: hidden;
 }
-.light-card > * {
-  position: relative;
-  z-index: 1;
+:host ::ng-deep .light-card .p-card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+:host ::ng-deep .light-card .p-card-header {
+  padding: 0;
+}
+:host ::ng-deep .light-card .p-card-content {
+  padding: 0;
+}
+
+/* ─────────────── Header ─────────────── */
+.light-card-head {
+  padding: 1.25rem 1.5rem 0;
+  text-align: center;
 }
 
 .light-name {
@@ -22,14 +26,12 @@
   font-size: 2rem;
   font-weight: 500;
   margin: 0 0 0.15rem;
-  text-align: center;
 }
 
 .light-loc {
   font-size: 1rem;
   color: var(--aura-text-muted);
-  text-align: center;
-  margin: 0 0 1.25rem;
+  margin: 0;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -66,7 +68,6 @@
   transition: opacity 0.4s ease;
 }
 
-/* ─────────────── Readout ─────────────── */
 .light-readout {
   text-align: center;
   margin-top: 1rem;
@@ -80,121 +81,91 @@
   color: var(--aura-text-muted);
 }
 
-/* ─────────────── Controls ─────────────── */
-.controls-row {
+/* ─────────────── Control rows (Power / Brightness / Color) ─────────────── */
+.control-row {
   margin-top: 1.25rem;
-  display: flex;
-  justify-content: center;
-}
-
-.power-btn {
-  background: transparent;
-  border: 1px solid var(--aura-border);
-  color: var(--aura-text-muted);
-  padding: 0.4rem 1.5rem;
-  border-radius: 999px;
-  font-size: 1rem;
-  font-family: inherit;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.power-btn:hover {
-  color: var(--aura-text);
-  border-color: var(--aura-text-muted);
-}
-.power-btn.on {
-  background: var(--aura-accent-soft);
-  border-color: var(--aura-accent);
-  color: var(--aura-accent);
-}
-
-/* ─────────────── Brightness ─────────────── */
-.brightness-row {
-  margin-top: 1.25rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
   align-items: center;
   gap: 12px;
   transition: opacity 0.2s ease;
 }
-.brightness-row.disabled {
-  opacity: 0.4;
-}
-.brightness-row label {
-  font-size: 1rem;
-  color: var(--aura-text-muted);
-  min-width: 90px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.brightness-row input[type=range] {
-  flex: 1.5;
-  accent-color: var(--aura-accent);
-}
-.brightness-row .val {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  min-width: 56px;
-  text-align: right;
+.control-row.is-disabled {
+  opacity: 0.5;
 }
 
-/* ─────────────── Color swatches ─────────────── */
-.color-row {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  transition: opacity 0.2s ease;
-}
-.color-row.disabled {
-  opacity: 0.4;
-}
-.color-row label {
+.control-label {
   font-size: 0.85rem;
   color: var(--aura-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-.color-swatches {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 400px;
+.control-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  min-width: 56px;
+  text-align: right;
+  color: var(--aura-text);
 }
 
-.color-swatch {
-  width: 28px;
+/* Power row */
+.power-row p-toggleswitch {
+  justify-self: start;
+  --p-toggleswitch-width: 4rem;
+  --p-toggleswitch-height: 2rem;
+  --p-toggleswitch-handle-size: 1.5rem;
+  --p-toggleswitch-border-radius: 999px;
+}
+
+/* ─────────────── Brightness slider ─────────────── */
+:host ::ng-deep .brightness-slider {
+  --p-slider-handle-background: var(--aura-accent);
+  --p-slider-range-background: var(--aura-accent);
+  --p-slider-handle-content-background: var(--aura-accent);
+  --p-slider-handle-border-color: var(--aura-accent);
+  flex: 1;
+}
+
+/* ─────────────── Color row ─────────────── */
+:host ::ng-deep .p-colorpicker-preview {
+  width: 44px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 8px;
   border: 1px solid var(--aura-border);
   cursor: pointer;
-  padding: 0;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
-.color-swatch:hover:not(:disabled) {
-  transform: scale(1.1);
+:host ::ng-deep .p-colorpicker-preview:hover:not(:disabled) {
+  transform: scale(1.05);
   border-color: var(--aura-text-muted);
 }
-.color-swatch.active {
-  border-color: var(--aura-accent);
-  box-shadow: 0 0 0 2px var(--aura-accent-soft);
-  transform: scale(1.1);
-}
-.color-swatch:disabled {
+:host ::ng-deep .p-colorpicker-preview:disabled {
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
-/* Reduced motion */
+/* ─────────────── Reduced motion ─────────────── */
 @media (prefers-reduced-motion: reduce) {
   .bulb,
   .glow-ring,
   .filament,
-  .light-card,
-  .light-card::before {
+  :host ::ng-deep .light-card {
     transition: none !important;
+  }
+}
+/* ─────────────── Mobile (< 480px) ─────────────── */
+@media (max-width: 480px) {
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  .control-value {
+    text-align: center;
+  }
+  .power-row p-toggleswitch {
+    justify-self: center;
   }
 }
 

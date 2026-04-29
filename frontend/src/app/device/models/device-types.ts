@@ -43,7 +43,10 @@ export enum ThermostatState {
 export interface Thermostat extends DeviceBase {
   $type: DeviceType.Thermostat;
   type: DeviceType.Thermostat;
-  powerState: PowerState;        // inherited from PoweredDevice on the backend
+  // Note: Thermostat does NOT have a separate powerState. The Off/Idle/
+  // Heating/Cooling state machine encodes power directly — Off is a
+  // first-class state, transitioning to Idle on power-on. This matches
+  // the domain model (Thermostat does not implement IPowerable).
   state: ThermostatState;
   mode: ThermostatMode;
   desiredTemperature: number;    // 60-80 °F
@@ -66,15 +69,6 @@ export interface DoorLock extends DeviceBase {
 
 /* ─────────────── Discriminated union ─────────────── */
 
-/**
- * Use this type wherever you accept "any device". Switch on `device.type`
- * (or `device.$type`) to narrow to the specific shape:
- *
- *   switch (device.type) {
- *     case DeviceType.Light:      // device is Light here
- *     case DeviceType.Thermostat: // device is Thermostat here
- *   }
- */
 export type AnyDevice = Light | Fan | Thermostat | DoorLock;
 
 /* ─────────────── Type guards (for use outside switches) ─────────────── */

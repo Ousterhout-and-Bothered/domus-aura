@@ -1,0 +1,62 @@
+﻿.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #0F0E0D;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 3.5rem;
+  max-width: 440px;
+  width: 100%;
+  background: #181614;
+  border: 1px solid #2D2A28;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.login-logo {
+  height: 6rem;
+  width: 6rem;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+}
+
+.login-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #F5F0E8;
+  letter-spacing: 0.01em;
+}
+
+.login-subtitle {
+  margin: 0 0 1rem;
+  color: #A8A29A;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+::ng-deep .login-button {
+  width: 100%;
+  margin-top: 0.5rem;
+
+  .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.login-hint {
+  margin: 0.75rem 0 0;
+  color: #6B655E;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
