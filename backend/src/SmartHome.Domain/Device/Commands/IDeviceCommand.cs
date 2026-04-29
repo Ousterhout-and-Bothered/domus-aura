@@ -1,7 +1,7 @@
 namespace SmartHome.Domain.Device.Commands;
 
 /// <summary>
-/// Defines the contract for a command that can be executed against a device.
+/// Defines the contract for a command that can be executed as part of device or scene workflows.
 /// Encapsulates a single operation as an object.
 /// </summary>
 public interface IDeviceCommand
@@ -28,5 +28,6 @@ public interface IDeviceCommand
     /// Executes the command.
     /// The receiver of the command is typically bound at creation time.
     /// </summary>
+    /// <returns>A structured result describing the command outcome.</returns>
     CommandResult Execute();
 }

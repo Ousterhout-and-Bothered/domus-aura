@@ -5,8 +5,9 @@ namespace SmartHome.Domain.Scene;
 
 /// <summary>
 /// A composite of <see cref="IDeviceCommand"/>s that executes its children in order
-/// and collects their results. Represents the "many commands as one unit" step
-/// in scene execution.
+/// and collects their results.
+/// Guarantees one result per child, even when failures occur.
+/// Represents the "many commands as one unit" step in scene execution.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -22,6 +23,11 @@ namespace SmartHome.Domain.Scene;
 /// Execution is tolerant of partial failure: if one child throws, the composite catches
 /// the exception, records it as a failed <see cref="CommandResult"/>, and continues to
 /// the next child. This is the spec's "scene does not abort on partial failure" requirement.
+/// </para>
+/// <para>
+/// Each child command contributes exactly one result. Thrown domain exceptions are
+/// converted into failed results, ensuring the output list is complete and stable.
+/// For commands without resolved device metadata, fallback values are used in the result.
 /// </para>
 /// </remarks>
 public sealed class CompositeCommand
@@ -39,7 +45,10 @@ public sealed class CompositeCommand
     /// exception contributes a failed <see cref="CommandResult"/> to the output; execution
     /// continues with the next child regardless.
     /// </summary>
-    /// <returns>One <see cref="CommandResult"/> per child, in execution order.</returns>
+    /// <returns>
+    /// One <see cref="CommandResult"/> per child, in execution order. The number of results
+    /// always matches the number of children.
+    /// </returns>
     public IReadOnlyList<CommandResult> Execute()
     {
         var results = new List<CommandResult>(_children.Count);
@@ -52,18 +61,19 @@ public sealed class CompositeCommand
             }
             catch (DomainException ex)
             {
-                // Composite pattern requirement: partial-failure tolerance.
-                // A failing child command must not abort sibling execution.
-                // DomainException is caught narrowly; unexpected runtime errors
-                // still propagate so they fail loudly rather than silently.
+                var isNoOp = ex.Message.Contains("Invalid transition", StringComparison.OrdinalIgnoreCase);
+
                 results.Add(new CommandResult(
                     DeviceId: child.DeviceId ?? Guid.Empty,
                     DeviceName: child.DeviceName ?? "Unknown",
                     DeviceType: child.DeviceType ?? default,
                     Operation: child.OperationName,
                     Value: child.Value,
-                    Success: false,
-                    Message: ex.Message));
+                    Success: isNoOp,
+                    Message: isNoOp
+                        ? "Device is already in the requested state."
+                        : ex.Message,
+                    IsNoOp: isNoOp));
             }
         }
 

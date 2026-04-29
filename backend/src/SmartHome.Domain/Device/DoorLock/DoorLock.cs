@@ -31,6 +31,12 @@ public sealed class DoorLock : Device, ILockable
         LockState = DoorLockState.Unlocked;
     }
 
+    public DoorLock(Guid id, string name, string location)
+        : base(id, name, location, DeviceType.DoorLock)
+    {
+        LockState = DoorLockState.Unlocked;
+    }
+    
     public DoorLock(string name, string location)
         : base(name, location, DeviceType.DoorLock)
     {

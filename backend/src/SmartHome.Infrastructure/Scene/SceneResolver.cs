@@ -1,7 +1,7 @@
-﻿using SmartHome.Domain.Device.Commands;
+﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Scene;
-using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Infrastructure.Scene;
 
@@ -21,11 +21,12 @@ public sealed class SceneResolver(
     {
         var composite = new CompositeCommand();
         var deviceIds = new List<Guid>();
+        var orderIndexes = new List<int>();
 
         foreach (var action in scene.Actions)
         {
             var devices = await ResolveTargetsAsync(action, cancellationToken);
-            
+
             if (devices.Count == 0)
             {
                 var failureMessage = action.TargetsDevice
@@ -38,19 +39,16 @@ public sealed class SceneResolver(
                     deviceId: action.DeviceId,
                     deviceType: action.DeviceType,
                     value: action.Value));
+
                 deviceIds.Add(Guid.Empty);
+                orderIndexes.Add(action.OrderIndex);
                 continue;
             }
-            
+
             foreach (var device in devices)
             {
-                // Construction-time failures (e.g. Lock on a Light) must not abort the
-                // whole resolution loop. CompositeCommand.Execute only catches exceptions
-                // thrown from Execute(), not from construction — so we translate the
-                // construction failure into a FailedCommand stub that reports itself as
-                // a failed CommandResult when the composite runs. This preserves the
-                // positional contract between Composite.Children and DeviceIdsInOrder.
                 IDeviceCommand command;
+
                 try
                 {
                     command = commandFactory.Create(
@@ -71,17 +69,21 @@ public sealed class SceneResolver(
 
                 composite.Add(command);
                 deviceIds.Add(device.Id);
+                orderIndexes.Add(action.OrderIndex);
             }
         }
 
-        return new ResolvedScene(composite, deviceIds);
+        return new ResolvedScene(composite, deviceIds, orderIndexes);
     }
 
     /// <summary>
     /// Expands a scene action's target into the concrete list of devices it applies to.
-    /// A device-targeted action yields one device (or none if the device was deleted);
+    /// A device-targeted action yields one device, or none if the device was deleted;
     /// a group-targeted action yields every device matching the type/location filter.
     /// </summary>
+    /// <param name="action">The scene action whose target should be resolved.</param>
+    /// <param name="cancellationToken">Token used to cancel the asynchronous operation.</param>
+    /// <returns>The devices targeted by the scene action.</returns>
     private async Task<IReadOnlyList<Domain.Device.Device>> ResolveTargetsAsync(
         SceneAction action,
         CancellationToken cancellationToken)
@@ -92,12 +94,9 @@ public sealed class SceneResolver(
             return device is null ? [] : [device];
         }
 
-        // Group target: query the repository for all matching devices.
-        // Location may be null, which the repository interprets as "any location".
         return await deviceRepository.GetAllTrackedAsync(
             location: action.Location,
             type: action.DeviceType,
             cancellationToken: cancellationToken);
     }
-
 }

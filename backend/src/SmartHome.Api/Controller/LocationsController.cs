@@ -9,9 +9,9 @@ namespace SmartHome.Api.Controller;
 /// Provides API endpoints for managing location-based simulation settings.
 /// </summary>
 /// <param name="simulationService">The service responsible for location-wide simulation logic.</param>
-//[Authorize]
 [ApiController]
 [Route("api/locations")]
+[Authorize]
 [Produces("application/json")]
 public sealed class LocationsController(ISimulationService simulationService) : ControllerBase
 {

@@ -19,7 +19,7 @@ public abstract class PoweredDevice : Device, IPowerable
     /// <summary>
     /// State machine enforcing legal transitions. Not persisted — rebuilt from
     /// <see cref="PowerState"/> on first use so EF-rehydrated instances
-    /// honor the same invariants as freshly-constructed ones.
+    /// honor the same invariants as freshly constructed ones.
     /// </summary>
     private StateMachine<PowerState>? _stateMachine;
 
@@ -32,6 +32,12 @@ public abstract class PoweredDevice : Device, IPowerable
         PowerState = PowerState.Off;
     }
 
+    protected PoweredDevice(Guid id, string name, string location, DeviceType type)
+        : base(id, name, location, type)
+    {
+        PowerState = PowerState.Off;
+    }
+    
     protected PoweredDevice(string name, string location, DeviceType type)
         : base(name, location, type)
     {

@@ -14,7 +14,7 @@ namespace SmartHome.Api.Controller;
 /// <param name="registry">Provides the set of allowed simulation speeds.</param>
 [ApiController]
 [Route("api/simulation")]
-//[Authorize]
+[Authorize]
 [Produces("application/json")]
 public sealed class SimulationController(
     ISimulationService simulationService,
@@ -26,6 +26,7 @@ public sealed class SimulationController(
     /// <summary>
     /// Retrieves the current simulation state — active speed and simulation clock.
     /// </summary>
+    /// <returns>The current simulation state.</returns>
     /// <response code="200">The current simulation state.</response>
     [HttpGet]
     [ProducesResponseType(typeof(SimulationStateResponse), StatusCodes.Status200OK)]
@@ -38,6 +39,7 @@ public sealed class SimulationController(
     /// Lists the speeds permitted by the current simulation speed registry.
     /// Frontend dropdowns can consume this endpoint instead of hardcoding the list.
     /// </summary>
+    /// <returns>The set of permitted simulation speeds.</returns>
     /// <response code="200">The set of permitted simulation speeds.</response>
     [HttpGet("allowed-speeds")]
     [ProducesResponseType(typeof(AllowedSpeedsResponse), StatusCodes.Status200OK)]
@@ -68,6 +70,8 @@ public sealed class SimulationController(
     /// <summary>
     /// Catches accidental path-based speed updates to provide a helpful error message.
     /// </summary>
+    /// <param name="multiplier">The path value incorrectly provided as the speed multiplier.</param>
+    /// <returns>A 400 Problem Details response explaining the correct request format.</returns>
     [HttpPut("speed/{*multiplier}")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public IActionResult RejectPathSpeed(string? multiplier)

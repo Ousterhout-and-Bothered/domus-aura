@@ -10,9 +10,18 @@ namespace SmartHome.Domain.Device.Thermostat;
 /// while the active <see cref="IThermostatModeStrategy"/> determines which target state
 /// is appropriate for the current conditions.
 /// </summary>
+/// <remarks>
+/// The thermostat distinguishes between Off and Idle. Idle means the thermostat is powered
+/// on but not actively heating or cooling. For filtering and reporting purposes, only
+/// Heating and Cooling are considered active "on" states.
+/// </remarks>
 public sealed class Thermostat : TickableDevice, IThermostatControllable, IPowerable
 {
     /// <inheritdoc />
+    /// <remarks>
+    /// Returns <see cref="PowerState.On"/> only when the thermostat is actively heating or cooling.
+    /// Idle is reported as <see cref="PowerState.Off"/> for filtering and reporting purposes.
+    /// </remarks>
     public PowerState PowerState => IsOn() ? PowerState.On : PowerState.Off;
 
     /// <summary>
@@ -27,6 +36,9 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// </summary>
     private ThermostatMode _mode;
 
+    /// <summary>
+    /// The current thermostat mode.
+    /// </summary>
     public ThermostatMode Mode
     {
         get => _mode;
@@ -76,11 +88,44 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         AmbientTemperature = DefaultTemperature;
     }
 
-    public Thermostat(string name, string location)
-        : this(name, location, new ThermostatStrategyProvider())
+    /// <summary>
+    /// Initializes a new thermostat with a specified identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier for the thermostat.</param>
+    /// <param name="name">The human-readable name of the thermostat.</param>
+    /// <param name="location">The location controlled by the thermostat.</param>
+    public Thermostat(Guid id, string name, string location)
+        : base(id, name, location, DeviceType.Thermostat)
     {
+        DesiredTemperature = 72;
+        AmbientTemperature = 72;
+        Mode = ThermostatMode.Auto;
+        State = ThermostatState.Off;
     }
 
+    /// <summary>
+    /// Initializes a new thermostat with a specified identifier and strategy provider.
+    /// </summary>
+    /// <param name="id">The unique identifier for the thermostat.</param>
+    /// <param name="name">The human-readable name of the thermostat.</param>
+    /// <param name="location">The location controlled by the thermostat.</param>
+    /// <param name="strategyProvider">The provider used to resolve thermostat mode strategies.</param>
+    public Thermostat(Guid id, string name, string location, IThermostatStrategyProvider strategyProvider)
+        : base(id, name, location, DeviceType.Thermostat)
+    {
+        _strategyProvider = strategyProvider;
+        State = ThermostatState.Off;
+        Mode = ThermostatMode.Auto;
+        DesiredTemperature = DefaultTemperature;
+        AmbientTemperature = DefaultTemperature;
+    }
+    
+    /// <summary>
+    /// Initializes a new thermostat with a generated identifier and strategy provider.
+    /// </summary>
+    /// <param name="name">The human-readable name of the thermostat.</param>
+    /// <param name="location">The location controlled by the thermostat.</param>
+    /// <param name="strategyProvider">The provider used to resolve thermostat mode strategies.</param>
     public Thermostat(string name, string location, IThermostatStrategyProvider strategyProvider)
         : base(name, location, DeviceType.Thermostat)
     {
@@ -94,7 +139,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// <summary>
     /// Powers the thermostat on from the Off state, transitioning to Idle and
     /// immediately evaluating whether heating or cooling should begin.
-    /// If the thermostat is already active, this operation has no effect.
+    /// If the thermostat is already in a non-Off state, this operation has no effect.
     /// </summary>
     public void TurnOn()
     {
@@ -108,7 +153,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Powers the thermostat off from any active state.
+    /// Powers the thermostat off from any non-Off state.
     /// </summary>
     public void TurnOff()
     {
@@ -117,7 +162,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
 
     /// <summary>
     /// Sets the operating mode and immediately re-evaluates state.
-    /// Throws <see cref="InvalidOperationException"/> if the thermostat is off.
+    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the thermostat is off.
     /// </summary>
     public void SetMode(ThermostatMode mode)
     {
@@ -132,7 +177,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// <summary>
     /// Sets the desired temperature in Fahrenheit.
     /// Values outside 60–80°F are clamped to the nearest bound.
-    /// Throws <see cref="InvalidOperationException"/> if the thermostat is off.
+    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the thermostat is off.
     /// </summary>
     public void SetDesiredTemperature(int temperature)
     {
@@ -196,6 +241,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// <summary>
     /// Delegates state evaluation to the active mode strategy and transitions
     /// through the state machine if a different target state is required.
+    /// The strategy is refreshed on each evaluation to ensure consistency.
     /// </summary>
     private void EvaluateState()
     {
