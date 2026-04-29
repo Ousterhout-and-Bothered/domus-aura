@@ -49,7 +49,14 @@ public class SceneServiceTests
         
         var composite = new CompositeCommand();
         var mockCommand = new Mock<IDeviceCommand>();
-        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult("Lock", true));
+        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult(
+            DeviceId: Guid.Empty,
+            DeviceName: "Test Device",
+            DeviceType: SmartHome.Domain.Device.DeviceType.DoorLock,
+            Operation: "Lock",
+            Value: null,
+            Success: true,
+            Message: null));
         mockCommand.Setup(c => c.OperationName).Returns("Lock");
         composite.Add(mockCommand.Object);
 

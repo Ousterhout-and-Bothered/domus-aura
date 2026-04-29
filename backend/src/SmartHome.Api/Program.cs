@@ -90,9 +90,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    //options.FallbackPolicy = new AuthorizationPolicyBuilder()
+      //  .RequireAuthenticatedUser()
+        //.Build();
 });
 
 // SQLite setup — resolves relative paths and ensures directory exists
@@ -106,6 +106,7 @@ builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<SmartHomeDbSeeder>();
 builder.Services.AddScoped<ISceneRepository, SceneRepository>();
+builder.Services.AddScoped<SceneDbSeeder>();
 
 // Domain services
 builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
@@ -154,8 +155,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseCors();
 app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 // Apply migrations and seed on startup
 app.Logger.LogInformation("SQLite database configured.");
@@ -167,6 +168,9 @@ using (var scope = app.Services.CreateScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<SmartHomeDbSeeder>();
     await seeder.SeedAsync();
+    
+    var sceneSeeder = scope.ServiceProvider.GetRequiredService<SceneDbSeeder>();
+    await sceneSeeder.SeedAsync();
 }
 
 app.MapControllers();

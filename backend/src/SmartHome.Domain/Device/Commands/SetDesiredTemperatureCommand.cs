@@ -5,16 +5,27 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to set the desired temperature of a thermostat.
 /// </summary>
-/// <param name="receiver">The thermostat to operate on.</param>
-/// <param name="temperature">The target temperature value.</param>
-public sealed class SetDesiredTemperatureCommand(IThermostatControllable receiver, int temperature) : IDeviceCommand
+public sealed class SetDesiredTemperatureCommand(
+    IThermostatControllable receiver,
+    int temperature,
+    Device device) : DeviceCommandBase(device)
 {
-    public string OperationName => $"SetDesiredTemperature({temperature})";
-    
+    public override string OperationName => "SetDesiredTemperature";
+
+    public override string Value => temperature.ToString();
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.SetDesiredTemperature(temperature);
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

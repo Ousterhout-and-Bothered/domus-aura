@@ -57,7 +57,11 @@ public sealed class CompositeCommand
                 // DomainException is caught narrowly; unexpected runtime errors
                 // still propagate so they fail loudly rather than silently.
                 results.Add(new CommandResult(
+                    DeviceId: child.DeviceId ?? Guid.Empty,
+                    DeviceName: child.DeviceName ?? "Unknown",
+                    DeviceType: child.DeviceType ?? default,
                     Operation: child.OperationName,
+                    Value: child.Value,
                     Success: false,
                     Message: ex.Message));
             }

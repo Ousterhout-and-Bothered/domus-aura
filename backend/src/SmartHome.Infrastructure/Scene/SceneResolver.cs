@@ -14,6 +14,7 @@ public sealed class SceneResolver(
     IDeviceRepository deviceRepository,
     IDeviceCommandFactory commandFactory) : ISceneResolver
 {
+    /// <inheritdoc />
     public async Task<ResolvedScene> ResolveAsync(
         DeviceScene scene,
         CancellationToken cancellationToken = default)
@@ -31,7 +32,12 @@ public sealed class SceneResolver(
                     ? $"Target device no longer registered (id: {action.DeviceId!.Value})."
                     : $"No devices match group target: {action.DeviceType} in {action.Location ?? "any location"}.";
 
-                composite.Add(new FailedCommand(action.Operation, failureMessage));
+                composite.Add(new FailedCommand(
+                    operationName: action.Operation,
+                    message: failureMessage,
+                    deviceId: action.DeviceId,
+                    deviceType: action.DeviceType,
+                    value: action.Value));
                 deviceIds.Add(Guid.Empty);
                 continue;
             }
@@ -54,7 +60,13 @@ public sealed class SceneResolver(
                 }
                 catch (DomainException ex)
                 {
-                    command = new FailedCommand(action.Operation, ex.Message);
+                    command = new FailedCommand(
+                        operationName: action.Operation,
+                        message: ex.Message,
+                        deviceId: device.Id,
+                        deviceName: device.Name,
+                        deviceType: device.Type,
+                        value: action.Value);
                 }
 
                 composite.Add(command);

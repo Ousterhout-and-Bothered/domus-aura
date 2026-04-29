@@ -5,16 +5,26 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to unlock a door lock device.
 /// </summary>
-/// <param name="receiver">The lockable device to operate on.</param>
-public sealed class UnlockCommand(ILockable receiver) : IDeviceCommand
+public sealed class UnlockCommand(
+    ILockable receiver,
+    Device device) : DeviceCommandBase(device)
 {
-    
-    public string OperationName => "Unlock";
-    
+    public override string OperationName => "Unlock";
+
+    public override string? Value => null;
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.Unlock();
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

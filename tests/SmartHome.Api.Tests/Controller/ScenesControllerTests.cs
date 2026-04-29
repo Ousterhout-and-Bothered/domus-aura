@@ -89,7 +89,14 @@ public class ScenesControllerTests
         var deviceId = Guid.NewGuid();
         var executionResult = new SceneExecutionResult(sceneId, "Test Scene", 
         [
-            new SceneExecutionEntry(deviceId, new CommandResult("TurnOn", true))
+            new SceneExecutionEntry(deviceId, new CommandResult(
+                DeviceId: deviceId,
+                DeviceName: "Test Device",
+                DeviceType: DeviceType.Light,
+                Operation: "TurnOn",
+                Value: null,
+                Success: true,
+                Message: null))
         ]);
 
         _sceneServiceMock.Setup(s => s.ExecuteSceneAsync(sceneId, It.IsAny<CancellationToken>()))

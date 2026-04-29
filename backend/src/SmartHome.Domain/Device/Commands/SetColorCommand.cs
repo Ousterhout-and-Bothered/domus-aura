@@ -1,3 +1,4 @@
+
 using SmartHome.Domain.Device.Light;
 
 namespace SmartHome.Domain.Device.Commands;
@@ -5,17 +6,27 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to set the color of a colorable device.
 /// </summary>
-/// <param name="receiver">The color-controllable light to operate on.</param>
-/// <param name="colorHex">The target color in hex format.</param>
-public sealed class SetColorCommand(IColorable receiver, string colorHex) : IDeviceCommand
+public sealed class SetColorCommand(
+    IColorable receiver,
+    string colorHex,
+    Device device) : DeviceCommandBase(device)
 {
-    
-    public string OperationName => $"SetColor({colorHex})";
-    
+    public override string OperationName => "SetColor";
+
+    public override string Value => colorHex;
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.SetColor(colorHex);
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

@@ -35,7 +35,10 @@ internal static class SceneMapper
             Entries: result.Entries
                 .Select(e => new SceneExecutionEntryResponse(
                     DeviceId: e.DeviceId,
+                    DeviceName: e.Result.DeviceName,
+                    DeviceType: e.Result.DeviceType,
                     Operation: e.Result.Operation,
+                    Value: e.Result.Value,
                     Success: e.Result.Success,
                     Message: e.Result.Message))
                 .ToList());

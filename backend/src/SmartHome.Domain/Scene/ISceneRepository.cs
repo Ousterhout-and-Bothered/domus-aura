@@ -37,6 +37,16 @@ public interface ISceneRepository
     Task<bool> RemoveByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Removes scene actions that target a specific device by ID.
+    /// Group-based actions are not removed because they are resolved at execution time.
+    /// Scenes left with no actions are removed.
+    /// Returns the names of scenes that were affected.
+    /// </summary>
+    Task<IReadOnlyList<string>> RemoveActionsForDeviceAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Persists all pending changes to the underlying storage medium.
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

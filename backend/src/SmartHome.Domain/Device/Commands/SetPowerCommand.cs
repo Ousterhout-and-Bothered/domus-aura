@@ -3,21 +3,30 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to toggle the power state of a device.
 /// </summary>
-/// <param name="receiver">The powerable device to operate on.</param>
-/// <param name="targetState">The desired power state (On/Off).</param>
-public sealed class SetPowerCommand(IPowerable receiver, PowerState targetState) : IDeviceCommand
+public sealed class SetPowerCommand(
+    IPowerable receiver,
+    PowerState targetState,
+    Device device) : DeviceCommandBase(device)
 {
-    
-    public string OperationName => $"SetPower({targetState})";
-    
+    public override string OperationName => "SetPower";
+
+    public override string Value => targetState.ToString();
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         if (targetState == PowerState.On)
             receiver.TurnOn();
         else
             receiver.TurnOff();
-        
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

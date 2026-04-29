@@ -5,15 +5,14 @@ meta {
 }
 
 put {
-  url: http://localhost:5137/api/devices/00ca180c-a34d-4409-a250-bc8702a12bcd/state
+  url: {{baseUrl}}/api/devices/{{doorLockId}}/state
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "command": "Lock",
-    "value": "Lock"
+    "command": "Lock"
   }
 }
 

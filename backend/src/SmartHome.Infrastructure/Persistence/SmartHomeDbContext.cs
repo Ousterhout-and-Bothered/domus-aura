@@ -92,8 +92,7 @@ public sealed class SmartHomeDbContext : DbContext
                 .HasFilter($"\"Type\" = {(int)DeviceType.Thermostat}");
 
             // Ensure GUIDs are handled consistently in SQLite.
-            // Using a string conversion and NOCASE collation avoids issues with case-sensitivity 
-            // (e.g., 404s when querying with lowercase GUIDs against uppercase DB values).
+            // Using a string conversion and NOCASE collation avoids issues with case-sensitivity.
             entity.Property(d => d.Id)
                 .HasConversion<string>()
                 .HasColumnType("TEXT COLLATE NOCASE");

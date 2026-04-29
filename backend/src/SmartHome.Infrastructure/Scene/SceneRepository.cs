@@ -67,4 +67,41 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
         dbContext.Scenes.Remove(scene);
         return true;
     }
+    
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> RemoveActionsForDeviceAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default)
+    {
+        var scenes = await dbContext.Scenes
+            .Include(s => s.Actions)
+            .Where(s => s.Actions.Any(a => a.DeviceId == deviceId))
+            .ToListAsync(cancellationToken);
+
+        var affectedSceneNames = new List<string>();
+
+        foreach (var scene in scenes)
+        {
+            var remainingActions = scene.Actions
+                .Where(a => a.DeviceId != deviceId)
+                .ToList();
+
+            if (remainingActions.Count != scene.Actions.Count)
+            {
+                affectedSceneNames.Add(scene.Name);
+            }
+
+            if (remainingActions.Count == 0)
+            {
+                dbContext.Scenes.Remove(scene);
+            }
+            else
+            {
+                scene.ReplaceActions(remainingActions);
+                await UpdateAsync(scene, cancellationToken);
+            }
+        }
+
+        return affectedSceneNames;
+    }
 }

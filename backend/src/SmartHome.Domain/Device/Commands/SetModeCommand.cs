@@ -5,17 +5,27 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to set the operating mode of a thermostat.
 /// </summary>
-/// <param name="receiver">The thermostat to operate on.</param>
-/// <param name="mode">The target operating mode (e.g., Heat, Cool, Auto).</param>
-public sealed class SetModeCommand(IThermostatControllable receiver, ThermostatMode mode) : IDeviceCommand
+public sealed class SetModeCommand(
+    IThermostatControllable receiver,
+    ThermostatMode mode,
+    Device device) : DeviceCommandBase(device)
 {
-    
-    public string OperationName => $"SetMode({mode})";
-    
+    public override string OperationName => "SetMode";
+
+    public override string Value => mode.ToString();
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.SetMode(mode);
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

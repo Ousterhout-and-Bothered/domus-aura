@@ -5,6 +5,7 @@ using SmartHome.Domain.Device.Events;
 using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Scene;
 using SmartHome.Infrastructure.Device.Events;
 
 namespace SmartHome.Infrastructure.Device.Service;
@@ -23,7 +24,8 @@ public sealed class DeviceService(
     IDeviceRepository repository,
     IDeviceFactory factory,
     IDeviceCommandFactory commandFactory,
-    IDeviceEventNotifier deviceEventNotifier) : IDeviceService
+    IDeviceEventNotifier deviceEventNotifier,
+    ISceneRepository sceneRepository) : IDeviceService
 {
     /// <inheritdoc />
     public async Task<Domain.Device.Device> RegisterDeviceAsync(
@@ -108,12 +110,27 @@ public sealed class DeviceService(
 
         var payload = DeviceEventPayloadFactory.Create(device);
 
+        var affectedScenes = await sceneRepository
+            .RemoveActionsForDeviceAsync(deviceId, cancellationToken);
+
+        if (affectedScenes.Count > 0)
+        {
+            var sceneList = string.Join(", ", affectedScenes);
+
+            await repository.LogActionAsync(
+                deviceId,
+                $"Scene cleanup: removed device references from affected scenes [{sceneList}]",
+                cancellationToken);
+        }
+
         var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
 
         if (!removed)
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
+
+        await repository.SaveChangesAsync(cancellationToken);
 
         await deviceEventNotifier.PublishDeletedAsync(
             deviceId,

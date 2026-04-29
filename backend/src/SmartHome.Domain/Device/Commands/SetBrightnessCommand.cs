@@ -5,16 +5,27 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to set the brightness of a dimmable device.
 /// </summary>
-/// <param name="receiver">The dimmable device to operate on.</param>
-/// <param name="brightness">The target brightness level ( 0-100).</param>
-public sealed class SetBrightnessCommand(IDimmable receiver, int brightness) : IDeviceCommand
+public sealed class SetBrightnessCommand(
+    IDimmable receiver,
+    int brightness,
+    Device device) : DeviceCommandBase(device)
 {
-    public string OperationName => $"SetBrightness({brightness})";
-    
+    public override string OperationName => "SetBrightness";
+
+    public override string Value => brightness.ToString();
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.SetBrightness(brightness);
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }

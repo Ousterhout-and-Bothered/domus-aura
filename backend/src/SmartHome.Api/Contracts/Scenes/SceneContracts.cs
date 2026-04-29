@@ -35,7 +35,7 @@ public sealed record SceneActionRequest(
     string? Value);
 
 /// <summary>
-/// Response describing a persisted scene.
+/// Response describing a saved scene.
 /// </summary>
 public sealed record SceneResponse(
     Guid Id,
@@ -69,6 +69,9 @@ public sealed record SceneExecutionResponse(
 /// </summary>
 public sealed record SceneExecutionEntryResponse(
     Guid DeviceId,
+    string DeviceName,
+    DeviceType DeviceType,
     string Operation,
+    string? Value,
     bool Success,
     string? Message);

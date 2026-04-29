@@ -5,16 +5,27 @@ namespace SmartHome.Domain.Device.Commands;
 /// <summary>
 /// Command to set the speed of a fan device.
 /// </summary>
-/// <param name="receiver">The fan device to operate on.</param>
-/// <param name="speed">The target fan speed (Low, Medium, High).</param>
-public sealed class SetSpeedCommand(IFanControllable receiver, FanSpeed speed) : IDeviceCommand
+public sealed class SetSpeedCommand(
+    IFanControllable receiver,
+    FanSpeed speed,
+    Device device) : DeviceCommandBase(device)
 {
-    public string OperationName => $"SetSpeed({speed})";
-    
+    public override string OperationName => "SetSpeed";
+
+    public override string Value => speed.ToString();
+
     /// <inheritdoc />
-    public CommandResult Execute()
+    public override CommandResult Execute()
     {
         receiver.SetSpeed(speed);
-        return new CommandResult(OperationName, true);
+
+        return new CommandResult(
+            DeviceId: DeviceId!.Value,
+            DeviceName: DeviceName!,
+            DeviceType: DeviceType!.Value,
+            Operation: OperationName,
+            Value: Value,
+            Success: true,
+            Message: null);
     }
 }
