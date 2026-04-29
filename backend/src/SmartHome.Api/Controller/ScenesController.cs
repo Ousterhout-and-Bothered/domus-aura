@@ -13,7 +13,7 @@ namespace SmartHome.Api.Controller;
 /// <param name="sceneService">The service coordinating scene CRUD and execution.</param>
 [ApiController]
 [Route("api/scenes")]
-//[Authorize]
+[Authorize]
 [Produces("application/json")]
 public sealed class ScenesController(ISceneService sceneService) : ControllerBase
 {
@@ -21,6 +21,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// Retrieves all scenes.
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The list of scenes.</returns>
     /// <response code="200">The list of scenes.</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<SceneResponse>), StatusCodes.Status200OK)]
@@ -35,6 +36,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// </summary>
     /// <param name="id">The unique identifier of the scene.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The scene.</returns>
     /// <response code="200">The scene.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpGet("{id:guid}")]
@@ -53,6 +55,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// </summary>
     /// <param name="request">The scene definition.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The newly created scene.</returns>
     /// <response code="201">The newly created scene.</response>
     /// <response code="400">The request failed validation or a domain invariant.</response>
     [HttpPost]
@@ -77,6 +80,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// <param name="id">The unique identifier of the scene to update.</param>
     /// <param name="request">The new scene definition.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The updated scene.</returns>
     /// <response code="200">The updated scene.</response>
     /// <response code="400">The request failed validation or a domain invariant.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
@@ -100,6 +104,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// </summary>
     /// <param name="id">The unique identifier of the scene to delete.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>No content.</returns>
     /// <response code="204">The scene was deleted.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpDelete("{id:guid}")]
@@ -121,6 +126,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     /// </summary>
     /// <param name="id">The unique identifier of the scene to execute.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The execution result with per-action outcomes.</returns>
     /// <response code="200">The execution result with per-action outcomes.</response>
     /// <response code="404">No scene exists with the specified identifier.</response>
     [HttpPost("{id:guid}/execute")]

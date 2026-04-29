@@ -5,14 +5,14 @@ meta {
 }
 
 put {
-  url: http://localhost:5137/api/locations/Office/ambient-temperature
+  url: {{baseUrl}}/api/locations/{{locationName}}/ambient-temperature
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "temperature": 69
+    "temperature": 70
   }
 }
 

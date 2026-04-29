@@ -60,7 +60,7 @@ public class SceneServiceTests
         mockCommand.Setup(c => c.OperationName).Returns("Lock");
         composite.Add(mockCommand.Object);
 
-        var resolved = new ResolvedScene(composite, [deviceId]);
+        var resolved = new ResolvedScene(composite, [deviceId], new[] { 0 });
 
         _sceneRepositoryMock.Setup(r => r.GetByIdAsync(sceneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);

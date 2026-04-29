@@ -28,7 +28,6 @@ using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // OpenAPI for local exploration (Scalar UI enabled in dev only)
@@ -90,9 +89,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    //options.FallbackPolicy = new AuthorizationPolicyBuilder()
-      //  .RequireAuthenticatedUser()
-        //.Build();
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 
 // SQLite setup — resolves relative paths and ensures directory exists
@@ -155,8 +154,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseCors();
 app.UseHttpsRedirection();
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Apply migrations and seed on startup
 app.Logger.LogInformation("SQLite database configured.");
@@ -180,6 +179,8 @@ await app.RunAsync();
 
 // Helpers
 
+// Resolves the SQLite connection string, converting relative paths
+// to absolute paths and ensuring the target directory exists.
 static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -214,6 +215,7 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
     return $"Data Source={absolute};{string.Join(';', others)}";
 }
 
+// Configures polymorphic JSON serialization for device types using a discriminator field.
 static DefaultJsonTypeInfoResolver ConfigureDevicePolymorphism() =>
     new()
     {

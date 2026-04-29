@@ -33,6 +33,8 @@ public static class Guard
     /// <summary>
     /// Gets a comma-separated string of all defined names for an enum type.
     /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <returns>A comma-separated list of allowed enum names.</returns>
     public static string GetAllowedValues<T>() where T : struct, Enum
     {
         return string.Join(", ", Enum.GetNames<T>());
@@ -95,10 +97,9 @@ public static class Guard
     /// Ensures the specified transition is legal for the given state machine.
     /// </summary>
     /// <typeparam name="TState">The state type.</typeparam>
-    /// <param name="machine">The state machine to validate against.</param>
-    /// <param name="allowedTransitions">The transition table.</param>
     /// <param name="currentState">The current state.</param>
     /// <param name="targetState">The desired target state.</param>
+    /// <param name="allowedTransitions">The transition table.</param>
     /// <exception cref="InvalidDomainOperationException">Thrown if the transition is not allowed.</exception>
     public static void ThrowIfInvalidTransition<TState>(
         TState currentState,
@@ -112,6 +113,14 @@ public static class Guard
         throw new InvalidDomainOperationException(
             $"Invalid transition: {currentState} -> {targetState}. {detail}");
     }
+
+    /// <summary>
+    /// Clamps a value to the specified inclusive range.
+    /// </summary>
+    /// <param name="value">The value to clamp.</param>
+    /// <param name="min">The minimum allowed value.</param>
+    /// <param name="max">The maximum allowed value.</param>
+    /// <returns>The clamped value.</returns>
     public static int Clamp(int value, int min, int max)
     {
         if (value < min) return min;

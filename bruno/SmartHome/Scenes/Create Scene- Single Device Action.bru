@@ -1,0 +1,28 @@
+meta {
+  name: Create Scene- Single Device Action
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/scenes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Test Single Device",
+    "actions": [
+      {
+        "deviceId": "{{lightId}}",
+        "operation": "TurnOn"
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

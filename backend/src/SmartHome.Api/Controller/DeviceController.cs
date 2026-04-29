@@ -13,7 +13,7 @@ namespace SmartHome.Api.Controller;
 /// </summary>
 [ApiController]
 [Route("api/devices")]
-//[Authorize]
+[Authorize]
 public class DeviceController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
@@ -155,6 +155,7 @@ public class DeviceController : ControllerBase
     /// Subscribes the client to a real-time stream of device state changes using Server-Sent Events (SSE).
     /// Acts as an HTTP adapter over the device event stream and does not contain business logic.
     /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the streaming connection.</param>
     [HttpGet("events")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]

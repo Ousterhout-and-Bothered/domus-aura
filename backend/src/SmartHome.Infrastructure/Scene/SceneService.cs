@@ -108,7 +108,10 @@ public sealed class SceneService(
                 await deviceRepository.LogActionAsync(deviceId, operationLabel, cancellationToken);
             }
 
-            entries.Add(new SceneExecutionEntry(deviceId, result));
+            entries.Add(new SceneExecutionEntry(
+                deviceId,
+                result,
+                resolved.OrderIndexesInOrder[i]));
         }
 
         // 5. Save all pending changes in one go: the device state mutations from
