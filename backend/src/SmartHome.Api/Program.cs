@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using SmartHome.Infrastructure.Device.Repository;
 using SmartHome.Infrastructure.Device.Service;
@@ -85,6 +86,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ?? !builder.Environment.IsDevelopment();
         options.TokenValidationParameters.ValidIssuer =
             builder.Configuration["Authentication:ValidIssuer"];
+
+        // EventSource cannot send Authorization headers, so SSE clients
+        // pass the access token via the access_token query parameter.
+        // Restricted to SSE routes to avoid token leakage on other endpoints.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var path = context.HttpContext.Request.Path;
+                if (path.StartsWithSegments("/api/devices/events") &&
+                    context.Request.Query.TryGetValue("access_token", out var token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -152,8 +170,17 @@ if (app.Environment.IsDevelopment())
 
 // Middleware Pipeline
 app.UseExceptionHandler();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    KnownIPNetworks = { },
+    KnownProxies = { }
+});
 app.UseCors();
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 

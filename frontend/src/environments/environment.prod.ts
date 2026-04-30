@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  apiUrl: 'https://api.domus-aura.com',
   oidc: {
-    issuer: 'http://localhost:8080/realms/smarthome',
+    issuer: 'https://auth.domus-aura.com/realms/smarthome',
     clientId: 'smarthome-spa',
   },
 };

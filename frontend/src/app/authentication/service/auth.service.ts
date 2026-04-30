@@ -11,7 +11,7 @@ export const authConfig: AuthConfig = {
   responseType: 'code',
   scope: 'openid profile email',
   showDebugInformation: !environment.production,
-  requireHttps: false,
+  requireHttps: environment.production,
 };
 
 @Injectable({ providedIn: 'root' })

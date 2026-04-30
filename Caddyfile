@@ -1,0 +1,21 @@
+# Caddy reverse proxy for Domus Aura.
+# Auto-provisions Let's Encrypt certs for each subdomain.
+#
+# DNS prerequisite: A records for the apex and subdomains must point at
+# the EC2 Elastic IP before Caddy starts, or cert issuance will fail.
+
+domus-aura.com, www.domus-aura.com {
+    reverse_proxy frontend:80
+    encode zstd gzip
+}
+
+api.domus-aura.com {
+    rewrite * /api{uri}
+    reverse_proxy backend:8080
+    encode zstd gzip
+}
+
+auth.domus-aura.com {
+    reverse_proxy keycloak:8080
+    encode zstd gzip
+}
