@@ -1,0 +1,23 @@
+meta {
+  name: Set Medium
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{fanId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setSpeed",
+    "value": "Medium"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

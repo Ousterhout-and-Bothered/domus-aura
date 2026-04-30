@@ -1,0 +1,251 @@
+@charset "UTF-8";
+/* ─────────────── PrimeNG p-card overrides ─────────────── */
+:host ::ng-deep .thermo-card {
+  background: var(--p-card-background, var(--aura-surface));
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+:host ::ng-deep .thermo-card .p-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* push header up, controls down */
+}
+
+/* ─────────────── Header ─────────────── */
+.thermo-card-head {
+  padding: 1.25rem 1.5rem 0;
+  text-align: center;
+}
+
+.thermo-name {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  margin: 0 0 0.15rem;
+}
+
+.thermo-loc {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─────────────── Gauge stage (SVG + center readout) ─────────────── */
+.gauge-stage {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  transition: opacity 0.3s ease;
+}
+.gauge-stage.is-off {
+  opacity: 0.55;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  touch-action: none;
+}
+
+.needle-group {
+  cursor: grab;
+  transition: opacity 0.2s ease;
+}
+.needle-group:active {
+  cursor: grabbing;
+}
+.needle-group.is-disabled {
+  cursor: not-allowed;
+}
+
+.gauge-readout {
+  text-align: center;
+  margin-top: 0.5rem;
+  position: relative;
+  pointer-events: none;
+}
+
+.gauge-temp-big {
+  font-family: var(--font-display);
+  font-size: 3.25rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.gauge-temp-unit {
+  font-size: 1.2rem;
+  color: var(--aura-text-muted);
+  margin-left: 0.1em;
+}
+
+.gauge-state {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  margin-top: 0.3rem;
+  font-weight: 700;
+}
+
+.gauge-state-cooling {
+  color: #1E40AF;
+}
+
+.gauge-state-heating {
+  color: #C2410C;
+}
+
+.gauge-state-idle {
+  color: var(--aura-text-muted);
+}
+
+.ambient-readout {
+  text-align: center;
+  margin: 1rem 0 0;
+  font-size: 1.5rem;
+  color: var(--aura-text-muted);
+}
+.ambient-readout strong {
+  color: var(--aura-text);
+  font-weight: 500;
+}
+
+/* ─────────────── Control rows (Power / Setpoint / Mode) ───────────────*/
+.control-row {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  transition: opacity 0.2s ease;
+}
+.control-row.is-disabled {
+  opacity: 0.5;
+}
+
+.control-label {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.control-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  min-width: 56px;
+  text-align: left;
+  color: var(--aura-text);
+}
+
+.power-row p-toggleswitch {
+  justify-self: start;
+  --p-toggleswitch-width: 4rem;
+  --p-toggleswitch-height: 2rem;
+  --p-toggleswitch-handle-size: 1.5rem;
+  --p-toggleswitch-border-radius: 999px;
+}
+
+/* ─────────────── Setpoint InputNumber ───────────────*/
+.setpoint-row {
+  grid-template-columns: 90px 1fr;
+}
+
+:host ::ng-deep .setpoint-input {
+  --p-inputnumber-button-background: transparent;
+  --p-inputnumber-button-border-color: var(--aura-border);
+  --p-inputnumber-button-color: var(--aura-text-muted);
+  --p-inputnumber-button-hover-background: var(--aura-accent-soft);
+  --p-inputnumber-button-hover-border-color: var(--aura-accent);
+  --p-inputnumber-button-hover-color: var(--aura-accent);
+}
+:host ::ng-deep .setpoint-input .p-inputnumber-input {
+  width: 80px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--aura-text);
+  background: transparent;
+}
+:host ::ng-deep .setpoint-input.p-disabled, :host ::ng-deep .setpoint-input[ng-reflect-disabled=true] {
+  opacity: 0.6;
+}
+
+/* ─────────────── Mode SelectButton ───────────────*/
+.mode-row {
+  grid-template-columns: 100px 1fr;
+}
+
+:host ::ng-deep .mode-select {
+  display: flex;
+  gap: 10px;
+}
+:host ::ng-deep .mode-select .p-button,
+:host ::ng-deep .mode-select .p-togglebutton,
+:host ::ng-deep .mode-select .p-selectbutton-option {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--aura-border);
+  color: var(--aura-text-muted);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+:host ::ng-deep .mode-select .p-button:hover:not(:disabled),
+:host ::ng-deep .mode-select .p-togglebutton:hover:not(:disabled),
+:host ::ng-deep .mode-select .p-selectbutton-option:hover:not(:disabled) {
+  color: var(--aura-text);
+  border-color: var(--aura-text-muted);
+}
+:host ::ng-deep .mode-select .p-button.p-highlight, :host ::ng-deep .mode-select .p-button[aria-pressed=true],
+:host ::ng-deep .mode-select .p-togglebutton.p-highlight,
+:host ::ng-deep .mode-select .p-togglebutton[aria-pressed=true],
+:host ::ng-deep .mode-select .p-selectbutton-option.p-highlight,
+:host ::ng-deep .mode-select .p-selectbutton-option[aria-pressed=true] {
+  background: var(--aura-accent-soft);
+  border-color: var(--aura-accent);
+  color: var(--aura-accent);
+}
+:host ::ng-deep .mode-select .p-button:disabled,
+:host ::ng-deep .mode-select .p-togglebutton:disabled,
+:host ::ng-deep .mode-select .p-selectbutton-option:disabled {
+  cursor: not-allowed;
+}
+
+/* ─────────────── Reduced motion ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .gauge-stage,
+  .needle-group,
+  :host ::ng-deep .thermo-card {
+    transition: none !important;
+  }
+}
+/* ─────────────── Mobile (< 480px) ─────────────── */
+@media (max-width: 480px) {
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  .control-value {
+    text-align: center;
+  }
+  .power-row p-toggleswitch {
+    justify-self: center;
+  }
+  :host ::ng-deep .setpoint-input,
+  :host ::ng-deep .mode-select {
+    justify-self: center;
+  }
+}
+
+/*# sourceMappingURL=thermostat-gauge.css.map */

@@ -1,0 +1,23 @@
+meta {
+  name: Set Color
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{lightId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setColor",
+    "value": "#FF8800"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

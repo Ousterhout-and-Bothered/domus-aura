@@ -1,0 +1,121 @@
+.aura-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.aura-header {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  padding: 1rem 1rem 0.75rem;
+  background: #0F0E0D;
+  border-bottom: 1px solid #2D2A28;
+
+  .aura-wordmark {
+    color: #F5F0E8;
+  }
+
+  .aura-nav {
+    display: flex;
+    gap: 1rem;
+    align-self: flex-end;
+    padding-bottom: 0.72rem;
+    flex: 1;
+
+    a {
+      display: inline-block;
+      color: #A8A29A;
+      text-decoration: none;
+      font-size: 1.5rem;
+      font-weight: 350;
+      position: relative;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #F5F0E8;
+      }
+
+      &.active {
+        color: #F5F0E8;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: -3px;
+          height: 2px;
+          background: #FB923C;
+        }
+      }
+    }
+  }
+
+  .aura-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .aura-user {
+    color: #A8A29A;
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aura-icon-button {
+    background: transparent;
+    border: 1px solid #2D2A28;
+    color: #F5F0E8;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      background: #232120;
+      border-color: #A8A29A;
+    }
+
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+.aura-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 600;
+  font-variation-settings: 'opsz' 144;
+  color: var(--aura-text);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+
+.aura-logo {
+  height: 4rem;
+  width: 4rem;
+  object-fit: contain;
+}
+
+.aura-main {
+  flex: 1;
+  padding: 2.5rem 3rem;
+
+  &--full {
+    padding: 0;
+  }
+}

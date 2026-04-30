@@ -1,0 +1,33 @@
+meta {
+  name: Turn On
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{lightId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setPower",
+    "value": "On"
+  }
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("device should be on after turn on command", function() {
+    expect(res.body.powerState).to.equal("On");
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

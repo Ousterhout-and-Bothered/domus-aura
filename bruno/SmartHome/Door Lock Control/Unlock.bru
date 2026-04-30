@@ -1,0 +1,22 @@
+meta {
+  name: Unlock
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{doorLockId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "Unlock"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

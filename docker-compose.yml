@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/src/SmartHome.Api/Dockerfile
+    ports:
+      - "5137:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/smarthome.db
+      - Authentication__Authority=http://keycloak:8080/realms/smarthome
+      - Authentication__Audience=smarthome-spa
+      - Authentication__ValidIssuer=http://localhost:8080/realms/smarthome
+      - Authentication__RequireHttpsMetadata=false
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - keycloak
+
+  frontend:
+    build:
+      context: frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: smarthome-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import

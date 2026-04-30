@@ -1,0 +1,41 @@
+meta {
+  name: Devices
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/devices
+  body: none
+  auth: inherit
+}
+
+tests {
+  const devices = res.body;
+  
+  // LIGHT
+  const light = devices.find(d => d.type === "Light");
+  if (light) bru.setEnvVar("lightId", light.id);
+  
+  // FAN
+  const fan = devices.find(d => d.type === "Fan");
+  if (fan) bru.setEnvVar("fanId", fan.id);
+  
+  // THERMOSTAT
+  const thermostat = devices.find(d => d.type === "Thermostat");
+  if (thermostat) {
+    bru.setEnvVar("thermostatId", thermostat.id);
+    if (thermostat.location) {
+      bru.setEnvVar("locationName", thermostat.location);
+    }
+  }
+  
+  // DOOR LOCK
+  const doorLock = devices.find(d => d.type === "DoorLock");
+  if (doorLock) bru.setEnvVar("doorLockId", doorLock.id);
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Device\Repository\ISceneRepository.cs" />
+    <Compile Remove="Device\Scenes\SceneAction.cs" />
+    <Compile Remove="Device\Scenes\Scene.cs" />
+    <Compile Remove="Device\Commands\IDeviceCommandProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Device\Scenes\" />
+    <Folder Include="Scene\" />
+  </ItemGroup>
+
+</Project>

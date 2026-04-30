@@ -1,0 +1,16 @@
+meta {
+  name: Delete Invalid Id
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/devices/{{invalidId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

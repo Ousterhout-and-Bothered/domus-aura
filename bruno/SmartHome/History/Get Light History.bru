@@ -1,0 +1,16 @@
+meta {
+  name: Get Light History
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/devices/{{lightId}}/history
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

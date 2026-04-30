@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "SmartHome",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

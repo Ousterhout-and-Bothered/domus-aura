@@ -1,0 +1,16 @@
+meta {
+  name: SSE Endpoint
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/devices/events
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

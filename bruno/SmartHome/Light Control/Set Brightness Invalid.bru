@@ -1,0 +1,23 @@
+meta {
+  name: Set Brightness Invalid
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{lightId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setBrightness",
+    "value": 101
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

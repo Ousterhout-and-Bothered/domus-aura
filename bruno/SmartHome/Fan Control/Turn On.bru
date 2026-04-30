@@ -1,0 +1,23 @@
+meta {
+  name: Turn On
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{fanId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setPower",
+    "value": "On"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

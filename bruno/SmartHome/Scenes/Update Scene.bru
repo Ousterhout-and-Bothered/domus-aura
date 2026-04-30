@@ -1,0 +1,42 @@
+meta {
+  name: Update Scene
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/scenes/{{sceneId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Good Night (Updated)",
+    "actions": [
+      {
+        "deviceId": null,
+        "deviceType": "DoorLock",
+        "location": null,
+        "operation": "Lock",
+        "value": null
+      },
+      {
+        "deviceId": null,
+        "deviceType": "Light",
+        "location": null,
+        "operation": "SetPower",
+        "value": "Off"
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

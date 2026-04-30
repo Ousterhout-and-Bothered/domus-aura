@@ -1,0 +1,223 @@
+﻿/* ─────────────── PrimeNG p-card overrides ─────────────── */
+
+:host ::ng-deep .fan-card {
+  background: var(--p-card-background, var(--aura-surface));
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+
+  .p-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .p-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+
+/* ─────────────── Header ─────────────── */
+
+.fan-card-head {
+  padding: 1.25rem 1.5rem 0;
+  text-align: center;
+}
+
+.fan-name {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  margin: 0 0 0.15rem;
+}
+
+.fan-loc {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─────────────── Fan stage (SVG) ─────────────── */
+
+/* Fixed slot — SVG shrinks to fit, card height is no longer driven by content. */
+.fan-stage {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.fan-svg {
+  max-height: 100%;
+  width: auto;
+  display: block;
+  user-select: none;
+}
+
+/* ─────────────── Blade animation ─────────────── */
+
+.fan-blades {
+  transform-origin: 100px 100px;
+  transition: filter 0.4s ease;
+}
+
+.fan-blades.spinning {
+  animation: fan-spin linear infinite;
+}
+
+.fan-blades.speed-low    { animation-duration: 1.6s; }
+.fan-blades.speed-medium { animation-duration: 0.9s; }
+.fan-blades.speed-high {
+  animation-duration: 0.4s;
+  filter: blur(0.6px);
+}
+
+.fan-blades.fan-off {
+  animation: none;
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+
+@keyframes fan-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-blades.spinning {
+    animation-duration: 6s !important;
+    filter: none !important;
+  }
+}
+
+/* ─────────────── Readout ─────────────── */
+
+.fan-readout {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.fan-state-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  font-weight: 600;
+  color: var(--aura-text-muted);
+}
+
+/* ─────────────── Controls block ─────────────── */
+
+/* margin-top: auto pins the entire control stack to the bottom of the
+   flex column, so any extra card height absorbs above it. */
+.controls {
+  margin-top: auto;
+}
+
+.control-row {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  transition: opacity 0.2s ease;
+
+  &.is-disabled {
+    opacity: 0.5;
+  }
+}
+
+.control-label {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.control-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  min-width: 56px;
+  text-align: left;
+  color: var(--aura-text);
+}
+
+.power-row p-toggleswitch {
+  justify-self: start;
+  --p-toggleswitch-width: 4rem;
+  --p-toggleswitch-height: 2rem;
+  --p-toggleswitch-handle-size: 1.5rem;
+  --p-toggleswitch-border-radius: 999px;
+}
+
+/* ─────────────── Speed SelectButton ─────────────── */
+
+.speed-row {
+  grid-template-columns: 90px 1fr;
+}
+
+:host ::ng-deep .speed-select {
+  display: flex;
+  gap: 10px;
+
+  .p-button,
+  .p-togglebutton,
+  .p-selectbutton-option {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--aura-border);
+    color: var(--aura-text-muted);
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--aura-text);
+      border-color: var(--aura-text-muted);
+    }
+
+    &.p-highlight,
+    &[aria-pressed='true'] {
+      background: var(--aura-accent-soft);
+      border-color: var(--aura-accent);
+      color: var(--aura-accent);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* ─────────────── Mobile (< 480px) ─────────────── */
+
+@media (max-width: 480px) {
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .control-value {
+    text-align: center;
+  }
+
+  .power-row p-toggleswitch {
+    justify-self: center;
+  }
+
+  :host ::ng-deep .speed-select {
+    justify-self: center;
+  }
+}
