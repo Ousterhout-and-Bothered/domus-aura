@@ -59,7 +59,7 @@ internal static class ChatToolHelpers
         string name,
         out int value)
     {
-        value = 0;
+        value = default;
 
         if (!arguments.TryGetValue(name, out var element))
             return false;
@@ -84,7 +84,7 @@ internal static class ChatToolHelpers
     /// </summary>
     /// <param name="count">The number of items.</param>
     /// <param name="noun">The singular noun to format.</param>
-    /// <returns>A formatted sentence subject using 'was' or 'were'.</returns>
+    /// <returns>A formatted sentence subject using was or were.</returns>
     public static string SentenceCount(int count, string noun) =>
         count == 1 ? $"1 {noun} was" : $"{count} {noun}s were";
 

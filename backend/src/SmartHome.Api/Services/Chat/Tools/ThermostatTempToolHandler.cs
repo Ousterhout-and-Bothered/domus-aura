@@ -11,8 +11,14 @@ namespace SmartHome.Api.Services.Chat.Tools;
 public sealed class ThermostatTempToolHandler(
     IDeviceService deviceService) : IChatToolHandler
 {
+    /// <summary>
+    /// Gets the tool name exposed to the language model.
+    /// </summary>
     public string ToolName => "set_thermostat_temperature";
 
+    /// <summary>
+    /// Gets the tool definition sent to the language model.
+    /// </summary>
     public object ToolDefinition => new
     {
         type = "function",
@@ -33,6 +39,12 @@ public sealed class ThermostatTempToolHandler(
         }
     };
 
+    /// <summary>
+    /// Executes the thermostat temperature tool using the supplied model arguments.
+    /// </summary>
+    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A message describing the result of the thermostat temperature operation.</returns>
     public async Task<string> HandleAsync(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
@@ -84,6 +96,14 @@ public sealed class ThermostatTempToolHandler(
         return BuildResponse(location!, changed, alreadyCorrect, temp);
     }
 
+    /// <summary>
+    /// Builds a user-facing response summarizing the thermostat temperature operation.
+    /// </summary>
+    /// <param name="location">The requested thermostat location, or all for every thermostat.</param>
+    /// <param name="changed">The number of thermostats changed by the operation.</param>
+    /// <param name="alreadyCorrect">The number of thermostats already set to the requested temperature.</param>
+    /// <param name="temp">The requested desired temperature.</param>
+    /// <returns>A message summarizing the operation result.</returns>
     private static string BuildResponse(
         string location,
         int changed,

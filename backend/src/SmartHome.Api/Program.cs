@@ -121,7 +121,7 @@ builder.Services.AddScoped<ISceneService, SceneService>();
 // LLM Chat Service
 builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
 
-// Chat Tool Handlers (Strategy Pattern)
+// Chat Tool Handlers
 builder.Services.AddScoped<IChatToolHandler>(sp =>
     new PoweredDeviceToolHandler(
         sp.GetRequiredService<IDeviceService>(),
