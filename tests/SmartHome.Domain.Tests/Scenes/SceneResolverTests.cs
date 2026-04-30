@@ -24,7 +24,7 @@ public class SceneResolverTests
     {
         var stub = new Mock<IDeviceCommand>();
         stub.SetupGet(c => c.OperationName).Returns(operationName);
-        stub.Setup(c => c.Execute()).Returns(new CommandResult(operationName, Success: true));
+        stub.Setup(c => c.Execute()).Returns(new CommandResult(Guid.Empty, "Stub", DeviceType.Light, operationName, null, Success: true, null));
         return stub.Object;
     }
 

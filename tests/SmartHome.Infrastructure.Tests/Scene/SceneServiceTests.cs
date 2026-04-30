@@ -49,11 +49,11 @@ public class SceneServiceTests
 
         var composite = new CompositeCommand();
         var mockCommand = new Mock<IDeviceCommand>();
-        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult("Lock", true));
+        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult(deviceId, "Front Door", SmartHome.Domain.Device.DeviceType.DoorLock, "Lock", null, true, null));
         mockCommand.Setup(c => c.OperationName).Returns("Lock");
         composite.Add(mockCommand.Object);
 
-        var resolved = new ResolvedScene(composite, [deviceId]);
+        var resolved = new ResolvedScene(composite, [deviceId], [0]);
 
         _sceneRepositoryMock.Setup(r => r.GetByIdAsync(sceneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);

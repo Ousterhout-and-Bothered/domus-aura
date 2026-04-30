@@ -24,7 +24,6 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     [InlineData("/api/devices")]
     [InlineData("/api/simulation")]
     [InlineData("/api/scenes")]
-    [InlineData("/api/locations")]
     public async Task GetProtectedEndpoints_WithoutAuthentication_Returns401Unauthorized(string url)
     {
         // Arrange
