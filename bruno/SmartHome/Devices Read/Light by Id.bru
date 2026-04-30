@@ -1,0 +1,16 @@
+meta {
+  name: Light by Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/devices/{{lightId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

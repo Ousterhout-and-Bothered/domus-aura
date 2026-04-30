@@ -1,0 +1,19 @@
+﻿<div class="login-page">
+  <div class="login-card">
+    <img src="Domus Aura.png" alt="" class="login-logo" />
+    <h1 class="login-title">Domus Aura</h1>
+    <p class="login-subtitle">Sign in to access your smart home dashboard.</p>
+
+    <p-button
+      label="Sign in with Keycloak"
+      icon="pi pi-sign-in"
+      severity="primary"
+      styleClass="login-button"
+      (onClick)="signIn()"
+    />
+
+    <p class="login-hint">
+      You'll be redirected to the identity provider to complete sign-in.
+    </p>
+  </div>
+</div>

@@ -445,3 +445,29 @@ CLAUDE.md
 READMEPROJ.md
 *.zip
 
+
+# Angular
+dist/
+.angular/
+
+# Environment files
+.env.local
+appsettings.Development.json
+
+# SQLite
+**/smarthome.db
+**/*.db-shm
+**/*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+
+CLAUDE.md
+READMEPROJ.md
+*.zip
+
+.env

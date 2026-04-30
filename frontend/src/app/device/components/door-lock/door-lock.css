@@ -1,0 +1,177 @@
+@charset "UTF-8";
+/* ─────────────── PrimeNG p-card overrides ─────────────── */
+:host ::ng-deep .lock-card {
+  background: radial-gradient(ellipse 80% 50% at 50% 30%, var(--lock-glow, transparent) 0%, transparent 70%), var(--p-card-background, var(--aura-surface));
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+:host ::ng-deep .lock-card .p-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ─────────────── Header ─────────────── */
+.lock-card-head {
+  padding: 1.25rem 1.5rem 0;
+  text-align: center;
+}
+
+.lock-name {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  margin: 0 0 0.15rem;
+}
+
+.lock-loc {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─────────────── Lock visual ─────────────── */
+.lock-stage {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lock-svg-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 240px;
+  transition: transform 0.15s ease;
+}
+.lock-svg-button:hover {
+  transform: scale(1.03);
+}
+.lock-svg-button:active {
+  transform: scale(0.98);
+}
+.lock-svg-button:focus-visible {
+  outline: 2px solid var(--aura-accent);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.lock-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+.lock-body,
+.shackle path {
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+
+/* ─────────────── Shackle animation ─────────────── */
+.shackle {
+  /* Pivot the rotation around the right anchor point of the shackle (where
+     it stays attached to the body when "popped open") */
+  transform-origin: 124px 100px;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); /* slight overshoot bounce */
+}
+
+.shackle.shackle-open {
+  transform: rotate(28deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shackle {
+    transition: transform 0.2s linear;
+  }
+}
+/* ─────────────── Readout ─────────────── */
+.lock-readout {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.lock-state-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  font-weight: 600;
+  color: #C2410C;
+  transition: color 0.4s ease;
+}
+
+.lock-state-label.unlocked-label {
+  color: var(--aura-text-muted);
+}
+
+/* ─────────────── Control row ─────────────── */
+.control-row {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-label {
+  font-size: 1rem;
+  color: var(--aura-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.control-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  min-width: 56px;
+  text-align: right;
+  color: var(--aura-text);
+}
+
+.lock-row {
+  grid-template-columns: 1fr;
+}
+
+.lock-row p-toggleswitch {
+  justify-self: center;
+  --p-toggleswitch-width: 4rem;
+  --p-toggleswitch-height: 2rem;
+  --p-toggleswitch-handle-size: 1.5rem;
+  --p-toggleswitch-border-radius: 999px;
+}
+
+/* ─────────────── Mobile (< 480px) ─────────────── */
+@media (max-width: 480px) {
+  .control-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  .control-value {
+    text-align: center;
+  }
+  .lock-row p-toggleswitch {
+    justify-self: center;
+  }
+}
+
+/*# sourceMappingURL=door-lock.css.map */

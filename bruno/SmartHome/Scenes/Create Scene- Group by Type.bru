@@ -1,0 +1,28 @@
+meta {
+  name: Create Scene- Group by Type
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/scenes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  { 
+  "name": "All Lights On",
+    "actions": [
+      {
+        "deviceType": "Light",
+        "operation": "TurnOn"
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

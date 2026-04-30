@@ -1,0 +1,146 @@
+using SmartHome.Domain.Common.Exceptions;
+using DeviceBase = SmartHome.Domain.Device.Device;
+using SmartHome.Domain.Device.Events;
+using SmartHome.Domain.Device.Repository;
+using SmartHome.Domain.Simulation;
+using SmartHome.Infrastructure.Simulation.Clock;
+
+namespace SmartHome.Infrastructure.Simulation;
+
+/// <summary>
+/// Coordinates simulation behavior: advancing ticks, applying ambient
+/// temperature changes, and resetting devices. Delegates time and speed state
+/// to <see cref="ISimulationClock"/>, persistence to <see cref="IDeviceRepository"/>,
+/// and device-change notifications to the configured event notifier.
+/// </summary>
+/// <param name="clock">The global simulation clock owning time and speed state.</param>
+/// <param name="devices">The repository for general device domain operations.</param>
+/// <param name="simulation">The repository for bulk simulation operations (ticking and resetting).</param>
+/// <param name="deviceEventNotifier">Publishes device change events for SSE subscribers.</param>
+public sealed class SimulationService(
+    ISimulationClock clock,
+    IDeviceRepository devices,
+    ISimulationRepository simulation,
+    IDeviceEventNotifier deviceEventNotifier) : ISimulationService
+{
+    /// <inheritdoc />
+    public SimulationSpeed Speed => clock.Speed;
+
+    /// <inheritdoc />
+    public DateTime SimulationClock => clock.CurrentTime;
+
+    /// <inheritdoc />
+    public Task SetSpeedAsync(SimulationSpeed speed, CancellationToken cancellationToken = default)
+    {
+        clock.SetSpeed(speed);
+        return Task.CompletedTask;
+    }
+
+    /// <remarks>
+    /// Publishes an <see cref="DeviceChangeType.Updated"/> event only for devices
+    /// whose state changed during the simulation tick.
+    ///
+    /// Event payload construction is delegated to the configured device event notifier.
+    /// </remarks>
+    public async Task TickAsync(CancellationToken cancellationToken = default)
+    {
+        var tickables = await simulation.GetTickableAsync(cancellationToken);
+
+        var changedDevices = new List<DeviceBase>();
+
+        foreach (var tickable in tickables)
+        {
+            if (tickable.Tick() && tickable is DeviceBase device)
+            {
+                changedDevices.Add(device);
+            }
+        }
+
+        if (changedDevices.Count == 0)
+        {
+            clock.Advance(clock.BaseTickInterval);
+            return;
+        }
+
+        await simulation.SaveChangesAsync(cancellationToken);
+
+        foreach (var device in changedDevices)
+        {
+            await deviceEventNotifier.PublishAsync(
+                device,
+                DeviceChangeType.Updated,
+                cancellationToken);
+        }
+
+        clock.Advance(clock.BaseTickInterval);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// After updating ambient temperature, publishes an <see cref="DeviceChangeType.Updated"/>
+    /// event for each affected device so connected clients receive real-time updates.
+    ///
+    /// Event payload construction is delegated to the configured device event notifier.
+    /// </remarks>
+    public async Task SetAmbientTemperatureAsync(
+        string location,
+        int temperature,
+        CancellationToken cancellationToken = default)
+    {
+        var thermostats = await devices.GetThermostatsByLocationAsync(location, cancellationToken);
+
+        if (thermostats.Count == 0)
+        {
+            throw new InvalidDomainOperationException(
+                $"No thermostats exist at location '{location}'.");
+        }
+
+        foreach (var thermostat in thermostats)
+        {
+            thermostat.SetAmbientTemperature(temperature);
+        }
+
+        await devices.SaveChangesAsync(cancellationToken);
+
+        foreach (var device in thermostats)
+        {
+            await deviceEventNotifier.PublishAsync(
+                device,
+                DeviceChangeType.Updated,
+                cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Resets all devices to their default state and persists the changes.
+    /// After persistence, publishes an <see cref="DeviceChangeType.Updated"/> event
+    /// for each device so connected SSE clients can synchronize their state.
+    ///
+    /// Event payload construction is delegated to the configured device event notifier.
+    ///
+    /// The simulation clock is reset after all device updates have been
+    /// persisted and events have been published.
+    /// </remarks>
+    public async Task ResetAllDevicesAsync(CancellationToken cancellationToken = default)
+    {
+        await simulation.ResetAllAsync(cancellationToken);
+        await simulation.SaveChangesAsync(cancellationToken);
+
+        var allDevices = await devices.GetAllAsync(
+            location: null,
+            type: null,
+            isOn: null,
+            cancellationToken: cancellationToken);
+
+        foreach (var device in allDevices)
+        {
+            await deviceEventNotifier.PublishAsync(
+                device,
+                DeviceChangeType.Updated,
+                cancellationToken);
+        }
+
+        clock.Reset();
+    }
+}

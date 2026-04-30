@@ -1,0 +1,16 @@
+meta {
+  name: Delete Test Device
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/api/devices/{{lightId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

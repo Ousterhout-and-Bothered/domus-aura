@@ -1,0 +1,16 @@
+meta {
+  name: Execute Scene Happy Path
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/scenes/{{movieNightId}}/execute
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

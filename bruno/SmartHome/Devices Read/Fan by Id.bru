@@ -1,0 +1,16 @@
+meta {
+  name: Fan by Id
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/devices/{{fanId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

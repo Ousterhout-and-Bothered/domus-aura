@@ -1,0 +1,23 @@
+meta {
+  name: Power On
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/devices/{{thermostatId}}/state
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "command": "setPower",
+    "value": "On"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

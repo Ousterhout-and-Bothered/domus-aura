@@ -1,0 +1,16 @@
+meta {
+  name: Simulation Reset
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/simulation/reset
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

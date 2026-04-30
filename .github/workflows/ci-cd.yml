@@ -1,0 +1,73 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  backend:
+    name: Backend - Lint, Build, Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore backend
+        run: dotnet restore SmartHome.sln
+
+      - name: Check backend formatting
+        run: dotnet format SmartHome.sln --verify-no-changes --verbosity diagnostic
+
+      - name: Build backend
+        run: dotnet build SmartHome.sln --configuration Release --no-restore
+
+      - name: Run backend tests
+        run: dotnet test SmartHome.sln --configuration Release --no-build --verbosity normal
+
+  frontend:
+    name: Frontend - Lint, Build, Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint --if-present
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Run frontend tests
+        run: npm test

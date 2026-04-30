@@ -1,0 +1,26 @@
+meta {
+  name: Simulation Speed Invalid
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/simulation/speed
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "speedMultiplier": "hello"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
