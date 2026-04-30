@@ -30,10 +30,10 @@ public sealed class DeviceScene
     /// and restored by the repository upon loading.
     /// </summary>
     public IReadOnlyList<SceneAction> Actions => _actions.OrderBy(a => a.OrderIndex).ToList();
-    
+
     // Required for EF Core
     private DeviceScene() { }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceScene"/> class with a predefined identifier.
     /// </summary>
@@ -52,7 +52,7 @@ public sealed class DeviceScene
 
         RenumberAndStore(ordered);
     }
-    
+
     /// <summary>
     /// Creates a new scene with the given name and actions.
     /// </summary>
@@ -94,7 +94,7 @@ public sealed class DeviceScene
     public void ReplaceActions(IEnumerable<SceneAction>? newActions)
     {
         Guard.Against(newActions is not null, "Scene actions are required.");
-        
+
         var ordered = newActions!.ToList();
         Guard.Against(ordered.Count > 0, "A scene must contain at least one action.");
 

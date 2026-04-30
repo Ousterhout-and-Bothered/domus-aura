@@ -35,7 +35,7 @@ public sealed class SimulationService(
         clock.SetSpeed(speed);
         return Task.CompletedTask;
     }
-    
+
     /// <remarks>
     /// Publishes an <see cref="DeviceChangeType.Updated"/> event only for devices
     /// whose state changed during the simulation tick.

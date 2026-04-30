@@ -76,7 +76,7 @@ public interface IDeviceRepository
     /// Retrieves the command history for a specific device, ordered by most recent first.
     /// </summary>
     Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(
-        Guid deviceId, 
+        Guid deviceId,
         CancellationToken cancellationToken = default);
 
     /// <summary>

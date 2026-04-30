@@ -14,7 +14,7 @@ namespace SmartHome.Domain.Device.Events;
 /// </remarks>
 public interface IDeviceEventNotifier
 {
-    
+
     /// <summary>
     /// Publishes a device change notification for the specified device.
     /// Used for create and update operations.
@@ -23,7 +23,7 @@ public interface IDeviceEventNotifier
         DeviceModel device,
         DeviceChangeType changeType,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Publishes a deletion notification using a precomputed payload.
     /// </summary>

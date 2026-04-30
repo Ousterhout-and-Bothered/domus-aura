@@ -12,7 +12,7 @@ namespace SmartHome.Api.Validation;
 /// </summary>
 public sealed class SetAmbientTemperatureRequestValidator : AbstractValidator<SetAmbientTemperatureRequest>
 {
-    
+
     /// <summary>
     /// Initializes validation rules for ambient temperature requests.
     /// </summary>

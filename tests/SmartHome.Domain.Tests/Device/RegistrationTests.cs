@@ -39,12 +39,12 @@ public class RegistrationTests
         _doorLockBuilderMock.Setup(b => b.Build(It.IsAny<string>(), It.IsAny<string>()))
             .Returns((string n, string l) => new DoorLock(n, l));
 
-        _factory = new DeviceFactory(new[] 
-        { 
-            _lightBuilderMock.Object, 
-            _fanBuilderMock.Object, 
-            _thermostatBuilderMock.Object, 
-            _doorLockBuilderMock.Object 
+        _factory = new DeviceFactory(new[]
+        {
+            _lightBuilderMock.Object,
+            _fanBuilderMock.Object,
+            _thermostatBuilderMock.Object,
+            _doorLockBuilderMock.Object
         });
     }
 
@@ -80,7 +80,7 @@ public class RegistrationTests
     public void RegisterDevice_ValidRequest_InitializesWithDefaultState()
     {
         var device = _factory.Create("New Light", "Hallway", DeviceType.Light);
-        
+
         Assert.Equal("New Light", device.Name);
         Assert.Equal("Hallway", device.Location);
         Assert.Equal(PowerState.Off, ((Light)device).PowerState);

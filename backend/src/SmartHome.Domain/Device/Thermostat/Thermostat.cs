@@ -119,7 +119,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         DesiredTemperature = DefaultTemperature;
         AmbientTemperature = DefaultTemperature;
     }
-    
+
     /// <summary>
     /// Initializes a new thermostat with a generated identifier and strategy provider.
     /// </summary>
@@ -249,7 +249,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         {
             return;
         }
-        
+
         _strategy = _strategyProvider.GetStrategy(_mode);
 
         var targetState = _strategy.Evaluate(AmbientTemperature, DesiredTemperature);

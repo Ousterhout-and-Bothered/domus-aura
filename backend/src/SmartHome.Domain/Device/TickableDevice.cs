@@ -15,7 +15,7 @@ public abstract class TickableDevice : Device, ITickable
 
     protected TickableDevice(Guid id, string name, string location, DeviceType type)
         : base(id, name, location, type) { }
-    
+
     protected TickableDevice(string name, string location, DeviceType type)
         : base(name, location, type) { }
 

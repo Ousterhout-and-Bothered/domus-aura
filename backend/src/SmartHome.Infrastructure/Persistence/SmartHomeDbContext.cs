@@ -53,7 +53,7 @@ public sealed class SmartHomeDbContext : DbContext
     /// Gets the set of all door lock devices.
     /// </summary>
     public DbSet<DoorLock> DoorLocks => Set<DoorLock>();
-    
+
     /// <summary>
     /// Gets the set of all scenes.
     /// </summary>
@@ -97,7 +97,7 @@ public sealed class SmartHomeDbContext : DbContext
                 .HasConversion<string>()
                 .HasColumnType("TEXT COLLATE NOCASE");
         });
-        
+
         modelBuilder.Entity<DeviceScene>(entity =>
         {
             entity.ToTable("Scenes");

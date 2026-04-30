@@ -53,7 +53,7 @@ public abstract class Device : IDevice
 
         Type = type;
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Device"/> class with a generated identifier.
     /// </summary>

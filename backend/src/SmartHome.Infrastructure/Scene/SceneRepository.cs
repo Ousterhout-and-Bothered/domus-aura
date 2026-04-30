@@ -18,7 +18,7 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
     {
         return await dbContext.Scenes
             .AsNoTracking()
-            .Include(s => s.Actions.OrderBy(a=>a.OrderIndex))
+            .Include(s => s.Actions.OrderBy(a => a.OrderIndex))
             .ToListAsync(cancellationToken);
     }
 
@@ -67,7 +67,7 @@ public sealed class SceneRepository(SmartHomeDbContext dbContext)
         dbContext.Scenes.Remove(scene);
         return true;
     }
-    
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<string>> RemoveActionsForDeviceAsync(
         Guid deviceId,

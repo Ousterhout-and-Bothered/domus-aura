@@ -145,7 +145,7 @@ public class DeviceSceneTests
         var orderIndices = scene.Actions.Select(a => a.OrderIndex).ToList();
         Assert.Equal(new[] { 0, 1, 2 }, orderIndices);
     }
-    
+
     [Fact]
     public void Constructor_NullActions_ThrowsInvalidDomainArgument()
     {

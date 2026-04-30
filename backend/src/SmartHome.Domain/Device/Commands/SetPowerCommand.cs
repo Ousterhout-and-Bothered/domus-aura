@@ -36,7 +36,7 @@ public sealed class SetPowerCommand(
                     ? thermostat.State != ThermostatState.Off
                     : thermostat.State == ThermostatState.Off)
                 : receiver.PowerState == targetState;
-    
+
         if (targetState == PowerState.On)
         {
             receiver.TurnOn();
@@ -57,5 +57,5 @@ public sealed class SetPowerCommand(
                 ? "Device is already in the requested state."
                 : null,
             IsNoOp: wasAlreadyInRequestedState);
-    } 
+    }
 }

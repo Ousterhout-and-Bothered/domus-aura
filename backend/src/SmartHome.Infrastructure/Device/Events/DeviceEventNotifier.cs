@@ -17,7 +17,7 @@ namespace SmartHome.Infrastructure.Device.Events;
 public sealed class DeviceEventNotifier(
     IDeviceEventPublisher publisher) : IDeviceEventNotifier
 {
-    
+
     /// <inheritdoc />
     public ValueTask PublishAsync(
         DeviceModel device,
