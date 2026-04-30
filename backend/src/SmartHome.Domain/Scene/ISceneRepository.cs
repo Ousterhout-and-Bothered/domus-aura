@@ -45,7 +45,7 @@ public interface ISceneRepository
     Task<IReadOnlyList<string>> RemoveActionsForDeviceAsync(
         Guid deviceId,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Persists all pending changes to the underlying storage medium.
     /// </summary>

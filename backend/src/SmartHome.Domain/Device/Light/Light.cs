@@ -40,7 +40,7 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
         Brightness = 100;
         ColorHex = "#FFFFFF";
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Light"/> class with a generated identifier.
     /// </summary>

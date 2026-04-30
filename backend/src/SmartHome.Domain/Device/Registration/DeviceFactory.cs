@@ -31,13 +31,13 @@ public sealed class DeviceFactory(IEnumerable<IDeviceBuilder> builders) : IDevic
     public Device Create(string name, string location, DeviceType type)
     {
         Guard.EnumDefined(type, nameof(type));
-        
+
         if (!_builders.TryGetValue(type, out var builder))
         {
             throw new InvalidDomainOperationException(
                 $"No builder registered for device type: {type}. Check DI configuration.");
         }
-        
+
         return builder.Build(name, location);
     }
 

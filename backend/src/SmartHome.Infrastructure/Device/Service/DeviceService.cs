@@ -40,18 +40,18 @@ public sealed class DeviceService(
         {
             throw new DuplicateThermostatException(location);
         }
-        
+
         var device = factory.Create(name, location, type);
-        
+
         await repository.AddAsync(device, cancellationToken);
-        
+
         await repository.SaveChangesAsync(cancellationToken);
-        
+
         await deviceEventNotifier.PublishAsync(
             device,
             DeviceChangeType.Created,
             cancellationToken);
-        
+
         return device;
     }
 
@@ -63,30 +63,30 @@ public sealed class DeviceService(
         CancellationToken cancellationToken = default)
     {
         var device = await repository.GetByIdAsync(deviceId, cancellationToken);
-        
+
         if (device is null)
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
-        
+
         var commandValue = ValueParser.Normalize(value);
-        
+
         var command = commandFactory.Create(commandName, commandValue, device);
-        
+
         command.Execute();
-        
+
         await repository.LogActionAsync(device.Id, $"{commandName}: {commandValue}", cancellationToken);
-        
+
         await repository.SaveChangesAsync(cancellationToken);
-        
+
         await deviceEventNotifier.PublishAsync(
             device,
             DeviceChangeType.Updated,
             cancellationToken);
-        
+
         return device;
     }
-    
+
     /// <inheritdoc />
     /// <remarks>
     /// Removes a device from the system and publishes a <see cref="DeviceChangeType.Deleted"/>
@@ -137,7 +137,7 @@ public sealed class DeviceService(
             payload,
             cancellationToken);
     }
-    
+
     /// <inheritdoc />
     /// Ensures controllers do not access the repository directly.
     public async Task<IReadOnlyList<Domain.Device.Device>> GetAllDevicesAsync(
@@ -148,7 +148,7 @@ public sealed class DeviceService(
     {
         return await repository.GetAllAsync(location, type, isOn, cancellationToken);
     }
-    
+
     /// <inheritdoc />
     public async Task<Domain.Device.Device> GetDeviceByIdAsync(
         Guid deviceId,
@@ -163,7 +163,7 @@ public sealed class DeviceService(
 
         return device;
     }
-    
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<CommandHistory>> GetDeviceHistoryAsync(
         Guid deviceId,

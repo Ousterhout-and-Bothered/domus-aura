@@ -41,7 +41,7 @@ public interface IDeviceService
     /// <see cref="DeviceChangeType.Updated"/> event so connected SSE clients can stay synchronized.
     /// </remarks>
     Task<Device> ExecuteCommandAsync(Guid deviceId, string commandName, string? value, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Removes a device from the system.
     /// </summary>
@@ -54,7 +54,7 @@ public interface IDeviceService
     /// so connected SSE clients can remove the device from their UI in real time.
     /// </remarks>
     Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves all devices, optionally filtered by location, type, and power state.
     /// </summary>
@@ -82,7 +82,7 @@ public interface IDeviceService
         DeviceType? type,
         bool? isOn,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves a device by its unique identifier.
     /// </summary>
@@ -91,7 +91,7 @@ public interface IDeviceService
     /// <returns>The matching device.</returns>
     /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
     Task<Device> GetDeviceByIdAsync(Guid deviceId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves the command history for a device after verifying the device exists.
     /// </summary>

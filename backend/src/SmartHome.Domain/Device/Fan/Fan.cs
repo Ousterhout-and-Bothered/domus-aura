@@ -32,7 +32,7 @@ public sealed class Fan : PoweredDevice, IFanControllable
     {
         Speed = FanSpeed.Medium;
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Fan"/> class with a generated identifier.
     /// </summary>

@@ -36,7 +36,7 @@ public sealed class DoorLock : Device, ILockable
     {
         LockState = DoorLockState.Unlocked;
     }
-    
+
     public DoorLock(string name, string location)
         : base(name, location, DeviceType.DoorLock)
     {

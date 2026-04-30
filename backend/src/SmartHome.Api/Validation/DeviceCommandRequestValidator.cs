@@ -50,7 +50,7 @@ public sealed class DeviceCommandRequestValidator : AbstractValidator<DeviceComm
 
                     return;
                 }
-                
+
                 if (request.Command.Equals("setBrightness", StringComparison.OrdinalIgnoreCase))
                 {
                     if (normalizedValue == null)

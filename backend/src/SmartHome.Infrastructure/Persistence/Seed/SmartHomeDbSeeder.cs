@@ -57,7 +57,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
     /// <summary>Predefined identifier for the office thermostat.</summary>
     private static readonly Guid OfficeThermostatId =
         Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-        
+
     /// <summary>
     /// Seeds the database with a default set of devices if it is currently empty.
     /// This method is idempotent and will not duplicate data on subsequent runs.
@@ -70,42 +70,42 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
             return;
 
         // Door Locks
-        var frontDoor = new DoorLock(FrontDoorId,"Front Door", "Entryway");
+        var frontDoor = new DoorLock(FrontDoorId, "Front Door", "Entryway");
 
-        var backDoor = new DoorLock(BackDoorId,"Back Door", "Patio");
+        var backDoor = new DoorLock(BackDoorId, "Back Door", "Patio");
 
         // Fans
-        var livingRoomFan = new Fan(LivingRoomFanId,"Living Room Fan", "Living Room");
+        var livingRoomFan = new Fan(LivingRoomFanId, "Living Room Fan", "Living Room");
         livingRoomFan.TurnOn();
         // Set non-default speed
         livingRoomFan.SetSpeed(FanSpeed.High);
 
-        var bedroomFan = new Fan(BedroomFanId,"Bedroom Fan", "Bedroom");
+        var bedroomFan = new Fan(BedroomFanId, "Bedroom Fan", "Bedroom");
         bedroomFan.TurnOn();
         bedroomFan.SetSpeed(FanSpeed.Low);
         // Turn off after configuration to retain settings
         bedroomFan.TurnOff();
 
         // Lights
-        var kitchenOverhead = new Light(KitchenOverheadId,"Kitchen Overhead", "Kitchen");
+        var kitchenOverhead = new Light(KitchenOverheadId, "Kitchen Overhead", "Kitchen");
         kitchenOverhead.TurnOn();
         // Set custom brightness and color
         kitchenOverhead.SetBrightness(75);
         kitchenOverhead.SetColor("#FF8800");
 
-        var livingRoomOverhead = new Light(LivingRoomOverheadId,"Living Room Overhead", "Living Room");
+        var livingRoomOverhead = new Light(LivingRoomOverheadId, "Living Room Overhead", "Living Room");
         livingRoomOverhead.TurnOn();
         livingRoomOverhead.SetBrightness(40);
         livingRoomOverhead.SetColor("#FFF4CC");
 
-        var hallwayLight = new Light(HallwayLightId,"Hallway Light", "Hallway");
+        var hallwayLight = new Light(HallwayLightId, "Hallway Light", "Hallway");
         hallwayLight.TurnOn();
         hallwayLight.SetBrightness(100);
         hallwayLight.SetColor("#FFFFFF");
         // Turn off to verify state restoration on next power-on
         hallwayLight.TurnOff();
 
-        var porchLight = new Light(PorchLightId,"Porch Light", "Entryway");
+        var porchLight = new Light(PorchLightId, "Porch Light", "Entryway");
         porchLight.TurnOn();
         porchLight.SetBrightness(85);
         porchLight.SetColor("#FFC0CB");
@@ -114,7 +114,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
 
         // Cooling example
         // ambient > desired (triggers cooling)
-        var livingRoomThermostat = new Thermostat(LivingRoomThermostatId,"Living Room Thermostat", "Living Room");
+        var livingRoomThermostat = new Thermostat(LivingRoomThermostatId, "Living Room Thermostat", "Living Room");
         livingRoomThermostat.TurnOn();
         livingRoomThermostat.SetMode(ThermostatMode.Cool);
         livingRoomThermostat.SetDesiredTemperature(72);
@@ -122,7 +122,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
 
         // Heating example
         // ambient < desired (triggers heating)
-        var bedroomThermostat = new Thermostat(BedroomThermostatId,"Bedroom Thermostat", "Bedroom");
+        var bedroomThermostat = new Thermostat(BedroomThermostatId, "Bedroom Thermostat", "Bedroom");
         bedroomThermostat.TurnOn();
         bedroomThermostat.SetMode(ThermostatMode.Heat);
         bedroomThermostat.SetDesiredTemperature(68);
@@ -130,7 +130,7 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
 
         // Idle example
         // ambient == desired results in idle state
-        var officeThermostat = new Thermostat(OfficeThermostatId,"Office Thermostat", "Office");
+        var officeThermostat = new Thermostat(OfficeThermostatId, "Office Thermostat", "Office");
         officeThermostat.TurnOn();
         officeThermostat.SetMode(ThermostatMode.Auto);
         officeThermostat.SetDesiredTemperature(72);

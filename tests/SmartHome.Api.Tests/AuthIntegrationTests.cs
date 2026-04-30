@@ -78,9 +78,9 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
             });
         }).CreateClient();
 
-        client.DefaultRequestHeaders.Authorization = 
+        client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue(scheme: "TestScheme");
-        
+
         return client;
     }
 }

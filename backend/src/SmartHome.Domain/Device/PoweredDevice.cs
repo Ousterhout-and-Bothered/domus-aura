@@ -37,7 +37,7 @@ public abstract class PoweredDevice : Device, IPowerable
     {
         PowerState = PowerState.Off;
     }
-    
+
     protected PoweredDevice(string name, string location, DeviceType type)
         : base(name, location, type)
     {
