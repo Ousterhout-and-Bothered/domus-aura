@@ -23,11 +23,11 @@ using SmartHome.Domain.Simulation;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
-using SmartHome.Api.Services.Chat;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -115,9 +115,6 @@ builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
 builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
 
-// LLM Chat Service
-builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
-
 // Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
 builder.Services.AddScoped<IDeviceBuilder, FanBuilder>();
@@ -171,7 +168,7 @@ using (var scope = app.Services.CreateScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<SmartHomeDbSeeder>();
     await seeder.SeedAsync();
-
+    
     var sceneSeeder = scope.ServiceProvider.GetRequiredService<SceneDbSeeder>();
     await sceneSeeder.SeedAsync();
 }
@@ -183,8 +180,6 @@ await app.RunAsync();
 
 // Helpers
 
-// Resolves the SQLite connection string, converting relative paths
-// to absolute paths and ensuring the target directory exists.
 static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -205,7 +200,7 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
         p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
 
     if (dataSource is null) return connectionString;
-
+    
     var path = dataSource[dataSourcePrefix.Length..].Trim();
 
     if (Path.IsPathRooted(path)) return connectionString;
@@ -219,7 +214,6 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
     return $"Data Source={absolute};{string.Join(';', others)}";
 }
 
-// Configures polymorphic JSON serialization for device types using a discriminator field.
 static DefaultJsonTypeInfoResolver ConfigureDevicePolymorphism() =>
     new()
     {

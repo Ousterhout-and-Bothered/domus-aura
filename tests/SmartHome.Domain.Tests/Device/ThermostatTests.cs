@@ -4,7 +4,7 @@ namespace SmartHome.Domain.Tests.Device;
 
 public class ThermostatTests
 {
-    private static Thermostat CreateThermostat() => new("Test Thermostat", "Living Room", new ThermostatStrategyProvider());
+    private static Thermostat CreateThermostat() => new("Test Thermostat", "Living Room");
 
     [Fact]
     public void TurnOn_OffToIdle_Succeeds()

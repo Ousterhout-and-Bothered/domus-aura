@@ -6,12 +6,18 @@ meta {
 
 post {
   url: {{baseUrl}}/api/chat
-  body: none
+  body: json
   auth: inherit
 }
 
 headers {
   Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Turn off all the lights and unlock the front door and lock the back door and set all thermostats to 68."
+  }
 }
 
 settings {

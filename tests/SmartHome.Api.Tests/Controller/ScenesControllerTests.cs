@@ -63,12 +63,12 @@ public class ScenesControllerTests
     public async Task Create_ReturnsCreatedScene()
     {
         // Arrange
-        var request = new SceneRequest("Party",
+        var request = new SceneRequest("Party", 
         [
             new SceneActionRequest(null, DeviceType.Light, "Lounge", "SetColor", "#FF0000")
         ]);
         var scene = new DeviceScene("Party", [SceneAction.ForGroup(DeviceType.Light, "Lounge", "SetColor", 0, "#FF0000")]);
-
+        
         _sceneServiceMock.Setup(s => s.CreateSceneAsync(It.IsAny<string>(), It.IsAny<IEnumerable<SceneAction>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);
 
@@ -87,19 +87,9 @@ public class ScenesControllerTests
         // Arrange
         var sceneId = Guid.NewGuid();
         var deviceId = Guid.NewGuid();
-        var executionResult = new SceneExecutionResult(sceneId, "Test Scene",
+        var executionResult = new SceneExecutionResult(sceneId, "Test Scene", 
         [
-            new SceneExecutionEntry(
-                deviceId,
-                new CommandResult(
-                    DeviceId: deviceId,
-                    DeviceName: "Test Device",
-                    DeviceType: DeviceType.Light,
-                    Operation: "TurnOn",
-                    Value: null,
-                    Success: true,
-                    Message: null),
-                OrderIndex: 0)
+            new SceneExecutionEntry(deviceId, new CommandResult("TurnOn", true))
         ]);
 
         _sceneServiceMock.Setup(s => s.ExecuteSceneAsync(sceneId, It.IsAny<CancellationToken>()))
@@ -112,8 +102,8 @@ public class ScenesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var response = Assert.IsType<SceneExecutionResponse>(okResult.Value);
         Assert.Equal(sceneId, response.SceneId);
-        Assert.Equal(1, response.Summary.Succeeded);
-        Assert.Single(response.Results);
-        Assert.Equal("changed", response.Results[0].Status);
+        Assert.Equal(1, response.SucceededCount);
+        Assert.Single(response.Entries);
+        Assert.True(response.Entries[0].Success);
     }
 }

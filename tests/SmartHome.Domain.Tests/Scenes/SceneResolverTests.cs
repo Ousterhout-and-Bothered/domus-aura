@@ -20,24 +20,11 @@ public class SceneResolverTests
     private static DoorLock MakeDoorLock(string name = "Front Door", string location = "Entryway") =>
         new(name, location);
 
-    private static IDeviceCommand MakeStubCommand(
-        string operationName = "Lock",
-        string? value = null,
-        Guid? deviceId = null,
-        string deviceName = "Test Device",
-        DeviceType deviceType = DeviceType.Light)
+    private static IDeviceCommand MakeStubCommand(string operationName = "Lock")
     {
         var stub = new Mock<IDeviceCommand>();
         stub.SetupGet(c => c.OperationName).Returns(operationName);
-        stub.SetupGet(c => c.Value).Returns(value);
-        stub.Setup(c => c.Execute()).Returns(new CommandResult(
-            DeviceId: deviceId ?? Guid.Empty,
-            DeviceName: deviceName,
-            DeviceType: deviceType,
-            Operation: operationName,
-            Value: value,
-            Success: true,
-            Message: null));
+        stub.Setup(c => c.Execute()).Returns(new CommandResult(operationName, Success: true));
         return stub.Object;
     }
 

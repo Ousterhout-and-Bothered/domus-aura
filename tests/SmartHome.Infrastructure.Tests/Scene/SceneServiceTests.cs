@@ -35,7 +35,7 @@ public class SceneServiceTests
             .ReturnsAsync((DeviceScene)null!);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ResourceNotFoundException>(() =>
+        await Assert.ThrowsAsync<ResourceNotFoundException>(() => 
             _service.GetSceneAsync(sceneId));
     }
 
@@ -46,21 +46,14 @@ public class SceneServiceTests
         var sceneId = Guid.NewGuid();
         var scene = new DeviceScene("Night", [SceneAction.ForGroup(SmartHome.Domain.Device.DeviceType.DoorLock, null, "Lock", 0)]);
         var deviceId = Guid.NewGuid();
-
+        
         var composite = new CompositeCommand();
         var mockCommand = new Mock<IDeviceCommand>();
-        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult(
-            DeviceId: Guid.Empty,
-            DeviceName: "Test Device",
-            DeviceType: SmartHome.Domain.Device.DeviceType.DoorLock,
-            Operation: "Lock",
-            Value: null,
-            Success: true,
-            Message: null));
+        mockCommand.Setup(c => c.Execute()).Returns(new CommandResult("Lock", true));
         mockCommand.Setup(c => c.OperationName).Returns("Lock");
         composite.Add(mockCommand.Object);
 
-        var resolved = new ResolvedScene(composite, [deviceId], new[] { 0 });
+        var resolved = new ResolvedScene(composite, [deviceId]);
 
         _sceneRepositoryMock.Setup(r => r.GetByIdAsync(sceneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);

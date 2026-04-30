@@ -1,18 +1,37 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using SmartHome.Domain.Device;
-using SmartHome.Domain.Device.DoorLock;
+using SmartHome.Api.Services.Chat.Tools;
 
 namespace SmartHome.Api.Services.Chat;
 
+/// <summary>
+/// Provides an OpenAI-backed implementation of <see cref="ILlmChatService"/>
+/// for interpreting smart home chat requests and invoking registered chat tools.
+/// </summary>
+/// <param name="httpClient">The HTTP client used to send requests to the OpenAI API.</param>
+/// <param name="configuration">The application configuration containing OpenAI settings.</param>
+/// <param name="toolHandlers">The registered chat tool handlers available to the language model.</param>
 public sealed class OpenAiChatService(
     HttpClient httpClient,
     IConfiguration configuration,
-    IDeviceService deviceService) : ILlmChatService
+    IEnumerable<IChatToolHandler> toolHandlers) : ILlmChatService
 {
-    private readonly IDeviceService _deviceService = deviceService;
+    private readonly IReadOnlyDictionary<string, IChatToolHandler> _toolHandlers =
+        toolHandlers.ToDictionary(
+            handler => handler.ToolName,
+            StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Sends a user message to OpenAI and returns either the model response
+    /// or the combined results of any requested tool calls.
+    /// </summary>
+    /// <param name="message">The user message to process.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>The model response or tool execution result summary.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the OpenAI API key is missing or the OpenAI request fails.
+    /// </exception>
     public async Task<string> GetResponseAsync(
         string message,
         CancellationToken cancellationToken = default)
@@ -25,7 +44,10 @@ public sealed class OpenAiChatService(
             throw new InvalidOperationException("OpenAI API key is not configured.");
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "https://api.openai.com/v1/chat/completions");
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
         var body = new
@@ -33,97 +55,37 @@ public sealed class OpenAiChatService(
             model,
             messages = new object[]
             {
-                new { role = "system", content = "You are a smart home assistant. Use tools to control devices. " +
-                                                 "If the user asks for multiple actions, call all necessary tools " +
-                                                 "in the same response." },                
-                new { role = "user", content = message }
-            },
-            tools = new object[]
-            {
                 new
                 {
-                    type = "function",
-                    function = new
-                    {
-                        name = "turn_on_lights",
-                        description = "Turn on lights in a location, or use 'all' to turn on every light.",
-                        parameters = new
-                        {
-                            type = "object",
-                            properties = new
-                            {
-                                location = new { type = "string", description = "Room name like Living Room, or all" }
-                            },
-                            required = new[] { "location" }
-                        }
-                    }
+                    role = "system",
+                    content = "You are a smart home assistant. Use tools to control devices. " +
+                              "If the user asks for multiple actions, call all necessary tools " +
+                              "in the same response."
                 },
                 new
                 {
-                    type = "function",
-                    function = new
-                    {
-                        name = "turn_off_lights",
-                        description = "Turn off lights in a location, or use 'all' to turn off every light.",
-                        parameters = new
-                        {
-                            type = "object",
-                            properties = new
-                            {
-                                location = new { type = "string", description = "Room name like Living Room, or all" }
-                            },
-                            required = new[] { "location" }
-                        }
-                    }
-                },
-                new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = "lock_door",
-                        description = "Lock a door by name, or use 'all' to lock every door.",
-                        parameters = new
-                        {
-                            type = "object",
-                            properties = new
-                            {
-                                name = new { type = "string", description = "Door name like Front Door or Back Door, or all" }
-                            },
-                            required = new[] { "name" }
-                        }
-                    }
-                },
-                new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = "unlock_door",
-                        description = "Unlock a door by name, or use 'all' to unlock every door.",
-                        parameters = new
-                        {
-                            type = "object",
-                            properties = new
-                            {
-                                name = new { type = "string", description = "Door name like Front Door or Back Door, or all" }
-                            },
-                            required = new[] { "name" }
-                        }
-                    }
+                    role = "user",
+                    content = message
                 }
             },
+            tools = _toolHandlers.Values
+                .Select(handler => handler.ToolDefinition)
+                .ToArray(),
             tool_choice = "auto"
         };
 
-        request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(body),
+            Encoding.UTF8,
+            "application/json");
 
         using var response = await httpClient.SendAsync(request, cancellationToken);
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException($"OpenAI request failed: {response.StatusCode}. Body: {json}");
+            throw new InvalidOperationException(
+                $"OpenAI request failed: {response.StatusCode}. Body: {json}");
         }
 
         using var document = JsonDocument.Parse(json);
@@ -133,168 +95,39 @@ public sealed class OpenAiChatService(
             .GetProperty("message");
 
         if (messageElement.TryGetProperty("tool_calls", out var toolCalls))
-{
-    var results = new List<string>();
-
-    foreach (var toolCall in toolCalls.EnumerateArray())
-    {
-        var functionName = toolCall.GetProperty("function").GetProperty("name").GetString();
-        var argumentsJson = toolCall.GetProperty("function").GetProperty("arguments").GetString();
-        var args = JsonSerializer.Deserialize<Dictionary<string, string>>(argumentsJson!);
-
-        if ((functionName == "turn_on_lights" || functionName == "turn_off_lights") &&
-            args is not null &&
-            args.TryGetValue("location", out var lightLocation))
         {
-            var turnOn = functionName == "turn_on_lights";
+            var results = new List<string>();
 
-            var targetLights = (await _deviceService.GetAllDevicesAsync(
-                lightLocation.Equals("all", StringComparison.OrdinalIgnoreCase) ? null : lightLocation,
-                DeviceType.Light,
-                null,
-                cancellationToken)).ToList();
-
-            var changed = 0;
-            var alreadyInRequestedState = 0;
-
-            foreach (var light in targetLights)
+            foreach (var toolCall in toolCalls.EnumerateArray())
             {
-                var isAlreadyCorrect = turnOn ? light.IsOn() : !light.IsOn();
+                var functionName = toolCall
+                    .GetProperty("function")
+                    .GetProperty("name")
+                    .GetString();
 
-                if (isAlreadyCorrect)
+                var argumentsJson = toolCall
+                    .GetProperty("function")
+                    .GetProperty("arguments")
+                    .GetString();
+
+                var args = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                    argumentsJson ?? "{}");
+
+                if (functionName is not null &&
+                    args is not null &&
+                    _toolHandlers.TryGetValue(functionName, out var handler))
                 {
-                    alreadyInRequestedState++;
+                    var result = await handler.HandleAsync(args, cancellationToken);
+                    results.Add(result);
                     continue;
                 }
 
-                await _deviceService.ExecuteCommandAsync(
-                    light.Id,
-                    "SetPower",
-                    turnOn ? "On" : "Off",
-                    cancellationToken);
-
-                changed++;
+                results.Add($"I received an unsupported tool request: {functionName}.");
             }
 
-            results.Add(BuildLightResponse(lightLocation, turnOn, changed, alreadyInRequestedState));
-            continue;
+            return string.Join(" ", results);
         }
-
-        if ((functionName == "lock_door" || functionName == "unlock_door") &&
-            args is not null &&
-            args.TryGetValue("name", out var doorName))
-        {
-            var shouldLock = functionName == "lock_door";
-
-            var doors = await _deviceService.GetAllDevicesAsync(
-                null,
-                DeviceType.DoorLock,
-                null,
-                cancellationToken);
-
-            var targetDoors = doorName.Equals("all", StringComparison.OrdinalIgnoreCase)
-                ? doors.ToList()
-                : doors.Where(d => string.Equals(d.Name, doorName, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            if (targetDoors.Count == 0)
-            {
-                results.Add($"I could not find a door named {doorName}.");
-                continue;
-            }
-
-            var changed = 0;
-            var alreadyInRequestedState = 0;
-
-            foreach (var door in targetDoors)
-            {
-                var doorLock = (DoorLock)door;
-
-                var isAlreadyCorrect = shouldLock
-                    ? doorLock.LockState == DoorLockState.Locked
-                    : doorLock.LockState == DoorLockState.Unlocked;
-
-                if (isAlreadyCorrect)
-                {
-                    alreadyInRequestedState++;
-                    continue;
-                }
-
-                await _deviceService.ExecuteCommandAsync(
-                    door.Id,
-                    shouldLock ? "Lock" : "Unlock",
-                    null,
-                    cancellationToken);
-
-                changed++;
-            }
-
-            results.Add(BuildDoorResponse(doorName, shouldLock, changed, alreadyInRequestedState));
-            continue;
-        }
-
-        results.Add($"I received an unsupported tool request: {functionName}.");
-    }
-
-    return string.Join(" ", results);
-}
 
         return messageElement.GetProperty("content").GetString() ?? "No response";
     }
-
-    private static string BuildLightResponse(string location, bool turnOn, int changed, int alreadyCorrect)
-    {
-        var allLights = location.Equals("all", StringComparison.OrdinalIgnoreCase);
-        var action = turnOn ? "Turned on" : "Turned off";
-        var state = turnOn ? "on" : "off";
-
-        if (changed == 0)
-        {
-            return allLights
-                ? $"All {Pluralize(alreadyCorrect, "light")} were already {state}."
-                : $"All {Pluralize(alreadyCorrect, "light")} in {location} were already {state}.";
-        }
-
-        if (alreadyCorrect == 0)
-        {
-            return allLights
-                ? $"{action} {Pluralize(changed, "light")}."
-                : $"{action} {Pluralize(changed, "light")} in {location}.";
-        }
-
-        return allLights
-            ? $"{action} {Pluralize(changed, "light")}. {SentenceCount(alreadyCorrect, "light")} already {state}."
-            : $"{action} {Pluralize(changed, "light")} in {location}. {SentenceCount(alreadyCorrect, "light")} already {state}.";
-    }
-
-    private static string BuildDoorResponse(string doorName, bool shouldLock, int changed, int alreadyCorrect)
-    {
-        var allDoors = doorName.Equals("all", StringComparison.OrdinalIgnoreCase);
-        var action = shouldLock ? "Locked" : "Unlocked";
-        var state = shouldLock ? "locked" : "unlocked";
-
-        if (!allDoors)
-        {
-            return changed == 0
-                ? $"{doorName} was already {state}."
-                : $"{action} {doorName}.";
-        }
-
-        if (changed == 0)
-        {
-            return $"All {Pluralize(alreadyCorrect, "door")} were already {state}.";
-        }
-
-        if (alreadyCorrect == 0)
-        {
-            return $"{action} {Pluralize(changed, "door")}.";
-        }
-
-        return $"{action} {Pluralize(changed, "door")}. {SentenceCount(alreadyCorrect, "door")} already {state}.";
-    }
-
-    private static string Pluralize(int count, string noun) =>
-        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
-
-    private static string SentenceCount(int count, string noun) =>
-        count == 1 ? $"1 {noun} was" : $"{count} {noun}s were";
 }

@@ -6,10 +6,25 @@ meta {
 
 post {
   url: {{baseUrl}}/api/chat
-  body: none
+  body: json
   auth: inherit
+}
+
+params:query {
+  : 
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Lock all the doors."
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
