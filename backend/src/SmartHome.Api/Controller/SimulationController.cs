@@ -22,7 +22,7 @@ public sealed class SimulationController(
 {
     private readonly ISimulationService _simulationService = simulationService;
     private readonly ISimulationSpeedRegistry _registry = registry;
-    
+
     /// <summary>
     /// Retrieves the current simulation state — active speed and simulation clock.
     /// </summary>
