@@ -149,14 +149,14 @@ builder.Services.AddScoped<IChatToolHandler>(sp =>
 builder.Services.AddScoped<IChatToolHandler>(sp =>
     new DoorLockToolHandler(
         sp.GetRequiredService<IDeviceService>(),
-        true));  
+        true));
 builder.Services.AddScoped<IChatToolHandler>(sp =>
     new DoorLockToolHandler(
         sp.GetRequiredService<IDeviceService>(),
-        false)); 
+        false));
 builder.Services.AddScoped<IChatToolHandler>(sp =>
     new ThermostatTempToolHandler(
-        sp.GetRequiredService<IDeviceService>())); 
+        sp.GetRequiredService<IDeviceService>()));
 builder.Services.AddScoped<IChatToolHandler>(sp =>
     new ThermostatPowerToolHandler(
         sp.GetRequiredService<IDeviceService>(),
