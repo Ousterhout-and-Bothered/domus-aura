@@ -23,12 +23,15 @@ using SmartHome.Domain.Simulation;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
+using SmartHome.Api.Services.Chat;
+using SmartHome.Api.Services.Chat.Tools;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-
+// Entry point for configuring and running the SmartHome API application,
+// including service registration, middleware pipeline, and application startup logic.
 var builder = WebApplication.CreateBuilder(args);
 
 // OpenAPI for local exploration (Scalar UI enabled in dev only)
@@ -90,9 +93,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    //options.FallbackPolicy = new AuthorizationPolicyBuilder()
-    //  .RequireAuthenticatedUser()
-    //.Build();
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 
 // SQLite setup — resolves relative paths and ensures directory exists
@@ -114,6 +117,63 @@ builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
 builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
+
+// LLM Chat Service
+builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
+
+// Chat Tool Handlers (Strategy Pattern)
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new PoweredDeviceToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        DeviceType.Light,
+        "light",
+        true));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new PoweredDeviceToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        DeviceType.Light,
+        "light",
+        false));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new PoweredDeviceToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        DeviceType.Fan,
+        "fan",
+        true));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new PoweredDeviceToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        DeviceType.Fan,
+        "fan",
+        false));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new DoorLockToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        true));  
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new DoorLockToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        false)); 
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new ThermostatTempToolHandler(
+        sp.GetRequiredService<IDeviceService>())); 
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new ThermostatPowerToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        true));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new ThermostatPowerToolHandler(
+        sp.GetRequiredService<IDeviceService>(),
+        false));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new LightBrightnessToolHandler(
+        sp.GetRequiredService<IDeviceService>()));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new LightColorToolHandler(
+        sp.GetRequiredService<IDeviceService>()));
+builder.Services.AddScoped<IChatToolHandler>(sp =>
+    new FanSpeedToolHandler(
+        sp.GetRequiredService<IDeviceService>()));
 
 // Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
@@ -155,8 +215,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseCors();
 app.UseHttpsRedirection();
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Apply migrations and seed on startup
 app.Logger.LogInformation("SQLite database configured.");
@@ -178,8 +238,9 @@ app.MapControllers();
 await app.RunAsync();
 
 
-// Helpers
 
+// Resolves the SQLite connection string by converting relative paths to absolute paths
+// and ensuring the target directory exists.
 static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -214,6 +275,7 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
     return $"Data Source={absolute};{string.Join(';', others)}";
 }
 
+// Configures polymorphic JSON serialization for device types using a discriminator field.
 static DefaultJsonTypeInfoResolver ConfigureDevicePolymorphism() =>
     new()
     {
