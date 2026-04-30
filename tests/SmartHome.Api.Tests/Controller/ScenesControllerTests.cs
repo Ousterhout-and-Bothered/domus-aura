@@ -63,12 +63,12 @@ public class ScenesControllerTests
     public async Task Create_ReturnsCreatedScene()
     {
         // Arrange
-        var request = new SceneRequest("Party", 
+        var request = new SceneRequest("Party",
         [
             new SceneActionRequest(null, DeviceType.Light, "Lounge", "SetColor", "#FF0000")
         ]);
         var scene = new DeviceScene("Party", [SceneAction.ForGroup(DeviceType.Light, "Lounge", "SetColor", 0, "#FF0000")]);
-        
+
         _sceneServiceMock.Setup(s => s.CreateSceneAsync(It.IsAny<string>(), It.IsAny<IEnumerable<SceneAction>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);
 
@@ -87,7 +87,7 @@ public class ScenesControllerTests
         // Arrange
         var sceneId = Guid.NewGuid();
         var deviceId = Guid.NewGuid();
-        var executionResult = new SceneExecutionResult(sceneId, "Test Scene", 
+        var executionResult = new SceneExecutionResult(sceneId, "Test Scene",
         [
             new SceneExecutionEntry(deviceId, new CommandResult("TurnOn", true))
         ]);

@@ -91,8 +91,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     //options.FallbackPolicy = new AuthorizationPolicyBuilder()
-      //  .RequireAuthenticatedUser()
-        //.Build();
+    //  .RequireAuthenticatedUser()
+    //.Build();
 });
 
 // SQLite setup — resolves relative paths and ensures directory exists
@@ -168,7 +168,7 @@ using (var scope = app.Services.CreateScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<SmartHomeDbSeeder>();
     await seeder.SeedAsync();
-    
+
     var sceneSeeder = scope.ServiceProvider.GetRequiredService<SceneDbSeeder>();
     await sceneSeeder.SeedAsync();
 }
@@ -200,7 +200,7 @@ static string ResolveSqliteConnectionString(WebApplicationBuilder builder)
         p.StartsWith(dataSourcePrefix, StringComparison.OrdinalIgnoreCase));
 
     if (dataSource is null) return connectionString;
-    
+
     var path = dataSource[dataSourcePrefix.Length..].Trim();
 
     if (Path.IsPathRooted(path)) return connectionString;

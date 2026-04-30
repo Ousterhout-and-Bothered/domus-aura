@@ -87,7 +87,7 @@ internal static class ChatToolHelpers
     /// <returns>A formatted sentence subject using 'was' or 'were'.</returns>
     public static string SentenceCount(int count, string noun) =>
         count == 1 ? $"1 {noun} was" : $"{count} {noun}s were";
-    
+
     /// <summary>
     /// Represents the result of applying a powered-device tool command to one or more devices.
     /// </summary>
@@ -108,7 +108,7 @@ internal static class ChatToolHelpers
         /// </summary>
         public int PoweredOff { get; init; }
     }
-    
+
     /// <summary>
     /// Executes a command against powered devices that are on and not already in the requested state.
     /// </summary>

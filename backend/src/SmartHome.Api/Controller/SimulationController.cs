@@ -14,7 +14,7 @@ namespace SmartHome.Api.Controller;
 /// <param name="registry">Provides the set of allowed simulation speeds.</param>
 [ApiController]
 [Route("api/simulation")]
-//[Authorize]
+[Authorize]
 [Produces("application/json")]
 public sealed class SimulationController(
     ISimulationService simulationService,

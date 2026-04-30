@@ -13,13 +13,13 @@ namespace SmartHome.Api.Controller;
 /// </summary>
 [ApiController]
 [Route("api/devices")]
-//[Authorize]
+[Authorize]
 public class DeviceController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
     private readonly IDeviceEventStream _deviceEventStream;
     private readonly IOptions<JsonOptions> _jsonOptions;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceController"/> class.
     /// </summary>
@@ -150,7 +150,7 @@ public class DeviceController : ControllerBase
 
         return Ok(device);
     }
-    
+
     /// <summary>
     /// Subscribes the client to a real-time stream of device state changes using Server-Sent Events (SSE).
     /// Acts as an HTTP adapter over the device event stream and does not contain business logic.

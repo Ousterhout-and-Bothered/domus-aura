@@ -56,7 +56,7 @@ public sealed class LightBrightnessToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-       
+
         if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
         {
             return "I need a location to set light brightness.";
@@ -66,7 +66,7 @@ public sealed class LightBrightnessToolHandler(
         {
             return "I need a valid brightness value.";
         }
-        
+
         var lights = (await deviceService.GetAllDevicesAsync(
             ChatToolHelpers.ToLocationFilter(location),
             DeviceType.Light,
@@ -90,7 +90,7 @@ public sealed class LightBrightnessToolHandler(
             result.Unchanged,
             result.PoweredOff);
     }
-    
+
     /// <summary>
     /// Builds a user-facing response summarizing the light brightness operation.
     /// </summary>
@@ -107,7 +107,7 @@ public sealed class LightBrightnessToolHandler(
         int unchanged,
         int poweredOff)
     {
-        
+
         var isAll = ChatToolHelpers.IsAll(location);
         var parts = new List<string>();
 

@@ -145,7 +145,7 @@ public sealed class LightColorToolHandler(
                 ? $"{ChatToolHelpers.Pluralize(unchanged, "light")} already {colorName}"
                 : $"The light is already {colorName}");
         }
-        
+
         if (poweredOff > 0)
         {
             parts.Add($"{ChatToolHelpers.Pluralize(poweredOff, "light")} could not be changed because powered off");
