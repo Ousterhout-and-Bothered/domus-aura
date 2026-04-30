@@ -1,0 +1,90 @@
+﻿# Production overlay for AWS EC2 deployment.
+#
+# Usage on the EC2 host:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Requires a `.env` file in the same directory (NOT committed to git).
+# See .env.example for required variables.
+
+services:
+  backend:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/smarthome.db
+      - Authentication__Authority=http://keycloak:8080/realms/smarthome
+      - Authentication__Audience=smarthome-spa
+      - Authentication__ValidIssuer=https://auth.domus-aura.com/realms/smarthome
+      - Authentication__RequireHttpsMetadata=false
+      - AllowedOrigins__0=https://domus-aura.com
+      - AllowedOrigins__1=https://www.domus-aura.com
+    restart: unless-stopped
+    # Caddy fronts everything; no host port exposure.
+    ports: !reset []
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        BUILD_CONFIG: production
+    restart: unless-stopped
+    ports: !reset [ ]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: smarthome-keycloak
+    command: start --import-realm --optimized
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: https://auth.domus-aura.com
+      KC_HOSTNAME_STRICT: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports: !reset []
+
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: smarthome-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: smarthome-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+      - frontend
+      - keycloak
+    restart: unless-stopped
+
+volumes:
+  keycloak-db-data:
+  caddy-data:
+  caddy-config:

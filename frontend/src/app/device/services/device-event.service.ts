@@ -2,6 +2,7 @@ import { Injectable, OnDestroy, signal, inject, NgZone } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DeviceChangedEvent } from '../models/device';
+import { AuthService } from '../../authentication/service/auth.service';
 
 /**
  * Subscribes to /api/devices/events (SSE) and exposes incoming events as
@@ -18,6 +19,7 @@ import { DeviceChangedEvent } from '../models/device';
 @Injectable({ providedIn: 'root' })
 export class DeviceEventService implements OnDestroy {
   private readonly zone = inject(NgZone);
+  private readonly auth = inject(AuthService);
   private source: EventSource | null = null;
 
   private readonly _events$ = new Subject<DeviceChangedEvent>();
@@ -29,7 +31,13 @@ export class DeviceEventService implements OnDestroy {
   connect(): void {
     if (this.source) return;
 
-    const url = `${environment.apiUrl}/devices/events`;
+    const token = this.auth.getAccessToken();
+    if (!token) {
+      // No token yet — caller should call connect() after auth completes.
+      return;
+    }
+
+    const url = `${environment.apiUrl}/devices/events?access_token=${encodeURIComponent(token)}`;
     this.source = new EventSource(url);
 
     this.source.addEventListener('deviceChanged', (e) => {

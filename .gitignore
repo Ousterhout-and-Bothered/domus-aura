@@ -440,3 +440,5 @@ Thumbs.db
 CLAUDE.md
 READMEPROJ.md
 *.zip
+
+.env
