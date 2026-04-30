@@ -1,0 +1,26 @@
+meta {
+  name: Turn on One Light
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "turn on the living room lights."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

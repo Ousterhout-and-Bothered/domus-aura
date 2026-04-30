@@ -23,6 +23,7 @@ using SmartHome.Domain.Simulation;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
+using SmartHome.Api.Services.Chat;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
@@ -89,9 +90,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    //options.FallbackPolicy = new AuthorizationPolicyBuilder()
+      //  .RequireAuthenticatedUser()
+        //.Build();
 });
 
 // SQLite setup — resolves relative paths and ensures directory exists
@@ -113,6 +114,9 @@ builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
 builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
+
+// LLM Chat Service
+builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
 
 // Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
@@ -154,8 +158,8 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseCors();
 app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 // Apply migrations and seed on startup
 app.Logger.LogInformation("SQLite database configured.");

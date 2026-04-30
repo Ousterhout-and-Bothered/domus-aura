@@ -13,7 +13,7 @@ namespace SmartHome.Api.Controller;
 /// <param name="sceneService">The service coordinating scene CRUD and execution.</param>
 [ApiController]
 [Route("api/scenes")]
-[Authorize]
+//[Authorize]
 [Produces("application/json")]
 public sealed class ScenesController(ISceneService sceneService) : ControllerBase
 {

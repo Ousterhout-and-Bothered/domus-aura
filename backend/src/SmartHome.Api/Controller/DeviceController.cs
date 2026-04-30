@@ -13,7 +13,7 @@ namespace SmartHome.Api.Controller;
 /// </summary>
 [ApiController]
 [Route("api/devices")]
-[Authorize]
+//[Authorize]
 public class DeviceController : ControllerBase
 {
     private readonly IDeviceService _deviceService;
