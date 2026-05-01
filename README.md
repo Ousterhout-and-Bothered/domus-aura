@@ -97,7 +97,7 @@ password: admin
 
 ```text
 username: demouser
-password: TheAnswerIs42
+password: TheAnswerIs42!
 ```
 
 ---
