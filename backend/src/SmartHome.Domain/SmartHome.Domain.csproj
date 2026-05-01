@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <Folder Include="Device\Scenes\" />
-    <Folder Include="Scene\" />
   </ItemGroup>
 
 </Project>

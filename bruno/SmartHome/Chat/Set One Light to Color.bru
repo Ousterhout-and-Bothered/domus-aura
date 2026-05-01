@@ -1,0 +1,26 @@
+meta {
+  name: Set One Light to Color
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set the living room lights to black."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

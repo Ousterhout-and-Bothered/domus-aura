@@ -1,0 +1,26 @@
+meta {
+  name: Turn One Thermostat Off
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Turn off the living room thermostat."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

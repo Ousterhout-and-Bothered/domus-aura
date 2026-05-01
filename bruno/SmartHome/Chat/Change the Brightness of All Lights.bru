@@ -1,0 +1,26 @@
+meta {
+  name: Change the Brightness of All Lights
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set the brightness of all lights to 100."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

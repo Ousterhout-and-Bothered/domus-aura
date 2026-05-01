@@ -1,0 +1,26 @@
+meta {
+  name: Lock All Doors
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Lock all the doors."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
