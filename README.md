@@ -237,19 +237,6 @@ This video covers the GitHub Actions pipeline, including linting, build, tests, 
 
 ---
 
-## Docker Architecture
-
-The `docker-compose.yml` file starts the full application stack:
-
-- Frontend SPA
-- Backend API
-- Keycloak identity provider
-- SQLite-backed persistence
-
-The application is seeded automatically on first run. No manual migrations or manual data imports should be required.
-
----
-
 ## Project Structure
 
 ```text
