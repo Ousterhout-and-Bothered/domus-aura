@@ -1,0 +1,92 @@
+﻿:host ::ng-deep .scene-execution-dialog .p-dialog-content {
+  background: #1A1816;
+  border: 1px solid rgba(241, 239, 232, 0.1);
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.dlg-shell {
+  padding: 2rem 2rem 1.5rem;
+}
+
+.dlg-head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.dlg-progress {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(241, 239, 232, 0.5);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dlg-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #f1efe8;
+  line-height: 1.25;
+}
+
+.dlg-stage {
+  background: #0F0E0D;
+  border: 1px solid rgba(241, 239, 232, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s ease;
+
+  &.is-fading {
+    opacity: 0.2;
+  }
+}
+
+.dlg-card {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
+  > * {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+.dlg-missing {
+  margin: 0;
+  font-style: italic;
+  color: rgba(241, 239, 232, 0.5);
+  font-size: 0.9rem;
+}
+
+.dlg-foot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(241, 239, 232, 0.2);
+    transition: background 0.15s ease, transform 0.15s ease;
+
+    &.done {
+      background: #1d9e75;
+    }
+
+    &.active {
+      background: #ef9f27;
+      transform: scale(1.4);
+    }
+  }
+}

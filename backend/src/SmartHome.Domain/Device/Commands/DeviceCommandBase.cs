@@ -10,7 +10,7 @@ public abstract class DeviceCommandBase : IDeviceCommand
     /// <summary>
     /// The device instance that this command operates on.
     /// </summary>
-    protected readonly Device Device;
+    public Device Device { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceCommandBase"/> class.

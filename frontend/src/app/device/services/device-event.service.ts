@@ -21,14 +21,14 @@ export class DeviceEventService implements OnDestroy {
   private readonly zone = inject(NgZone);
   private readonly auth = inject(AuthService);
   private source: EventSource | null = null;
+  private subscriberCount = 0;
 
   private readonly _events$ = new Subject<DeviceChangedEvent>();
-
   readonly events$: Observable<DeviceChangedEvent> = this._events$.asObservable();
-
   readonly connected = signal(false);
 
   connect(): void {
+    this.subscriberCount++;
     if (this.source) return;
 
     const token = this.auth.getAccessToken();
@@ -42,11 +42,14 @@ export class DeviceEventService implements OnDestroy {
 
     this.source.addEventListener('deviceChanged', (e) => {
       const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
+      console.log('[SSE] deviceChanged:', data.deviceId, data.changeType);
       this.zone.run(() => this._events$.next(data));
     });
 
-    this.source.addEventListener('open', () => {
-      this.zone.run(() => this.connected.set(true));
+    this.source.addEventListener('deviceChanged', (e) => {
+      const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
+      console.log('[SSE] deviceChanged FULL:', JSON.stringify(data));
+      this.zone.run(() => this._events$.next(data));
     });
 
     this.source.addEventListener('error', () => {
@@ -55,13 +58,20 @@ export class DeviceEventService implements OnDestroy {
   }
 
   disconnect(): void {
+    this.subscriberCount = Math.max(0, this.subscriberCount - 1);
+    if (this.subscriberCount > 0) return;
+
     this.source?.close();
     this.source = null;
     this.connected.set(false);
   }
 
   ngOnDestroy(): void {
-    this.disconnect();
-    this._events$.complete();
+    this.subscriberCount = 0;
+    this.source?.close();
+    this.source = null;
+    this.connected.set(false);
+    // Note: deliberately NOT completing _events$ — completion is permanent
+    // and breaks any future subscribers if the service is reused via HMR.
   }
 }
