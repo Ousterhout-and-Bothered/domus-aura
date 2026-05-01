@@ -109,6 +109,7 @@ builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<SmartHomeDbSeeder>();
 builder.Services.AddScoped<ISceneRepository, SceneRepository>();
+builder.Services.AddScoped<ISceneActionNormalizer, SceneActionNormalizer>();
 builder.Services.AddScoped<SceneDbSeeder>();
 
 // Domain services
