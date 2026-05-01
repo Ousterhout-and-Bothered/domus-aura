@@ -57,35 +57,50 @@ public sealed class FanSpeedToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return "I need a location to set fan speed.";
         }
 
-        if (!ChatToolHelpers.TryGetString(arguments, "speed", out var speed))
+        if (!ChatToolHelpers.TryGetString(arguments, "speed", out var speed) || speed is null)
         {
             return "Please provide a valid fan speed.";
         }
 
+        if (!Enum.TryParse<FanSpeed>(speed, true, out var parsedSpeed))
+        {
+            return "Please provide a valid fan speed: Low, Medium, or High.";
+        }
+
+        var normalizedSpeed = parsedSpeed.ToString();
+
         var fans = (await deviceService.GetAllDevicesAsync(
-            ChatToolHelpers.ToLocationFilter(location!),
+            ChatToolHelpers.ToLocationFilter(location),
             DeviceType.Fan,
             null,
             cancellationToken)).ToList();
 
+        if (fans.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return "No fans were found.";
+
+            return $"No fans were found in {location}.";
+        }
+
         var result = await ChatToolHelpers.ExecuteOnPoweredDevicesAsync(
             fans,
             device => device is Fan fanDevice &&
-                      string.Equals(fanDevice.Speed.ToString(), speed, StringComparison.OrdinalIgnoreCase),
+                      fanDevice.Speed == parsedSpeed,
             device => deviceService.ExecuteCommandAsync(
                 device.Id,
                 "SetSpeed",
-                speed!,
+                normalizedSpeed,
                 cancellationToken));
 
         return BuildResponse(
-            location!,
-            speed!,
+            location,
+            normalizedSpeed,
             result.Changed,
             result.Unchanged,
             result.PoweredOff);

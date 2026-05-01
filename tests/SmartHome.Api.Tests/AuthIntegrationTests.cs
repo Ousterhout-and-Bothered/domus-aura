@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
@@ -26,13 +27,10 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     [InlineData("/api/scenes")]
     public async Task GetProtectedEndpoints_WithoutAuthentication_Returns401Unauthorized(string url)
     {
-        // Arrange
         var client = _factory.CreateClient();
 
-        // Act
         var response = await client.GetAsync(url);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -42,26 +40,33 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     [InlineData("/api/scenes")]
     public async Task GetProtectedEndpoints_WithAuthentication_ReturnsSuccess(string url)
     {
-        // Arrange
         var client = CreateAuthenticatedClient();
 
-        // Act
         var response = await client.GetAsync(url);
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
     public async Task PutAmbientTemperature_WithoutAuthentication_Returns401Unauthorized()
     {
-        // Arrange
         var client = _factory.CreateClient();
 
-        // Act
         var response = await client.PutAsync("/api/locations/Kitchen/ambient-temperature", null);
 
-        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostChat_WithoutAuthentication_Returns401Unauthorized()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/chat", new
+        {
+            message = "turn on all lights"
+        });
+
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -86,8 +91,10 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
 
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger, UrlEncoder encoder)
+    public TestAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder)
         : base(options, logger, encoder)
     {
     }
@@ -99,8 +106,6 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, "TestScheme");
 
-        var result = AuthenticateResult.Success(ticket);
-
-        return Task.FromResult(result);
+        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }

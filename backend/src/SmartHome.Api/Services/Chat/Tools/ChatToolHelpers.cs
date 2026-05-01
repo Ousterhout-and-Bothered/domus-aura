@@ -42,9 +42,19 @@ internal static class ChatToolHelpers
         if (!arguments.TryGetValue(name, out var element))
             return false;
 
-        value = element.GetString();
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            value = element.GetString();
+            return !string.IsNullOrWhiteSpace(value);
+        }
 
-        return !string.IsNullOrWhiteSpace(value);
+        if (element.ValueKind == JsonValueKind.Number)
+        {
+            value = element.ToString();
+            return !string.IsNullOrWhiteSpace(value);
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -59,7 +69,7 @@ internal static class ChatToolHelpers
         string name,
         out int value)
     {
-        value = default;
+        value = 0;
 
         if (!arguments.TryGetValue(name, out var element))
             return false;
@@ -67,7 +77,10 @@ internal static class ChatToolHelpers
         if (element.ValueKind == JsonValueKind.Number)
             return element.TryGetInt32(out value);
 
-        return int.TryParse(element.GetString(), out value);
+        if (element.ValueKind == JsonValueKind.String)
+            return int.TryParse(element.GetString(), out value);
+
+        return false;
     }
 
     /// <summary>
@@ -84,7 +97,7 @@ internal static class ChatToolHelpers
     /// </summary>
     /// <param name="count">The number of items.</param>
     /// <param name="noun">The singular noun to format.</param>
-    /// <returns>A formatted sentence subject using was or were.</returns>
+    /// <returns>A formatted sentence subject using 'was' or 'were'.</returns>
     public static string SentenceCount(int count, string noun) =>
         count == 1 ? $"1 {noun} was" : $"{count} {noun}s were";
 

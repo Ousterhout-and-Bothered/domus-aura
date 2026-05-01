@@ -55,16 +55,24 @@ public sealed class ThermostatPowerToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return "I need a location to control thermostats.";
         }
 
         var thermostats = (await deviceService.GetAllDevicesAsync(
-            ChatToolHelpers.ToLocationFilter(location!),
+            ChatToolHelpers.ToLocationFilter(location),
             DeviceType.Thermostat,
             null,
             cancellationToken)).ToList();
+
+        if (thermostats.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return "No thermostats were found.";
+
+            return $"No thermostats were found in {location}.";
+        }
 
         var changed = 0;
         var alreadyCorrect = 0;
@@ -90,7 +98,7 @@ public sealed class ThermostatPowerToolHandler(
             changed++;
         }
 
-        return BuildResponse(location!, changed, alreadyCorrect);
+        return BuildResponse(location, changed, alreadyCorrect);
     }
 
     /// <summary>

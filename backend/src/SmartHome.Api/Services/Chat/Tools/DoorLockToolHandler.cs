@@ -56,7 +56,7 @@ public sealed class DoorLockToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "name", out var doorName))
+        if (!ChatToolHelpers.TryGetString(arguments, "name", out var doorName) || doorName is null)
         {
             return "I need a door name to control a door lock.";
         }
@@ -67,7 +67,7 @@ public sealed class DoorLockToolHandler(
             null,
             cancellationToken);
 
-        var targetDoors = ChatToolHelpers.IsAll(doorName!)
+        var targetDoors = ChatToolHelpers.IsAll(doorName)
             ? doors.ToList()
             : doors
                 .Where(d => string.Equals(d.Name, doorName, StringComparison.OrdinalIgnoreCase))
@@ -75,7 +75,9 @@ public sealed class DoorLockToolHandler(
 
         if (targetDoors.Count == 0)
         {
-            return $"I could not find a door named {doorName}.";
+            return ChatToolHelpers.IsAll(doorName)
+                ? "No doors were found."
+                : $"I could not find a door named {doorName}.";
         }
 
         var changed = 0;
@@ -104,7 +106,7 @@ public sealed class DoorLockToolHandler(
             changed++;
         }
 
-        return BuildDoorResponse(doorName!, shouldLock, changed, alreadyCorrect);
+        return BuildDoorResponse(doorName, shouldLock, changed, alreadyCorrect);
     }
 
     /// <summary>

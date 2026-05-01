@@ -56,21 +56,29 @@ public sealed class LightColorToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return "I need a location to set light color.";
         }
 
-        if (!ChatToolHelpers.TryGetString(arguments, "color", out var color))
+        if (!ChatToolHelpers.TryGetString(arguments, "color", out var color) || color is null)
         {
             return "Please provide a valid color.";
         }
 
         var lights = (await deviceService.GetAllDevicesAsync(
-            ChatToolHelpers.ToLocationFilter(location!),
+            ChatToolHelpers.ToLocationFilter(location),
             DeviceType.Light,
             null,
             cancellationToken)).ToList();
+
+        if (lights.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return "No lights were found.";
+
+            return $"No lights were found in {location}.";
+        }
 
         var result = await ChatToolHelpers.ExecuteOnPoweredDevicesAsync(
             lights,
@@ -79,12 +87,12 @@ public sealed class LightColorToolHandler(
             device => deviceService.ExecuteCommandAsync(
                 device.Id,
                 "SetColor",
-                color!,
+                color,
                 cancellationToken));
 
         return BuildResponse(
-            location!,
-            color!,
+            location,
+            color,
             result.Changed,
             result.Unchanged,
             result.PoweredOff);

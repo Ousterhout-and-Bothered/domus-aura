@@ -57,16 +57,24 @@ public sealed class PoweredDeviceToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return $"I need a location to control {deviceLabel}s.";
         }
 
         var targets = (await deviceService.GetAllDevicesAsync(
-            ChatToolHelpers.ToLocationFilter(location!),
+            ChatToolHelpers.ToLocationFilter(location),
             deviceType,
             null,
             cancellationToken)).ToList();
+
+        if (targets.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return $"No {ChatToolHelpers.Pluralize(0, deviceLabel)} were found.";
+
+            return $"No {ChatToolHelpers.Pluralize(0, deviceLabel)} were found in {location}.";
+        }
 
         var changed = 0;
         var alreadyCorrect = 0;
@@ -90,7 +98,7 @@ public sealed class PoweredDeviceToolHandler(
             changed++;
         }
 
-        return BuildResponse(location!, changed, alreadyCorrect);
+        return BuildResponse(location, changed, alreadyCorrect);
     }
 
     /// <summary>

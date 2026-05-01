@@ -56,8 +56,7 @@ public sealed class LightBrightnessToolHandler(
         Dictionary<string, JsonElement> arguments,
         CancellationToken cancellationToken = default)
     {
-
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return "I need a location to set light brightness.";
         }
@@ -73,6 +72,14 @@ public sealed class LightBrightnessToolHandler(
             null,
             cancellationToken)).ToList();
 
+        if (lights.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return "No lights were found.";
+
+            return $"No lights were found in {location}.";
+        }
+
         var result = await ChatToolHelpers.ExecuteOnPoweredDevicesAsync(
             lights,
             device => device is SmartHome.Domain.Device.Light.Light lightDevice &&
@@ -84,7 +91,7 @@ public sealed class LightBrightnessToolHandler(
                 cancellationToken));
 
         return BuildResponse(
-            location!,
+            location,
             brightness,
             result.Changed,
             result.Unchanged,

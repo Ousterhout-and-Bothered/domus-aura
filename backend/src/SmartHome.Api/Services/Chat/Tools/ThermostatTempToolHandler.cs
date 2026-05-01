@@ -54,16 +54,24 @@ public sealed class ThermostatTempToolHandler(
             return "Please provide a valid temperature.";
         }
 
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location))
+        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
         {
             return "I need a location to set thermostat temperature.";
         }
 
         var thermostats = (await deviceService.GetAllDevicesAsync(
-            ChatToolHelpers.ToLocationFilter(location!),
+            ChatToolHelpers.ToLocationFilter(location),
             DeviceType.Thermostat,
             null,
             cancellationToken)).Cast<Thermostat>().ToList();
+
+        if (thermostats.Count == 0)
+        {
+            if (ChatToolHelpers.IsAll(location))
+                return "No thermostats were found.";
+
+            return $"No thermostats were found in {location}.";
+        }
 
         var changed = 0;
         var alreadyCorrect = 0;
@@ -78,11 +86,14 @@ public sealed class ThermostatTempToolHandler(
                 continue;
             }
 
-            await deviceService.ExecuteCommandAsync(
-                thermostat.Id,
-                "SetPower",
-                "On",
-                cancellationToken);
+            if (!thermostat.IsOn())
+            {
+                await deviceService.ExecuteCommandAsync(
+                    thermostat.Id,
+                    "SetPower",
+                    "On",
+                    cancellationToken);
+            }
 
             await deviceService.ExecuteCommandAsync(
                 thermostat.Id,
@@ -93,7 +104,7 @@ public sealed class ThermostatTempToolHandler(
             changed++;
         }
 
-        return BuildResponse(location!, changed, alreadyCorrect, temp);
+        return BuildResponse(location, changed, alreadyCorrect, temp);
     }
 
     /// <summary>
