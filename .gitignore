@@ -422,8 +422,12 @@ dist/
 .angular/
 
 # Environment files
+# Local-only env files (never tracked).
+.env
 .env.local
 appsettings.Development.json
+# Note: appsettings.Production.json IS tracked. Prod config is committed
+# to the repo; secrets are injected via environment variables at runtime.
 
 # SQLite
 **/smarthome.db
@@ -443,3 +447,29 @@ READMEPROJ.md
 
 PROFESSOR_README.md
 
+
+# Angular
+dist/
+.angular/
+
+# Environment files
+.env.local
+appsettings.Development.json
+
+# SQLite
+**/smarthome.db
+**/*.db-shm
+**/*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+
+CLAUDE.md
+READMEPROJ.md
+*.zip
+
+.env

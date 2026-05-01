@@ -4,6 +4,7 @@ using SmartHome.Domain.Scene;
 using SmartHome.Infrastructure.Scene;
 using SmartHome.Domain.Device.Commands;
 using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device.Events;
 using Xunit;
 
 namespace SmartHome.Infrastructure.Tests.Scene;
@@ -14,6 +15,7 @@ public class SceneServiceTests
     private readonly Mock<IDeviceRepository> _deviceRepositoryMock;
     private readonly Mock<ISceneResolver> _resolverMock;
     private readonly Mock<ISceneActionNormalizer> _normalizerMock;
+    private readonly Mock<IDeviceEventNotifier> _eventNotifierMock;
     private readonly SceneService _service;
 
     public SceneServiceTests()
@@ -22,11 +24,14 @@ public class SceneServiceTests
         _deviceRepositoryMock = new Mock<IDeviceRepository>();
         _resolverMock = new Mock<ISceneResolver>();
         _normalizerMock = new Mock<ISceneActionNormalizer>();
+        _eventNotifierMock = new Mock<IDeviceEventNotifier>();   // ← new
+
         _service = new SceneService(
             _sceneRepositoryMock.Object,
             _deviceRepositoryMock.Object,
             _resolverMock.Object,
-            _normalizerMock.Object);
+            _normalizerMock.Object,
+            _eventNotifierMock.Object);                          // ← new
     }
 
     [Fact]

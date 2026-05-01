@@ -3,6 +3,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@angular/platform-browser-dynamic": "^21.2.11",
     "@types/three": "^0.184.0"
   }
 }

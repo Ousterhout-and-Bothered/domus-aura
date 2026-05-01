@@ -1,4 +1,6 @@
 ﻿using SmartHome.Domain.Common.Exceptions;
+using SmartHome.Domain.Device.Commands;
+using SmartHome.Domain.Device.Events;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Scene;
 
@@ -28,7 +30,8 @@ public sealed class SceneService(
     ISceneRepository sceneRepository,
     IDeviceRepository deviceRepository,
     ISceneResolver resolver,
-    ISceneActionNormalizer sceneActionNormalizer) : ISceneService
+    ISceneActionNormalizer sceneActionNormalizer,
+    IDeviceEventNotifier eventNotifier) : ISceneService
 {
     /// <inheritdoc />
     public async Task<DeviceScene> CreateSceneAsync(
@@ -133,6 +136,22 @@ public sealed class SceneService(
         }
 
         await deviceRepository.SaveChangesAsync(cancellationToken);
+
+        var children = resolved.Composite.Children;
+        for (var i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            if (entry.DeviceId == Guid.Empty) continue;
+            if (!entry.Result.Success) continue;
+
+            if (children[i] is DeviceCommandBase command)
+            {
+                await eventNotifier.PublishAsync(
+                    command.Device,
+                    DeviceChangeType.Updated,
+                    cancellationToken);
+            }
+        }
 
         return new SceneExecutionResult(scene.Id, scene.Name, entries);
     }

@@ -73,7 +73,7 @@ function hexWithAlpha(hex: string, alpha: number): string {
           <defs>
             <radialGradient [attr.id]="bulbGradientId" cx="0.5" cy="0.5" r="0.5">
               <stop offset="0%" [attr.stop-color]="centerColor()"/>
-              <stop offset="60%" [attr.stop-color]="colorHex()"/>
+              <stop offset="60%" [attr.stop-color]="localColor()"/>
               <stop offset="100%" [attr.stop-color]="edgeColor()"/>
             </radialGradient>
           </defs>
@@ -93,7 +93,7 @@ function hexWithAlpha(hex: string, alpha: number): string {
                 [attr.cx]="CX"
                 [attr.cy]="CY"
                 [attr.r]="ring.radius"
-                [attr.fill]="colorHex()"
+                [attr.fill]="localColor()"
                 [attr.opacity]="ring.opacity"
               />
             }
@@ -188,7 +188,7 @@ function hexWithAlpha(hex: string, alpha: number): string {
           [ngModel]="localBrightness()"
           (ngModelChange)="onBrightnessDrag($event)"
           (onSlideEnd)="onBrightnessCommit($event)"
-          styleClass="brightness-slider"
+          class="brightness-slider"
         />
         <span class="control-value">{{ localBrightness() }}%</span>
       </div>
@@ -198,11 +198,12 @@ function hexWithAlpha(hex: string, alpha: number): string {
         <span class="control-label">Color</span>
         <p-colorpicker
           format="hex"
-          [ngModel]="colorHex()"
-          (onChange)="onColorCustom($event)"
+          [ngModel]="localColor()"
+          (onChange)="onColorDrag($event)"
+          (onHide)="onColorCommit()"
           [disabled]="!isOn()"
           appendTo="body"></p-colorpicker>
-        <span class="control-value">{{ colorHex().toUpperCase() }}</span>
+        <span class="control-value">{{ localColor().toUpperCase() }}</span>
       </div>
     </p-card>
   `,
@@ -244,10 +245,16 @@ export class LightBulb {
   private readonly _localBrightness = signal(0);
   readonly localBrightness = this._localBrightness.asReadonly();
 
+  private readonly _localColor = signal('#FFFFFF');
+  readonly localColor = this._localColor.asReadonly();
+
   constructor() {
     // Sync local ← input whenever input changes.
     effect(() => {
       this._localBrightness.set(this.brightness());
+    });
+    effect(() => {
+      this._localColor.set(this.colorHex());
     });
   }
 
@@ -288,23 +295,23 @@ export class LightBulb {
     if (this.brightness() > 70) {
       return hexWithAlpha('#FFFFFF', alpha);
     }
-    return hexWithAlpha(this.colorHex(), alpha);
+    return hexWithAlpha(this.localColor(), alpha);
   });
 
   readonly edgeColor = computed(() => {
     const intensity = this.brightness() / 100;
-    return hexWithAlpha(this.colorHex(), intensity * 0.7);
+    return hexWithAlpha(this.localColor(), intensity * 0.7);
+  });
+
+  readonly cardGlowColor = computed(() => {
+    if (!this.isOn()) return 'transparent';
+    const intensity = this.brightness() / 100;
+    return hexWithAlpha(this.localColor(), intensity * 0.5);
   });
 
   readonly filamentOpacity = computed(() =>
     Math.min(1, this.brightness() / 100 + 0.2)
   );
-
-  readonly cardGlowColor = computed(() => {
-    if (!this.isOn()) return 'transparent';
-    const intensity = this.brightness() / 100;
-    return hexWithAlpha(this.colorHex(), intensity * 0.5);
-  });
 
   /* ─────────────── Event handlers ─────────────── */
 
@@ -324,13 +331,19 @@ export class LightBulb {
     }
   }
 
-  onColorCustom(event: { value: string | object | null }): void {
+  onColorDrag(event: { value: string | object | null }): void {
     if (!this.isOn()) return;
     const raw = event.value;
     if (!raw || typeof raw !== 'string') return;
-    const hex = raw.startsWith('#') ? raw : `#${raw}`;
-    if (hex.toUpperCase() !== this.colorHex().toUpperCase()) {
-      this.colorHexChange.emit(hex.toUpperCase());
+    const hex = (raw.startsWith('#') ? raw : `#${raw}`).toUpperCase();
+    this._localColor.set(hex);
+  }
+
+  onColorCommit(): void {
+    if (!this.isOn()) return;
+    const next = this._localColor();
+    if (next !== this.colorHex().toUpperCase()) {
+      this.colorHexChange.emit(next);
     }
   }
 }

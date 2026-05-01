@@ -12,10 +12,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:4200/*"
+        "http://localhost:4200/*",
+        "https://domus-aura.com/*",
+        "https://www.domus-aura.com/*"
       ],
       "webOrigins": [
-        "http://localhost:4200"
+        "http://localhost:4200",
+        "https://domus-aura.com",
+        "https://www.domus-aura.com"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
