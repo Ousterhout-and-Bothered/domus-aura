@@ -1,0 +1,26 @@
+meta {
+  name: Turn off All Lights
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Turn off all the lights."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

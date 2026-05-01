@@ -1,0 +1,22 @@
+meta {
+  name: Turn Off All Thermostats
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "message": "Turn off all of the thermostats."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

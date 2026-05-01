@@ -1,0 +1,26 @@
+meta {
+  name: Change One Lights Brightness
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set the living room light brightness to 50 percent."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
