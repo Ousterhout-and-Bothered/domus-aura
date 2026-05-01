@@ -2,17 +2,33 @@
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Domain.Scene;
 
-
 namespace SmartHome.Infrastructure.Scene;
 
 /// <summary>
-/// Default implementation of <see cref="ISceneService"/>. Coordinates scene persistence,
-/// resolution, and execution while logging per-action results to device command history.
+/// Default implementation of <see cref="ISceneService"/>.
+/// Responsible for managing scene lifecycle operations (create, update, delete)
+/// and coordinating scene execution, including normalization, resolution,
+/// command execution, and device history logging.
 /// </summary>
+/// <param name="sceneRepository">
+/// Repository used to persist and retrieve scene definitions.
+/// </param>
+/// <param name="deviceRepository">
+/// Repository used to persist device state changes and command history entries.
+/// </param>
+/// <param name="resolver">
+/// Resolves a scene definition into executable commands by expanding device groups
+/// and constructing a composite command tree.
+/// </param>
+/// <param name="sceneActionNormalizer">
+/// Preprocesses scene actions to enforce execution constraints such as ordering
+/// and prerequisite insertion (e.g., ensuring devices are powered on before applying changes).
+/// </param>
 public sealed class SceneService(
     ISceneRepository sceneRepository,
     IDeviceRepository deviceRepository,
-    ISceneResolver resolver) : ISceneService
+    ISceneResolver resolver,
+    ISceneActionNormalizer sceneActionNormalizer) : ISceneService
 {
     /// <inheritdoc />
     public async Task<DeviceScene> CreateSceneAsync(
@@ -70,25 +86,31 @@ public sealed class SceneService(
         await sceneRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Executes a scene by normalizing its actions, resolving them into executable commands,
+    /// executing those commands, and logging the results to device history.
+    /// </summary>
+    /// <param name="id">The unique identifier of the scene to execute.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>
+    /// A <see cref="SceneExecutionResult"/> containing per-action results,
+    /// including success/failure status and execution ordering.
+    /// </returns>
+    /// <exception cref="ResourceNotFoundException">
+    /// Thrown if no scene exists with the specified identifier.
+    /// </exception>
     public async Task<SceneExecutionResult> ExecuteSceneAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        // 1. Load the scene (throws ResourceNotFoundException if missing)
         var scene = await GetSceneAsync(id, cancellationToken);
 
-        // 2. Resolve the scene: expand groups, build the composite command tree
-        var resolved = await resolver.ResolveAsync(scene, cancellationToken);
+        var executableScene = sceneActionNormalizer.Normalize(scene);
 
-        // 3. Execute the composite synchronously. Partial failures are captured as
-        //    failed CommandResults; execution does not abort on a failing child.
+        var resolved = await resolver.ResolveAsync(executableScene, cancellationToken);
+
         var results = resolved.Composite.Execute();
 
-        // 4. Pair each result with the device it targeted (via the parallel id list)
-        //    and log to the device command history. Each log entry is scoped to the
-        //    device that was affected, so "show me this device's history" naturally
-        //    includes scene-triggered actions.
         var entries = new List<SceneExecutionEntry>(results.Count);
         for (var i = 0; i < results.Count; i++)
         {
@@ -97,10 +119,6 @@ public sealed class SceneService(
 
             if (deviceId != Guid.Empty)
             {
-                // Encode success/failure into the label so device history doesn't
-                // silently report a failed scene action as if it had succeeded.
-                // The structured success bit lives on SceneExecutionEntry; this
-                // string is the human-readable trace.
                 var operationLabel = result.Success
                     ? $"{result.Operation} (scene: {scene.Name})"
                     : $"{result.Operation} [FAILED: {result.Message}] (scene: {scene.Name})";
@@ -114,10 +132,6 @@ public sealed class SceneService(
                 resolved.OrderIndexesInOrder[i]));
         }
 
-        // 5. Save all pending changes in one go: the device state mutations from
-        //    command execution AND the history records just logged. Both sets of
-        //    changes live in the same EF change tracker, so one SaveChangesAsync
-        //    flushes both atomically.
         await deviceRepository.SaveChangesAsync(cancellationToken);
 
         return new SceneExecutionResult(scene.Id, scene.Name, entries);

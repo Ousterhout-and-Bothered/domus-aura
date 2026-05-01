@@ -11,9 +11,6 @@ public sealed class SceneDbSeeder(
     ISceneRepository repository,
     IDeviceRepository deviceRepository)
 {
-    private static readonly Guid MovieNightSceneId =
-        Guid.Parse("aaaaaaaa-1111-1111-1111-111111111111");
-
     private static readonly Guid WelcomeHomeSceneId =
         Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
@@ -34,15 +31,6 @@ public sealed class SceneDbSeeder(
 
         var scenes = new List<DeviceScene>
         {
-            new DeviceScene(MovieNightSceneId, "Movie Night", new[]
-            {
-                SceneAction.ForGroup(DeviceType.Light, "Living Room", "SetBrightness", 0, "20"),
-                SceneAction.ForGroup(DeviceType.Light, "Kitchen", "SetPower", 1, "Off"),
-                SceneAction.ForGroup(DeviceType.Fan, "Living Room", "SetPower", 2, "On"),
-                SceneAction.ForGroup(DeviceType.Fan, "Living Room", "SetSpeed", 3, "Low"),
-                SceneAction.ForGroup(DeviceType.DoorLock, "Entryway", "Lock", 4)
-            }),
-
             new DeviceScene(WelcomeHomeSceneId, "Welcome Home", new[]
             {
                 SceneAction.ForGroup(DeviceType.DoorLock, "Entryway", "Unlock", 0),

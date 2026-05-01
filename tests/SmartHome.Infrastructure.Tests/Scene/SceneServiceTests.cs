@@ -13,6 +13,7 @@ public class SceneServiceTests
     private readonly Mock<ISceneRepository> _sceneRepositoryMock;
     private readonly Mock<IDeviceRepository> _deviceRepositoryMock;
     private readonly Mock<ISceneResolver> _resolverMock;
+    private readonly Mock<ISceneActionNormalizer> _normalizerMock;
     private readonly SceneService _service;
 
     public SceneServiceTests()
@@ -20,10 +21,12 @@ public class SceneServiceTests
         _sceneRepositoryMock = new Mock<ISceneRepository>();
         _deviceRepositoryMock = new Mock<IDeviceRepository>();
         _resolverMock = new Mock<ISceneResolver>();
+        _normalizerMock = new Mock<ISceneActionNormalizer>();
         _service = new SceneService(
             _sceneRepositoryMock.Object,
             _deviceRepositoryMock.Object,
-            _resolverMock.Object);
+            _resolverMock.Object,
+            _normalizerMock.Object);
     }
 
     [Fact]
@@ -57,6 +60,7 @@ public class SceneServiceTests
 
         _sceneRepositoryMock.Setup(r => r.GetByIdAsync(sceneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(scene);
+        _normalizerMock.Setup(n => n.Normalize(scene)).Returns(scene);
         _resolverMock.Setup(r => r.ResolveAsync(scene, It.IsAny<CancellationToken>()))
             .ReturnsAsync(resolved);
 
