@@ -1,0 +1,178 @@
+﻿@use 'sass:color';
+
+$aura-gold: #ef9f27;
+$ember: #ba7517;
+$hearth-teal: #1d9e75;
+$night-slate: #2c2c2a;
+$warm-linen: #f1efe8;
+$danger: #e74c3c;
+
+.result-summary {
+  margin-bottom: 1.25rem;
+}
+
+.result-summary-counts {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+
+  i {
+    font-size: 0.9rem;
+  }
+
+  &.succeeded {
+    background: rgba($hearth-teal, 0.14);
+    color: color.adjust($hearth-teal, $lightness: 18%);
+    border-color: rgba($hearth-teal, 0.35);
+  }
+
+  &.failed {
+    background: rgba($danger, 0.14);
+    color: color.adjust($danger, $lightness: 12%);
+    border-color: rgba($danger, 0.35);
+  }
+}
+
+.result-empty {
+  margin: 1rem 0 0;
+  color: rgba($warm-linen, 0.55);
+  font-style: italic;
+}
+
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 22rem;
+  overflow-y: auto;
+
+  &.succeeded {
+    border-left-color: $hearth-teal;
+  }
+
+  &.noop {
+    border-left-color: rgba($warm-linen, 0.3);
+    // muted — succeeded-but-unchanged
+  }
+
+  &.failed {
+    border-left-color: $danger;
+    background: rgba($danger, 0.05);
+  }
+}
+
+.result-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid transparent;
+
+  &.succeeded {
+    border-left-color: $hearth-teal;
+  }
+
+  &.failed {
+    border-left-color: $danger;
+    background: rgba($danger, 0.05);
+  }
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+
+  .result-row.succeeded & {
+    background: rgba($hearth-teal, 0.18);
+    color: color.adjust($hearth-teal, $lightness: 20%);
+  }
+
+  .result-row.noop & {
+    background: rgba($warm-linen, 0.1);
+    color: rgba($warm-linen, 0.55);
+  }
+
+  .result-row.failed & {
+    background: rgba($danger, 0.18);
+    color: color.adjust($danger, $lightness: 12%);
+  }
+}
+
+.status-tag {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba($warm-linen, 0.5);
+  margin-left: auto;
+
+  .result-row.failed & {
+    color: $danger;
+  }
+}
+
+
+i {
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+
+.result-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-row-primary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: $warm-linen;
+}
+
+.device-name {
+  font-weight: 600;
+}
+
+.operation {
+  color: rgba($warm-linen, 0.7);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.825rem;
+}
+
+.value {
+  color: $aura-gold;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 0.825rem;
+}
+
+.result-row-message {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: rgba($warm-linen, 0.55);
+  font-style: italic;
+}
