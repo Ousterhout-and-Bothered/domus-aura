@@ -76,7 +76,7 @@ The application should start with the frontend, backend API, Keycloak identity p
 
 ---
 
-##️ Hosted Deployment (AWS)
+## Hosted Deployment (AWS)
 
 
 | Service | URL                               |
