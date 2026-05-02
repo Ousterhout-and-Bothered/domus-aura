@@ -13,6 +13,7 @@ namespace SmartHome.Domain.Device.Commands;
 /// </remarks>
 public sealed class SetBrightnessCommand(
     IDimmable receiver,
+    IPowerable power,
     int brightness,
     Device device) : DeviceCommandBase(device)
 {
@@ -29,9 +30,19 @@ public sealed class SetBrightnessCommand(
     /// <inheritdoc />
     public override CommandResult Execute()
     {
-        var wasAlreadyInRequestedState = receiver.Brightness == brightness;
+        var wasOff = power.PowerState == PowerState.Off;
+        var brightnessAlreadyAtTarget = receiver.Brightness == brightness;
+
+        if (wasOff)
+        {
+            power.TurnOn();
+        }
 
         receiver.SetBrightness(brightness);
+
+        // A power-state change is itself a state change — not a no-op,
+        // even when the brightness value matches what was already stored.
+        var isNoOp = brightnessAlreadyAtTarget && !wasOff;
 
         return new CommandResult(
             DeviceId: DeviceId!.Value,
@@ -40,9 +51,10 @@ public sealed class SetBrightnessCommand(
             Operation: OperationName,
             Value: Value,
             Success: true,
-            Message: wasAlreadyInRequestedState
+            Message: isNoOp
                 ? "Device is already in the requested state."
                 : null,
-            IsNoOp: wasAlreadyInRequestedState);
+            IsNoOp: isNoOp,
+            ImplicitPowerOn: wasOff);
     }
 }

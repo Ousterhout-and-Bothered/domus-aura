@@ -97,6 +97,17 @@ public sealed record SceneExecutionSummaryResponse(
 /// <param name="Value">The value used for the operation, if applicable.</param>
 /// <param name="Status">The result status (e.g., "succeeded", "failed").</param>
 /// <param name="Message">Optional message providing additional context or error details.</param>
+/// <param name="ImplicitPowerOn">
+/// True when the action implicitly powered the device on as part of its work
+/// (e.g., SetBrightness on a light that was off). The frontend renders this
+/// as a "powered on automatically" annotation under the row.
+/// </param>
+/// <param name="ImplicitModeChange">
+/// True when the action implicitly changed the device's mode as part of its
+/// work (currently only thermostats: SetDesiredTemperature switches mode to
+/// Auto when needed so the target temperature can actually be reached).
+/// The frontend renders this as a "switched to Auto mode" annotation.
+/// </param>
 public sealed record SceneExecutionResultResponse(
     int OrderIndex,
     Guid DeviceId,
@@ -105,4 +116,6 @@ public sealed record SceneExecutionResultResponse(
     string Operation,
     object? Value,
     string Status,
-    string? Message);
+    string? Message,
+    bool ImplicitPowerOn = false,
+    bool ImplicitModeChange = false);

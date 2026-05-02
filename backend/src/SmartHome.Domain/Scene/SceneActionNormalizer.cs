@@ -39,14 +39,21 @@ public sealed class SceneActionNormalizer : ISceneActionNormalizer
         var needsAutoMode = actions.Any(action =>
             action.Operation == "SetDesiredTemperature");
 
-        if (needsPowerOn && actions.All(action => action.Operation != "TurnOn"))
+        // Insert SetPower: On only if no SetPower: On is already specified.
+        // SetPower: Off is left alone — that's a different scene intent and
+        // the priority table runs it last anyway.
+        if (needsPowerOn && !actions.Any(action =>
+                action.Operation == "SetPower" &&
+                string.Equals(action.Value, "On", StringComparison.OrdinalIgnoreCase)))
         {
-            actions.Add(CreatePrerequisiteAction(actions[0], "TurnOn", null));
+            actions.Add(CreatePrerequisiteAction(actions[0], "SetPower", "On"));
         }
 
-        if (needsAutoMode && actions.All(action =>
-                action.Operation != "SetMode" ||
-                !string.Equals(action.Value, "Auto", StringComparison.OrdinalIgnoreCase)))
+        // Insert SetMode: Auto only if no SetMode action exists at all.
+        // An explicit Heat or Cool from the user satisfies the thermostat's
+        // "must not be Off" precondition and reflects a deliberate choice
+        // (e.g. heat-only, no AC) that we should respect.
+        if (needsAutoMode && actions.All(action => action.Operation != "SetMode"))
         {
             actions.Add(CreatePrerequisiteAction(actions[0], "SetMode", "Auto"));
         }
@@ -81,14 +88,14 @@ public sealed class SceneActionNormalizer : ISceneActionNormalizer
     {
         return action.Operation switch
         {
-            "TurnOn" => 0,
+            "SetPower" when string.Equals(action.Value, "On", StringComparison.OrdinalIgnoreCase) => 0,
             "SetMode" when string.Equals(action.Value, "Auto", StringComparison.OrdinalIgnoreCase) => 1,
             "SetMode" => 2,
             "SetDesiredTemperature" => 3,
             "SetBrightness" => 4,
             "SetColor" => 5,
             "SetSpeed" => 6,
-            "TurnOff" => 99,
+            "SetPower" => 99,
             _ => 50
         };
     }

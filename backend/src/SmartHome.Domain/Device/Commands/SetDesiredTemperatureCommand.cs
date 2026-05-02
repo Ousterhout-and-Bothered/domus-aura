@@ -28,11 +28,34 @@ public sealed class SetDesiredTemperatureCommand(
     /// <inheritdoc />
     public override CommandResult Execute()
     {
-        var thermostat = (SmartHome.Domain.Device.Thermostat.Thermostat)Device;
+        var thermostat = (Thermostat.Thermostat)Device;
 
-        var wasAlreadyInRequestedState = thermostat.DesiredTemperature == temperature;
+        var wasOff = receiver.State == ThermostatState.Off;
+        var wasNotAuto = thermostat.Mode != ThermostatMode.Auto;
+        var tempAlreadyAtTarget = thermostat.DesiredTemperature == temperature;
 
+        // Step 1: ensure non-Off state. SetMode below requires it.
+        if (wasOff)
+        {
+            receiver.TurnOn();
+        }
+
+        // Step 2: ensure Auto mode. Only Auto guarantees the system will
+        // actively reach the target regardless of whether ambient is above
+        // or below it. Heat-only and Cool-only modes are user preferences
+        // for direct device control; a scene-authored temperature target
+        // overrides them in service of the scene's stated intent.
+        if (wasNotAuto)
+        {
+            receiver.SetMode(ThermostatMode.Auto);
+        }
+
+        // Step 3: apply the temperature.
         receiver.SetDesiredTemperature(temperature);
+
+        // A no-op is *only* a no-op if nothing else changed either. An
+        // implicit power-on or mode change is itself a state transition.
+        var isNoOp = tempAlreadyAtTarget && !wasOff && !wasNotAuto;
 
         return new CommandResult(
             DeviceId: DeviceId!.Value,
@@ -41,9 +64,11 @@ public sealed class SetDesiredTemperatureCommand(
             Operation: OperationName,
             Value: Value,
             Success: true,
-            Message: wasAlreadyInRequestedState
+            Message: isNoOp
                 ? "Device is already in the requested state."
                 : null,
-            IsNoOp: wasAlreadyInRequestedState);
+            IsNoOp: isNoOp,
+            ImplicitPowerOn: wasOff,
+            ImplicitModeChange: wasNotAuto);
     }
 }

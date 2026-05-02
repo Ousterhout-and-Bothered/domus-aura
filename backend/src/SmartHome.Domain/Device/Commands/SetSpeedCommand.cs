@@ -12,6 +12,7 @@ namespace SmartHome.Domain.Device.Commands;
 /// </remarks>
 public sealed class SetSpeedCommand(
     IFanControllable receiver,
+    IPowerable power,
     FanSpeed speed,
     Device device) : DeviceCommandBase(device)
 {
@@ -28,9 +29,17 @@ public sealed class SetSpeedCommand(
     /// <inheritdoc />
     public override CommandResult Execute()
     {
-        var wasAlreadyInRequestedState = receiver.Speed == speed;
+        var wasOff = power.PowerState == PowerState.Off;
+        var speedAlreadyAtTarget = receiver.Speed == speed;
+
+        if (wasOff)
+        {
+            power.TurnOn();
+        }
 
         receiver.SetSpeed(speed);
+
+        var isNoOp = speedAlreadyAtTarget && !wasOff;
 
         return new CommandResult(
             DeviceId: DeviceId!.Value,
@@ -39,9 +48,10 @@ public sealed class SetSpeedCommand(
             Operation: OperationName,
             Value: Value,
             Success: true,
-            Message: wasAlreadyInRequestedState
+            Message: isNoOp
                 ? "Device is already in the requested state."
                 : null,
-            IsNoOp: wasAlreadyInRequestedState);
+            IsNoOp: isNoOp,
+            ImplicitPowerOn: wasOff);
     }
 }

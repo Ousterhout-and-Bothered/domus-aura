@@ -17,7 +17,18 @@ public sealed class SetModeCommand(
     /// <inheritdoc />
     public override CommandResult Execute()
     {
+        var thermostat = (Thermostat.Thermostat)Device;
+        var wasOff = receiver.State == ThermostatState.Off;
+        var modeAlreadyAtTarget = thermostat.Mode == mode;
+
+        if (wasOff)
+        {
+            receiver.TurnOn();
+        }
+
         receiver.SetMode(mode);
+
+        var isNoOp = modeAlreadyAtTarget && !wasOff;
 
         return new CommandResult(
             DeviceId: DeviceId!.Value,
@@ -26,6 +37,10 @@ public sealed class SetModeCommand(
             Operation: OperationName,
             Value: Value,
             Success: true,
-            Message: null);
+            Message: isNoOp
+                ? "Device is already in the requested state."
+                : null,
+            IsNoOp: isNoOp,
+            ImplicitPowerOn: wasOff);
     }
 }
