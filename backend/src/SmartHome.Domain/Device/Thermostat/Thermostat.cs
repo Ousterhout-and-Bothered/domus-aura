@@ -198,8 +198,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// <remarks>
     /// As of the implicit-power-on refactor, the off-state guard has been removed.
     /// Callers (the command layer) are responsible for transitioning the thermostat
-    /// to a non-Off state and ensuring an appropriate mode is active before
-    /// invoking this method. See <c>SetDesiredTemperatureCommand</c>.
+    /// to a non-Off state.
     /// </remarks>
     public void SetDesiredTemperature(int temperature)
     {
