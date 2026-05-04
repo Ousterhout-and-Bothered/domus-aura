@@ -1,4 +1,4 @@
-<<div class="aura-shell">
+<div class="aura-shell">
   @if (isAuthenticated()) {
     <header class="aura-header">
       <a routerLink="/devices" class="aura-wordmark">
@@ -36,6 +36,22 @@
         </button>
       </div>
     </header>
+
+    <button
+      type="button"
+      class="aura-chat-fab"
+      [class.is-active]="chatOpen()"
+      (click)="toggleChat()"
+      [attr.aria-label]="chatOpen() ? 'Close assistant' : 'Open assistant'"
+      [attr.aria-expanded]="chatOpen()"
+    >
+      <i class="pi pi-comments"></i>
+    </button>
+
+    <aura-chat-panel
+      [open]="chatOpen()"
+      (close)="closeChat()"
+    />
   }
 
   <main class="aura-main" [class.aura-main--full]="!isAuthenticated()">
