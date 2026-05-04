@@ -27,14 +27,19 @@ const MAX_NAME_LENGTH = 100;
  * SceneRequest from the staged target cards and POSTs to /api/scenes;
  * on success, emits the new scene to the parent and closes.
  *
+ * View switching uses CSS visibility, not @switch / @case. This is
+ * deliberate: structural directives destroy and re-create their child
+ * components on transition, which would tear down every StagedTargetCard
+ * (and its in-progress edits) every time the user opens the picker.
+ * Both views render simultaneously; only one is visible at a time.
+ *
  * Staged devices are stored as snapshots (full AnyDevice objects)
- * rather than ids. This is deliberate — it isolates each staged card
- * from upstream SSE updates to the live device list, so a thermostat
- * tick or a brightness change elsewhere in the system can't reset a
- * user's in-progress scene edits. The trade-off is that scenes built
- * from very stale snapshots will reflect the device's state at
- * stage-time, not save-time; for a one-screen modal interaction this
- * is the right trade.
+ * rather than ids. This isolates each staged card from upstream SSE
+ * updates to the live device list — a thermostat tick or a brightness
+ * change elsewhere can't mutate the stable device reference each
+ * card was bound to. The trade-off is that scenes built from very
+ * stale snapshots will reflect the device's state at stage-time,
+ * not save-time; for a one-screen modal this is the right trade.
  *
  * v1 supports create only. Edit (PUT) will reuse the same dialog by
  * accepting an optional existing scene as input.
@@ -64,106 +69,100 @@ const MAX_NAME_LENGTH = 100;
       styleClass="scene-editor-dialog"
     >
       <div class="scene-editor-body">
-        @switch (view()) {
-          @case ('editor') {
-            <div class="scene-editor-view">
-              <label class="scene-editor-name-label" for="sceneName">
-                Scene name
-              </label>
-              <input
-                pInputText
-                id="sceneName"
-                class="scene-editor-name-input"
-                [ngModel]="name()"
-                (ngModelChange)="onNameChange($event)"
-                [maxlength]="MAX_NAME_LENGTH"
-                placeholder="e.g. Goodnight"
-                autocomplete="off"
-              />
+        <div class="scene-editor-view" [class.is-hidden]="view() !== 'editor'">
+          <label class="scene-editor-name-label" for="sceneName">
+            Scene name
+          </label>
+          <input
+            pInputText
+            id="sceneName"
+            class="scene-editor-name-input"
+            [ngModel]="name()"
+            (ngModelChange)="onNameChange($event)"
+            [maxlength]="MAX_NAME_LENGTH"
+            placeholder="e.g. Goodnight"
+            autocomplete="off"
+          />
 
-              @if (errorMessage()) {
-                <div class="scene-editor-error" role="alert">
-                  <i class="pi pi-exclamation-triangle"></i>
-                  <span>{{ errorMessage() }}</span>
-                </div>
-              }
-
-              @if (stagedDevices().length === 0) {
-                <div class="scene-editor-targets-placeholder">
-                  <p>No devices yet. Click "Add device" to choose one.</p>
-                </div>
-              } @else {
-                <div class="scene-editor-targets-list">
-                  @for (device of stagedDevices(); track device.id) {
-                    <aura-staged-target-card
-                      [device]="device"
-                      (remove)="onRemoveStaged(device.id)"
-                    />
-                  }
-                </div>
-              }
-
-              <button
-                type="button"
-                class="scene-editor-add"
-                (click)="onShowPicker()"
-              >
-                <i class="pi pi-plus"></i>
-                Add device
-              </button>
+          @if (errorMessage()) {
+            <div class="scene-editor-error" role="alert">
+              <i class="pi pi-exclamation-triangle"></i>
+              <span>{{ errorMessage() }}</span>
             </div>
           }
 
-          @case ('picker') {
-            <div class="scene-editor-view">
-              <div class="picker-header">
-                <button
-                  type="button"
-                  class="picker-back"
-                  (click)="onBackToEditor()"
-                >
-                  <i class="pi pi-arrow-left"></i>
-                  Back
-                </button>
-                <input
-                  pInputText
-                  class="picker-filter"
-                  [ngModel]="pickerFilter()"
-                  (ngModelChange)="onPickerFilterChange($event)"
-                  placeholder="Filter devices…"
-                  autocomplete="off"
+          @if (stagedDevices().length === 0) {
+            <div class="scene-editor-targets-placeholder">
+              <p>No devices yet. Click "Add device" to choose one.</p>
+            </div>
+          } @else {
+            <div class="scene-editor-targets-list">
+              @for (device of stagedDevices(); track device.id) {
+                <aura-staged-target-card
+                  [device]="device"
+                  (remove)="onRemoveStaged(device.id)"
                 />
-              </div>
-
-              @if (availableDevices().length === 0) {
-                <p class="picker-empty">
-                  @if (pickerFilter().trim().length > 0) {
-                    No devices match "{{ pickerFilter() }}".
-                  } @else {
-                    All devices have been added to this scene.
-                  }
-                </p>
-              } @else {
-                <ul class="picker-list">
-                  @for (device of availableDevices(); track device.id) {
-                    <li>
-                      <button
-                        type="button"
-                        class="picker-item"
-                        (click)="onSelectDevice(device.id)"
-                      >
-                        <span class="picker-item-name">{{ device.name }}</span>
-                        <span class="picker-item-meta">
-                          {{ device.type }} · {{ device.location }}
-                        </span>
-                      </button>
-                    </li>
-                  }
-                </ul>
               }
             </div>
           }
-        }
+
+          <button
+            type="button"
+            class="scene-editor-add"
+            (click)="onShowPicker()"
+          >
+            <i class="pi pi-plus"></i>
+            Add device
+          </button>
+        </div>
+
+        <div class="scene-editor-view" [class.is-hidden]="view() !== 'picker'">
+          <div class="picker-header">
+            <button
+              type="button"
+              class="picker-back"
+              (click)="onBackToEditor()"
+            >
+              <i class="pi pi-arrow-left"></i>
+              Back
+            </button>
+            <input
+              pInputText
+              class="picker-filter"
+              [ngModel]="pickerFilter()"
+              (ngModelChange)="onPickerFilterChange($event)"
+              placeholder="Filter devices…"
+              autocomplete="off"
+            />
+          </div>
+
+          @if (availableDevices().length === 0) {
+            <p class="picker-empty">
+              @if (pickerFilter().trim().length > 0) {
+                No devices match "{{ pickerFilter() }}".
+              } @else {
+                All devices have been added to this scene.
+              }
+            </p>
+          } @else {
+            <ul class="picker-list">
+              @for (device of availableDevices(); track device.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="picker-item"
+                    (click)="onSelectDevice(device.id)"
+                  >
+                    <span class="picker-item-name">{{ device.name }}</span>
+                    <span class="picker-item-meta">
+                      {{ device.type }} · {{ device.location }}
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
       </div>
 
       <ng-template pTemplate="footer">

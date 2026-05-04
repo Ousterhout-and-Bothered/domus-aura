@@ -1,12 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
   computed,
   input,
-  linkedSignal,
   output,
   signal,
-  untracked,
 } from '@angular/core';
 
 import { DeviceType, PowerState } from '../../../device/models/device';
@@ -29,7 +28,7 @@ import { DoorLock } from '../../../device/components/door-lock/door-lock';
 /**
  * Local discriminated-union of the staged values for a target.
  * Discriminator matches the device's runtime type and is fixed at
- * construction time — never reassigned over a card's lifetime.
+ * snapshot time — never reassigned over a card's lifetime.
  */
 type StagedDeviceState =
   | {
@@ -79,11 +78,13 @@ type TouchedProperty =
  * dashboard leaf visual and tracks the user's edits as a discriminated
  * staged state plus a touched-properties set.
  *
- * The device input is treated as a snapshot, captured once on first
- * render via untracked() so that upstream SSE-driven updates to the
- * device list do not blow away the user's in-progress edits. The
- * parent dialog is responsible for keeping the same device reference
- * bound for this card's lifetime.
+ * The device input is treated as a snapshot, captured once in
+ * ngOnInit. The staged signal has no reactive dependency on the input,
+ * so upstream SSE-driven updates to the device list cannot reset the
+ * user's in-progress edits. The parent dialog is also responsible for
+ * keeping the same device reference bound (it stores AnyDevice
+ * snapshots, not ids) — together these guarantee stable card state
+ * across the dialog's lifetime.
  */
 @Component({
   selector: 'aura-staged-target-card',
@@ -111,7 +112,7 @@ type TouchedProperty =
       @switch (device().type) {
         @case (DeviceType.DoorLock) {
           @let s = stagedState();
-          @if (s.type === DeviceType.DoorLock) {
+          @if (s !== null && s.type === DeviceType.DoorLock) {
             <aura-door-lock
               [name]="device().name"
               [location]="device().location"
@@ -123,7 +124,7 @@ type TouchedProperty =
 
         @case (DeviceType.Light) {
           @let s = stagedState();
-          @if (s.type === DeviceType.Light) {
+          @if (s !== null && s.type === DeviceType.Light) {
             <aura-light-bulb
               [name]="device().name"
               [location]="device().location"
@@ -139,7 +140,7 @@ type TouchedProperty =
 
         @case (DeviceType.Fan) {
           @let s = stagedState();
-          @if (s.type === DeviceType.Fan) {
+          @if (s !== null && s.type === DeviceType.Fan) {
             <aura-fan-spinning
               [name]="device().name"
               [location]="device().location"
@@ -153,7 +154,7 @@ type TouchedProperty =
 
         @case (DeviceType.Thermostat) {
           @let s = stagedState();
-          @if (s.type === DeviceType.Thermostat) {
+          @if (s !== null && s.type === DeviceType.Thermostat) {
             <aura-thermostat-gauge
               [name]="device().name"
               [location]="device().location"
@@ -172,7 +173,7 @@ type TouchedProperty =
   `,
   styleUrl: './staged-target-card.scss',
 })
-export class StagedTargetCard {
+export class StagedTargetCard implements OnInit {
   // Expose DeviceType to the template's @switch / @case expressions.
   protected readonly DeviceType = DeviceType;
 
@@ -180,14 +181,12 @@ export class StagedTargetCard {
   readonly remove = output<void>();
 
   /**
-   * Staged values for this target. Lazy initialization via linkedSignal
-   * + untracked: the computation runs on first read (after the input is
-   * bound) but does not subscribe to device(), so subsequent input
-   * changes from upstream SSE events don't blow away the user's edits.
+   * Staged values for this target. Null until ngOnInit snapshots the
+   * device input. After that point, only the user's change handlers
+   * mutate it — upstream input changes (from SSE updates) never
+   * reset it because the signal has no reactive dependencies.
    */
-  protected readonly stagedState = linkedSignal<StagedDeviceState>(() =>
-    this.buildInitialState(untracked(() => this.device()))
-  );
+  protected readonly stagedState = signal<StagedDeviceState | null>(null);
 
   /**
    * Set of property keys the user has explicitly modified. A property
@@ -200,11 +199,16 @@ export class StagedTargetCard {
   // Drives the "N actions" badge in the header.
   protected readonly actionCount = computed(() => this.touched().size);
 
+  ngOnInit(): void {
+    console.log('[card] ngOnInit for', this.device().name, 'id:', this.device().id);
+    this.stagedState.set(this.buildInitialState(this.device()));
+  }
+
   /* ─────────────── Change handlers ─────────────── */
 
   protected onLockStateChange(next: DoorLockState): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.DoorLock
+      s !== null && s.type === DeviceType.DoorLock
         ? { ...s, lockState: next }
         : s);
     this.markTouched('lockState');
@@ -212,7 +216,7 @@ export class StagedTargetCard {
 
   protected onLightPowerChange(next: PowerState): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Light
+      s !== null && s.type === DeviceType.Light
         ? { ...s, powerState: next }
         : s);
     this.markTouched('power');
@@ -220,7 +224,7 @@ export class StagedTargetCard {
 
   protected onLightBrightnessChange(next: number): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Light
+      s !== null && s.type === DeviceType.Light
         ? { ...s, brightness: next }
         : s);
     this.markTouched('brightness');
@@ -228,7 +232,7 @@ export class StagedTargetCard {
 
   protected onLightColorChange(next: string): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Light
+      s !== null && s.type === DeviceType.Light
         ? { ...s, colorHex: next }
         : s);
     this.markTouched('color');
@@ -236,23 +240,25 @@ export class StagedTargetCard {
 
   protected onFanPowerChange(next: PowerState): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Fan
+      s !== null && s.type === DeviceType.Fan
         ? { ...s, powerState: next }
         : s);
     this.markTouched('power');
   }
 
   protected onFanSpeedChange(next: FanSpeed): void {
+    console.log('[card] onFanSpeedChange for', this.device().name, 'next:', next, 'before:', this.stagedState());
     this.stagedState.update(s =>
-      s.type === DeviceType.Fan
+      s !== null && s.type === DeviceType.Fan
         ? { ...s, speed: next }
         : s);
+    console.log('[card] onFanSpeedChange after:', this.stagedState());
     this.markTouched('speed');
   }
 
   protected onThermostatStateChange(next: ThermostatState): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Thermostat
+      s !== null && s.type === DeviceType.Thermostat
         ? { ...s, state: next }
         : s);
     this.markTouched('power');
@@ -260,7 +266,7 @@ export class StagedTargetCard {
 
   protected onThermostatDesiredTempChange(next: number): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Thermostat
+      s !== null && s.type === DeviceType.Thermostat
         ? { ...s, desiredTemperature: next }
         : s);
     this.markTouched('desiredTemperature');
@@ -268,7 +274,7 @@ export class StagedTargetCard {
 
   protected onThermostatModeChange(next: ThermostatMode): void {
     this.stagedState.update(s =>
-      s.type === DeviceType.Thermostat
+      s !== null && s.type === DeviceType.Thermostat
         ? { ...s, mode: next }
         : s);
     this.markTouched('mode');
@@ -300,7 +306,7 @@ export class StagedTargetCard {
 
   /**
    * Builds the initial staged state from the device snapshot. Called
-   * once during signal initialization via untracked().
+   * once from ngOnInit.
    */
   private buildInitialState(d: AnyDevice): StagedDeviceState {
     switch (d.type) {
@@ -345,6 +351,8 @@ export class StagedTargetCard {
   toActions(): SceneActionRequest[] {
     const actions: SceneActionRequest[] = [];
     const s = this.stagedState();
+    if (s === null) return actions;
+
     const touched = this.touched();
     const deviceId = this.device().id;
 

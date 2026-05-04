@@ -94,8 +94,6 @@ import { SceneEditorDialog } from '../scene-editor-dialog/scene-editor-dialog';
         </div>
       }
 
-      <p-confirmpopup />
-
       <aura-scene-editor-dialog
         [visible]="editorDialogVisible()"
         [devices]="devices()"
