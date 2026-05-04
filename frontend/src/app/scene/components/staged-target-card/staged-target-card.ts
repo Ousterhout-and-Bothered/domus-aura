@@ -1,0 +1,430 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  linkedSignal,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
+
+import { DeviceType, PowerState } from '../../../device/models/device';
+import {
+  AnyDevice,
+  DoorLockState,
+  FanSpeed,
+  ThermostatMode,
+  ThermostatState,
+} from '../../../device/models/device-types';
+import { SceneActionRequest } from '../../models/scene';
+
+// Leaf visuals — reused from the dashboard, same shapes the existing
+// device-card binds to.
+import { LightBulb } from '../../../device/components/light-bulb/light-bulb';
+import { FanSpinning } from '../../../device/components/fan-spinning/fan-spinning';
+import { ThermostatGauge } from '../../../device/components/thermostat-gauge/thermostat-gauge';
+import { DoorLock } from '../../../device/components/door-lock/door-lock';
+
+/**
+ * Local discriminated-union of the staged values for a target.
+ * Discriminator matches the device's runtime type and is fixed at
+ * construction time — never reassigned over a card's lifetime.
+ */
+type StagedDeviceState =
+  | {
+  type: DeviceType.Light;
+  powerState: PowerState;
+  brightness: number;
+  colorHex: string;
+}
+  | {
+  type: DeviceType.Fan;
+  powerState: PowerState;
+  speed: FanSpeed;
+}
+  | {
+  type: DeviceType.Thermostat;
+  state: ThermostatState;
+  mode: ThermostatMode;
+  desiredTemperature: number;
+}
+  | {
+  type: DeviceType.DoorLock;
+  lockState: DoorLockState;
+};
+
+/**
+ * Property keys that can be marked as user-touched for a staged target.
+ * On Save, the dialog asks each card for toActions(), which walks this
+ * set to emit one SceneActionRequest per touched property.
+ *
+ * Note: 'power' is the canonical name for any toggle that maps to a
+ * SetPower action — for thermostats this is bound to the gauge's state
+ * change event, even though the staged shape carries `state` rather
+ * than `powerState`. The touched-property name reflects the emitted
+ * action, not the leaf-visual binding.
+ */
+type TouchedProperty =
+  | 'power'
+  | 'brightness'
+  | 'color'
+  | 'speed'
+  | 'mode'
+  | 'desiredTemperature'
+  | 'lockState';
+
+/**
+ * One staged target inside the scene editor dialog. Wraps an existing
+ * dashboard leaf visual and tracks the user's edits as a discriminated
+ * staged state plus a touched-properties set.
+ *
+ * The device input is treated as a snapshot, captured once on first
+ * render via untracked() so that upstream SSE-driven updates to the
+ * device list do not blow away the user's in-progress edits. The
+ * parent dialog is responsible for keeping the same device reference
+ * bound for this card's lifetime.
+ */
+@Component({
+  selector: 'aura-staged-target-card',
+  standalone: true,
+  imports: [LightBulb, FanSpinning, ThermostatGauge, DoorLock],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <article class="staged-target">
+      <header class="staged-target-head">
+        <div class="staged-target-titles">
+          <h3 class="staged-target-name">{{ device().name }}</h3>
+          <p class="staged-target-loc">{{ device().location }}</p>
+        </div>
+        <span class="staged-target-badge">{{ actionCount() }} actions</span>
+        <button
+          type="button"
+          class="staged-target-remove"
+          [attr.aria-label]="'Remove ' + device().name + ' from scene'"
+          (click)="remove.emit()"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      </header>
+
+      @switch (device().type) {
+        @case (DeviceType.DoorLock) {
+          @let s = stagedState();
+          @if (s.type === DeviceType.DoorLock) {
+            <aura-door-lock
+              [name]="device().name"
+              [location]="device().location"
+              [lockState]="s.lockState"
+              (lockStateChange)="onLockStateChange($event)"
+            />
+          }
+        }
+
+        @case (DeviceType.Light) {
+          @let s = stagedState();
+          @if (s.type === DeviceType.Light) {
+            <aura-light-bulb
+              [name]="device().name"
+              [location]="device().location"
+              [powerState]="s.powerState"
+              [brightness]="s.brightness"
+              [colorHex]="s.colorHex"
+              (powerStateChange)="onLightPowerChange($event)"
+              (brightnessChange)="onLightBrightnessChange($event)"
+              (colorHexChange)="onLightColorChange($event)"
+            />
+          }
+        }
+
+        @case (DeviceType.Fan) {
+          @let s = stagedState();
+          @if (s.type === DeviceType.Fan) {
+            <aura-fan-spinning
+              [name]="device().name"
+              [location]="device().location"
+              [powerState]="s.powerState"
+              [speed]="s.speed"
+              (powerStateChange)="onFanPowerChange($event)"
+              (speedChange)="onFanSpeedChange($event)"
+            />
+          }
+        }
+
+        @case (DeviceType.Thermostat) {
+          @let s = stagedState();
+          @if (s.type === DeviceType.Thermostat) {
+            <aura-thermostat-gauge
+              [name]="device().name"
+              [location]="device().location"
+              [desiredTemperature]="s.desiredTemperature"
+              [ambientTemperature]="getAmbientTemperature()"
+              [mode]="s.mode"
+              [state]="s.state"
+              (stateChange)="onThermostatStateChange($event)"
+              (desiredTemperatureChange)="onThermostatDesiredTempChange($event)"
+              (modeChange)="onThermostatModeChange($event)"
+            />
+          }
+        }
+      }
+    </article>
+  `,
+  styleUrl: './staged-target-card.scss',
+})
+export class StagedTargetCard {
+  // Expose DeviceType to the template's @switch / @case expressions.
+  protected readonly DeviceType = DeviceType;
+
+  readonly device = input.required<AnyDevice>();
+  readonly remove = output<void>();
+
+  /**
+   * Staged values for this target. Lazy initialization via linkedSignal
+   * + untracked: the computation runs on first read (after the input is
+   * bound) but does not subscribe to device(), so subsequent input
+   * changes from upstream SSE events don't blow away the user's edits.
+   */
+  protected readonly stagedState = linkedSignal<StagedDeviceState>(() =>
+    this.buildInitialState(untracked(() => this.device()))
+  );
+
+  /**
+   * Set of property keys the user has explicitly modified. A property
+   * counts as touched the moment its handler fires, even if the value
+   * matches the original. This is deliberate: an explicit choice to
+   * "set brightness to its current value" is still a scene action.
+   */
+  protected readonly touched = signal<ReadonlySet<TouchedProperty>>(new Set());
+
+  // Drives the "N actions" badge in the header.
+  protected readonly actionCount = computed(() => this.touched().size);
+
+  /* ─────────────── Change handlers ─────────────── */
+
+  protected onLockStateChange(next: DoorLockState): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.DoorLock
+        ? { ...s, lockState: next }
+        : s);
+    this.markTouched('lockState');
+  }
+
+  protected onLightPowerChange(next: PowerState): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Light
+        ? { ...s, powerState: next }
+        : s);
+    this.markTouched('power');
+  }
+
+  protected onLightBrightnessChange(next: number): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Light
+        ? { ...s, brightness: next }
+        : s);
+    this.markTouched('brightness');
+  }
+
+  protected onLightColorChange(next: string): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Light
+        ? { ...s, colorHex: next }
+        : s);
+    this.markTouched('color');
+  }
+
+  protected onFanPowerChange(next: PowerState): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Fan
+        ? { ...s, powerState: next }
+        : s);
+    this.markTouched('power');
+  }
+
+  protected onFanSpeedChange(next: FanSpeed): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Fan
+        ? { ...s, speed: next }
+        : s);
+    this.markTouched('speed');
+  }
+
+  protected onThermostatStateChange(next: ThermostatState): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Thermostat
+        ? { ...s, state: next }
+        : s);
+    this.markTouched('power');
+  }
+
+  protected onThermostatDesiredTempChange(next: number): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Thermostat
+        ? { ...s, desiredTemperature: next }
+        : s);
+    this.markTouched('desiredTemperature');
+  }
+
+  protected onThermostatModeChange(next: ThermostatMode): void {
+    this.stagedState.update(s =>
+      s.type === DeviceType.Thermostat
+        ? { ...s, mode: next }
+        : s);
+    this.markTouched('mode');
+  }
+
+  /**
+   * Idempotent touch marker. If the property is already touched, returns
+   * the same set without allocating a new one — this avoids spurious
+   * re-renders when the user wiggles a control that's already touched.
+   */
+  private markTouched(prop: TouchedProperty): void {
+    this.touched.update(t => {
+      if (t.has(prop)) return t;
+      const next = new Set(t);
+      next.add(prop);
+      return next;
+    });
+  }
+
+  /**
+   * Returns the live ambient temperature for thermostat targets.
+   * Ambient is environmental — not a stageable property — so it's read
+   * straight from the device input rather than the staged signal.
+   */
+  protected getAmbientTemperature(): number {
+    const d = this.device();
+    return d.type === DeviceType.Thermostat ? d.ambientTemperature : 0;
+  }
+
+  /**
+   * Builds the initial staged state from the device snapshot. Called
+   * once during signal initialization via untracked().
+   */
+  private buildInitialState(d: AnyDevice): StagedDeviceState {
+    switch (d.type) {
+      case DeviceType.Light:
+        return {
+          type: DeviceType.Light,
+          powerState: d.powerState,
+          brightness: d.brightness,
+          colorHex: d.colorHex,
+        };
+      case DeviceType.Fan:
+        return {
+          type: DeviceType.Fan,
+          powerState: d.powerState,
+          speed: d.speed,
+        };
+      case DeviceType.Thermostat:
+        return {
+          type: DeviceType.Thermostat,
+          state: d.state,
+          mode: d.mode,
+          desiredTemperature: d.desiredTemperature,
+        };
+      case DeviceType.DoorLock:
+        return {
+          type: DeviceType.DoorLock,
+          lockState: d.lockState,
+        };
+    }
+  }
+
+  /**
+   * Walks the touched set and emits one SceneActionRequest per touched
+   * property, using the canonical backend operation strings:
+   * SetPower, SetBrightness, SetColor, SetSpeed, SetMode,
+   * SetDesiredTemperature, Lock, Unlock.
+   *
+   * Called by the parent dialog on Save. Order within the returned
+   * array is not significant — SceneActionNormalizer (server-side)
+   * applies the priority table.
+   */
+  toActions(): SceneActionRequest[] {
+    const actions: SceneActionRequest[] = [];
+    const s = this.stagedState();
+    const touched = this.touched();
+    const deviceId = this.device().id;
+
+    switch (s.type) {
+      case DeviceType.DoorLock:
+        if (touched.has('lockState')) {
+          actions.push({
+            deviceId,
+            operation: s.lockState === DoorLockState.Locked ? 'Lock' : 'Unlock',
+            value: null,
+          });
+        }
+        break;
+
+      case DeviceType.Light:
+        if (touched.has('power')) {
+          actions.push({
+            deviceId,
+            operation: 'SetPower',
+            value: s.powerState === PowerState.On ? 'On' : 'Off',
+          });
+        }
+        if (touched.has('brightness')) {
+          actions.push({
+            deviceId,
+            operation: 'SetBrightness',
+            value: String(s.brightness),
+          });
+        }
+        if (touched.has('color')) {
+          actions.push({
+            deviceId,
+            operation: 'SetColor',
+            value: s.colorHex,
+          });
+        }
+        break;
+
+      case DeviceType.Fan:
+        if (touched.has('power')) {
+          actions.push({
+            deviceId,
+            operation: 'SetPower',
+            value: s.powerState === PowerState.On ? 'On' : 'Off',
+          });
+        }
+        if (touched.has('speed')) {
+          actions.push({
+            deviceId,
+            operation: 'SetSpeed',
+            value: s.speed,
+          });
+        }
+        break;
+
+      case DeviceType.Thermostat:
+        if (touched.has('power')) {
+          actions.push({
+            deviceId,
+            operation: 'SetPower',
+            value: s.state === ThermostatState.Off ? 'Off' : 'On',
+          });
+        }
+        if (touched.has('mode')) {
+          actions.push({
+            deviceId,
+            operation: 'SetMode',
+            value: s.mode,
+          });
+        }
+        if (touched.has('desiredTemperature')) {
+          actions.push({
+            deviceId,
+            operation: 'SetDesiredTemperature',
+            value: String(s.desiredTemperature),
+          });
+        }
+        break;
+    }
+
+    return actions;
+  }
+}

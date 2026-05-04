@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
+  border-radius: 0.75rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:host(:hover) {
+  border-color: var(--aura-accent-soft);
+}
+
+.staged-target {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+.staged-target-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.staged-target-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.staged-target-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--aura-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.staged-target-loc {
+  font-size: 0.875rem;
+  color: var(--aura-text-muted);
+  margin: 0.1rem 0 0;
+}
+
+.staged-target-badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--aura-accent-soft);
+  color: var(--aura-accent);
+  flex-shrink: 0;
+}
+
+.staged-target-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--aura-text-muted);
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--aura-surface-muted);
+    color: var(--aura-text);
+  }
+}

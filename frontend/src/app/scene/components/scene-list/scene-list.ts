@@ -25,7 +25,8 @@ import { RecipeStep } from '../../services/scene-recipe';
 import { SceneCard } from '../scene-card/scene-card';
 import { SceneExecutionDialog } from '../scene-execution-dialog/scene-execution-dialog';
 import { SceneExecutionResultDialog } from '../scene-execution-result-dialog/scene-execution-result-dialog';
-
+import { StagedTargetCard } from '../staged-target-card/staged-target-card';
+import { SceneEditorDialog } from '../scene-editor-dialog/scene-editor-dialog';
 /**
  * The /scenes route. Owns the live device list (kept current via SSE),
  * the scenes list, and the two execution dialogs. Hands devices down
@@ -47,6 +48,8 @@ import { SceneExecutionResultDialog } from '../scene-execution-result-dialog/sce
     SceneCard,
     SceneExecutionDialog,
     SceneExecutionResultDialog,
+    StagedTargetCard,
+    SceneEditorDialog,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -64,8 +67,7 @@ import { SceneExecutionResultDialog } from '../scene-execution-result-dialog/sce
         <p-button
           label="New Scene"
           icon="pi pi-plus"
-          [disabled]="true"
-          pTooltip="Coming soon"
+          (onClick)="editorDialogVisible.set(true)"
         />
       </header>
 
@@ -93,6 +95,13 @@ import { SceneExecutionResultDialog } from '../scene-execution-result-dialog/sce
       }
 
       <p-confirmpopup />
+
+      <aura-scene-editor-dialog
+        [visible]="editorDialogVisible()"
+        [devices]="devices()"
+        (visibleChange)="editorDialogVisible.set($event)"
+        (sceneCreated)="onSceneCreated($event)"
+      />
 
       <aura-scene-execution-dialog
         [visible]="executionDialogVisible()"
@@ -129,6 +138,8 @@ export class SceneList implements OnInit, OnDestroy {
 
   readonly resultDialogVisible = signal(false);
   readonly lastExecutionResult = signal<SceneExecutionResponse | null>(null);
+
+  readonly editorDialogVisible = signal(false);
 
   constructor() {
     this.events.events$
@@ -178,8 +189,16 @@ export class SceneList implements OnInit, OnDestroy {
     }
   }
 
+  onSceneCreated(scene: SceneResponse): void {
+    this.scenes.update((current) => [...current, scene]);
+  }
+
   onSceneRemoved(id: string): void {
     this.scenes.update((current) => current.filter((s) => s.id !== id));
+  }
+
+  onSandboxRemove(): void {
+    console.log('[sandbox] StagedTargetCard remove clicked');
   }
 
   private applyEvent(evt: DeviceChangedEvent): void {
