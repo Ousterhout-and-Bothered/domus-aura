@@ -84,6 +84,14 @@ $danger: #e74c3c;
   background: rgba(255, 255, 255, 0.03);
   border-left: 3px solid transparent;
 
+
+  .result-row-annotation {
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: var(--aura-accent);
+    margin: 0.25rem 0 0;
+  }
+
   &.succeeded {
     border-left-color: $hearth-teal;
   }

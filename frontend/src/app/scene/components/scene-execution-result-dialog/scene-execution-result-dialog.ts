@@ -10,7 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
 
-import { SceneExecutionResponse } from '../../models/scene';
+import { SceneExecutionResponse, SceneExecutionResultResponse } from '../../models/scene';
 
 /**
  * Modal that opens after a scene execution completes. Renders the
@@ -24,6 +24,11 @@ import { SceneExecutionResponse } from '../../models/scene';
  *
  *   - "Per-action results reported on partial failure" — failures are
  *     listed alongside successes rather than aborting the run.
+ *
+ * Rows that triggered an implicit side effect (powered the device on,
+ * switched a thermostat to Auto) render an additional italic annotation
+ * under the primary row, so the user understands what actually happened
+ * rather than just seeing a successful outcome.
  *
  * The dialog is *controlled* — its visible state is owned by the parent
  * via [(visible)] two-way binding.
@@ -74,14 +79,14 @@ import { SceneExecutionResponse } from '../../models/scene';
                 [class.noop]="isNoOp(entry.status)"
                 [class.failed]="!isSuccess(entry.status)"
               >
-              <span class="status-icon" aria-hidden="true">
-                <i
-                  class="pi"
-                  [class.pi-check]="isSuccess(entry.status) && !isNoOp(entry.status)"
-                  [class.pi-minus]="isNoOp(entry.status)"
-                  [class.pi-times]="!isSuccess(entry.status)"
-                ></i>
-              </span>
+                <span class="status-icon" aria-hidden="true">
+                  <i
+                    class="pi"
+                    [class.pi-check]="isSuccess(entry.status) && !isNoOp(entry.status)"
+                    [class.pi-minus]="isNoOp(entry.status)"
+                    [class.pi-times]="!isSuccess(entry.status)"
+                  ></i>
+                </span>
 
                 <div class="result-row-body">
                   <div class="result-row-primary">
@@ -92,6 +97,11 @@ import { SceneExecutionResponse } from '../../models/scene';
                     }
                     <span class="status-tag">{{ statusLabel(entry.status) }}</span>
                   </div>
+
+                  @if (annotationFor(entry); as annotation) {
+                    <p class="result-row-annotation">{{ annotation }}</p>
+                  }
+
                   @if (entry.message) {
                     <p class="result-row-message">{{ entry.message }}</p>
                   }
@@ -143,5 +153,29 @@ export class SceneExecutionResultDialog {
       case 'already_in_requested_state': return 'No change needed';
       default: return status ?? 'Unknown';
     }
+  }
+
+  /**
+   * Build the implicit-side-effect annotation for a result row, or return
+   * null if there's nothing to annotate. Both flags can be true on the
+   * same row (e.g., a thermostat that was Off in Heat mode when the
+   * scene asked for a temperature). Phrasing is calm and factual —
+   * "X happened automatically" — not alarming, since these are intended
+   * behaviors not failures.
+   */
+  annotationFor(entry: SceneExecutionResultResponse): string | null {
+    const poweredOn = entry.implicitPowerOn === true;
+    const modeChanged = entry.implicitModeChange === true;
+
+    if (poweredOn && modeChanged) {
+      return `Powered on and switched to Auto mode automatically before ${entry.operation}.`;
+    }
+    if (poweredOn) {
+      return `Powered on automatically before ${entry.operation}.`;
+    }
+    if (modeChanged) {
+      return `Switched to Auto mode automatically before ${entry.operation}.`;
+    }
+    return null;
   }
 }

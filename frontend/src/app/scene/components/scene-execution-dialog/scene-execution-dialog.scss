@@ -1,6 +1,6 @@
 ﻿:host ::ng-deep .scene-execution-dialog .p-dialog-content {
-  background: #1A1816;
-  border: 1px solid rgba(241, 239, 232, 0.1);
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
   border-radius: 14px;
   padding: 0;
   overflow: hidden;
@@ -18,23 +18,23 @@
 .dlg-progress {
   margin: 0 0 0.4rem;
   font-size: 0.7rem;
-  color: rgba(241, 239, 232, 0.5);
+  color: var(--aura-text-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .dlg-title {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 500;
-  color: #f1efe8;
+  color: var(--aura-text);
   line-height: 1.25;
 }
 
 .dlg-stage {
-  background: #0F0E0D;
-  border: 1px solid rgba(241, 239, 232, 0.08);
+  background: var(--aura-bg);
+  border: 1px solid var(--aura-border);
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
@@ -63,7 +63,7 @@
 .dlg-missing {
   margin: 0;
   font-style: italic;
-  color: rgba(241, 239, 232, 0.5);
+  color: var(--aura-text-muted);
   font-size: 0.9rem;
 }
 
@@ -77,15 +77,15 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(241, 239, 232, 0.2);
+    background: var(--aura-border);
     transition: background 0.15s ease, transform 0.15s ease;
 
     &.done {
-      background: #1d9e75;
+      background: var(--aura-text-muted);
     }
 
     &.active {
-      background: #ef9f27;
+      background: var(--aura-accent);
       transform: scale(1.4);
     }
   }

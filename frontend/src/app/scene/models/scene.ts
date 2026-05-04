@@ -13,11 +13,13 @@ export interface SceneActionRequest {
   operation: string;
   /** Stringified value. Null for parameterless operations. */
   value?: string | null;
+
 }
 
 export interface SceneRequest {
   name: string;
   actions: SceneActionRequest[];
+
 }
 
 /* ─────────────── Responses ─────────────── */
@@ -53,6 +55,8 @@ export interface SceneExecutionResultResponse {
   value: unknown | null;
   status: string;
   message?: string | null;
+  implicitPowerOn?: boolean;
+  implicitModeChange?: boolean;
 }
 
 export interface SceneExecutionSummaryResponse {

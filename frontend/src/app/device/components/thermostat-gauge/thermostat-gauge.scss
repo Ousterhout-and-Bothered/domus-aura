@@ -107,7 +107,7 @@
 .ambient-readout {
   text-align: center;
   margin: 1rem 0 0;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   color: var(--aura-text-muted);
 
   strong {
@@ -168,12 +168,19 @@
   --p-inputnumber-button-hover-border-color: var(--aura-accent);
   --p-inputnumber-button-hover-color: var(--aura-accent);
 
+  // Allow the input to shrink with its container so the stepper buttons
+  // and value stay inside the card on narrow widths.
+  display: flex;
+  width: 100%;
+  min-width: 0;
 
   .p-inputnumber-input {
-    width: 80px;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
     text-align: center;
     font-family: var(--font-display);
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     color: var(--aura-text);
     background: transparent;
   }
@@ -193,18 +200,22 @@
 :host ::ng-deep .mode-select {
   display: flex;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 
   .p-button,
   .p-togglebutton,
   .p-selectbutton-option {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     background: transparent;
     border: 1px solid var(--aura-border);
     color: var(--aura-text-muted);
-    padding: 0.45rem 0.9rem;
+    padding: 0.45rem 0.6rem;
     border-radius: 999px;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     letter-spacing: 0.05em;
+    white-space: nowrap;
     transition: all 0.15s ease;
 
     &:hover:not(:disabled) {
@@ -222,6 +233,30 @@
     &:disabled {
       cursor: not-allowed;
     }
+  }
+}
+
+:host {
+  container-type: inline-size;
+  container-name: thermostat-card;
+}
+
+@container thermostat-card (max-width: 340px) {
+
+  .setpoint-row,
+  .mode-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .control-value {
+    text-align: center;
+  }
+
+  :host ::ng-deep .setpoint-input,
+  :host ::ng-deep .mode-select {
+    justify-self: center;
   }
 }
 
