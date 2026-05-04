@@ -1,12 +1,26 @@
-﻿import { DeviceType } from '../../device/models/device';
+﻿import { DeviceType, PowerState } from '../../device/models/device';
 import {
   AnyDevice,
-  isDoorLock,
-  isFan,
-  isLight,
+  ThermostatState,
   isThermostat,
 } from '../../device/models/device-types';
 import { SceneActionResponse, SceneResponse } from '../models/scene';
+
+
+/**
+ * Operations that may trigger an implicit power-on at execution time.
+ * Mirrors the backend command behavior: SetBrightness, SetColor, SetSpeed,
+ * SetMode, and SetDesiredTemperature each call TurnOn on their receiver
+ * if the device is currently off. SetPower is excluded because it sets
+ * the power state directly.
+ */
+const OPERATIONS_THAT_MAY_POWER_ON: ReadonlySet<string> = new Set([
+  'SetBrightness',
+  'SetColor',
+  'SetSpeed',
+  'SetMode',
+  'SetDesiredTemperature',
+]);
 
 /**
  * One row in a scene's recipe. Drives both the static recipe list in the
@@ -30,17 +44,33 @@ export interface RecipeStep {
    * so SSE-driven updates propagate without rebuilding the recipe.
    */
   device: AnyDevice | null;
+  /**
+   * True when this step's operation will implicitly power the device on
+   * at execution time, based on the device's current state. Drives the
+   * "(turned on)" annotation in the recipe display. Recomputed whenever
+   * the recipe rebuilds — when the user toggles a device on the
+   * dashboard, SSE patches the device list, the recipe is a `computed`,
+   * and the annotation disappears.
+   */
+  willPowerOn: boolean;
 }
 
 /**
  * Build a recipe from a scene against the current device registry.
  *
- * Steps are emitted in orderIndex order. Group targets ("all lights in
- * Kitchen") expand one step per resolved device, matching what executes.
- * Group targets that resolve to zero devices contribute nothing — no
- * "ghost step" for an empty group. Specific-device targets that point
- * at a removed device emit a step with deviceId = '' so the recipe can
- * render a greyed-out "missing device" row.
+ * Steps are emitted in scene-authored order (orderIndex). Group targets
+ * ("all lights in Kitchen") expand one step per resolved device, matching
+ * what executes. Group targets that resolve to zero devices contribute
+ * nothing — no "ghost step" for an empty group. Specific-device targets
+ * that point at a removed device emit a step with deviceId = '' so the
+ * recipe can render a greyed-out "missing device" row.
+ *
+ * Each step is tagged with willPowerOn=true if the operation requires
+ * power on a currently-off device. The annotation is predictive — the
+ * actual command may or may not need to power the device on by the time
+ * the user clicks Execute, depending on what's happened in between. This
+ * is acceptable because the recipe rebuilds on SSE updates, and even a
+ * stale prediction is informative.
  */
 export function buildRecipe(
   scene: SceneResponse,
@@ -57,11 +87,44 @@ export function buildRecipe(
         typeLabel: typeLabelFor(action, resolution.device),
         deviceId: resolution.device?.id ?? '',
         device: resolution.device,
+        willPowerOn: predictsImplicitPowerOn(action, resolution.device),
       });
     }
   }
 
   return steps;
+}
+
+/* ─────────────── Power-on prediction ─────────────── */
+
+/**
+ * Decide whether this action, against this device, would trigger an
+ * implicit power-on at execution time. Mirrors the rule the command
+ * layer applies: if the operation is one that powers the device on as
+ * a side effect, and the device is currently off, the prediction is true.
+ *
+ * Returns false for: missing devices (we have nothing to predict from),
+ * operations that don't power on (Lock/Unlock/SetPower), and devices
+ * that are already on.
+ *
+ * Note the thermostat asymmetry: a thermostat is "off" when its State
+ * is Off, regardless of the PowerState getter (which only reports On
+ * for Heating/Cooling, not Idle). We check State directly via the
+ * isThermostat type guard.
+ */
+function predictsImplicitPowerOn(
+  action: SceneActionResponse,
+  device: AnyDevice | null,
+): boolean {
+  if (device === null) return false;
+  if (!OPERATIONS_THAT_MAY_POWER_ON.has(action.operation)) return false;
+
+  if (isThermostat(device)) {
+    return device.state === ThermostatState.Off;
+  }
+
+  // Light, Fan — anything else with a binary PowerState.
+  return 'powerState' in device && device.powerState === PowerState.Off;
 }
 
 /* ─────────────── Target resolution ─────────────── */

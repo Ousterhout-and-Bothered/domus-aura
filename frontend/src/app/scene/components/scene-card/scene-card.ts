@@ -19,6 +19,7 @@ import {
 import { AnyDevice } from '../../../device/models/device-types';
 import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
 
+
 /**
  * One row in the scene list. Renders the scene name, a brief summary,
  * Execute and Remove buttons, and an expandable recipe panel showing
@@ -90,7 +91,12 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
                   [class.is-missing]="!step.deviceId"
                 >
                   <span class="recipe-num">{{ step.ordinal }}.</span>
-                  <span class="recipe-label">{{ step.label }}</span>
+                  <span class="recipe-label">
+                    {{ step.label }}
+                    @if (step.willPowerOn) {
+                      <span class="recipe-annotation">(turned on)</span>
+                    }
+                    </span>
                   @if (step.typeLabel) {
                     <span class="recipe-type">{{ step.typeLabel }}</span>
                   }

@@ -35,16 +35,12 @@ public sealed class SceneDbSeeder(
             {
                 SceneAction.ForGroup(DeviceType.DoorLock, "Entryway", "Unlock", 0),
 
-                SceneAction.ForGroup(DeviceType.Light, "Hallway", "SetPower", 1, "On"),
-                SceneAction.ForGroup(DeviceType.Light, "Kitchen", "SetPower", 2, "On"),
-                SceneAction.ForGroup(DeviceType.Light, "Hallway", "SetBrightness", 3, "100"),
-                SceneAction.ForGroup(DeviceType.Light, "Kitchen", "SetBrightness", 4, "100"),
+                SceneAction.ForGroup(DeviceType.Light, "Hallway", "SetBrightness", 1, "100"),
+                SceneAction.ForGroup(DeviceType.Light, "Kitchen", "SetBrightness", 2, "100"),
 
-                SceneAction.ForGroup(DeviceType.Fan, "Living Room", "SetPower", 5, "On"),
-                SceneAction.ForGroup(DeviceType.Fan, "Living Room", "SetSpeed", 6, "Medium"),
+                SceneAction.ForGroup(DeviceType.Fan, "Living Room", "SetSpeed", 3, "Medium"),
 
-                SceneAction.ForGroup(DeviceType.Thermostat, "Living Room", "SetPower", 7, "On"),
-                SceneAction.ForGroup(DeviceType.Thermostat, "Living Room", "SetDesiredTemperature", 8, "72")
+                SceneAction.ForGroup(DeviceType.Thermostat, "Living Room", "SetDesiredTemperature", 4, "72")
             }),
 
             new DeviceScene(AllLightsOffSceneId, "All Lights Off", new[]

@@ -161,25 +161,25 @@
 
 /* ─────────────── Speed SelectButton ─────────────── */
 
-.speed-row {
-  grid-template-columns: 90px 1fr;
-}
-
 :host ::ng-deep .speed-select {
   display: flex;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 
   .p-button,
   .p-togglebutton,
   .p-selectbutton-option {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     background: transparent;
     border: 1px solid var(--aura-border);
     color: var(--aura-text-muted);
-    padding: 0.45rem 0.9rem;
+    padding: 0.45rem 0.6rem;
     border-radius: 999px;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     letter-spacing: 0.05em;
+    white-space: nowrap;
     transition: all 0.15s ease;
 
     &:hover:not(:disabled) {
@@ -200,10 +200,15 @@
   }
 }
 
-/* ─────────────── Mobile (< 480px) ─────────────── */
+/* ─────────────── Container-based narrow layout ─────────────── */
 
-@media (max-width: 480px) {
-  .control-row {
+:host {
+  container-type: inline-size;
+  container-name: fan-card;
+}
+
+@container fan-card (max-width: 340px) {
+  .speed-row {
     grid-template-columns: 1fr;
     gap: 8px;
     text-align: center;
@@ -213,11 +218,12 @@
     text-align: center;
   }
 
-  .power-row p-toggleswitch {
-    justify-self: center;
-  }
-
   :host ::ng-deep .speed-select {
     justify-self: center;
   }
 }
+
+  :host ::ng-deep .speed-select {
+    justify-self: center;
+  }
+
