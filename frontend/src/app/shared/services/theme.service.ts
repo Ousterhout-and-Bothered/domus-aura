@@ -6,12 +6,17 @@ const STORAGE_KEY = 'domus-aura-theme';
 const DARK_CLASS = 'dark-mode'; // matches app.config.ts → providePrimeNG.darkModeSelector
 
 /**
- * App-wide light/dark theme. Toggles the `.dark-mode` class on <html>, which
- * the PrimeNG Aura preset uses as its dark-mode selector. Choice is persisted
- * to localStorage; on first load, falls back to the user's OS preference.
+ * Manages the application-wide light and dark theme.
+ *
+ * Toggles the `.dark-mode` class on the `<html>` element, which is used by PrimeNG
+ * as its dark-mode selector. The user's choice is persisted to `localStorage`.
+ * On initial load, it falls back to the operating system's color scheme preference.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
+  /**
+   * Signal representing the current theme ('light' or 'dark').
+   */
   readonly theme = signal<Theme>(this.loadInitialTheme());
 
   constructor() {
@@ -23,10 +28,18 @@ export class ThemeService {
     });
   }
 
+  /**
+   * Toggles the current theme between light and dark.
+   */
   toggle(): void {
     this.theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
   }
 
+  /**
+   * Explicitly sets the application theme.
+   *
+   * @param theme - The theme to apply ('light' or 'dark').
+   */
   set(theme: Theme): void {
     this.theme.set(theme);
   }

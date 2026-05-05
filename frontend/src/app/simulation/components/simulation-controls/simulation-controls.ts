@@ -33,6 +33,13 @@ interface SpeedOption {
   value: number;
 }
 
+/**
+ * Component for controlling the environment simulation.
+ *
+ * It allows users to adjust the simulation speed, reset all devices to their
+ * default states, and set ambient temperatures for different locations.
+ * The component also displays a synchronized simulation clock.
+ */
 @Component({
   selector: 'aura-simulation-controls',
   standalone: true,
@@ -143,10 +150,14 @@ export class SimulationControls implements OnInit {
 
   /* ─────────────── Inputs / outputs ─────────────── */
 
-  /** Device list owned by the parent. Drives per-location ambient inputs. */
+  /**
+   * The current list of devices, used to identify locations for ambient temperature control.
+   */
   readonly devices = input.required<AnyDevice[]>();
 
-  /** Fired after a successful reset so the parent can refetch device state. */
+  /**
+   * Emits when the simulation has been reset, prompting the parent to refresh state.
+   */
   readonly simulationReset = output<void>();
 
   /* ─────────────── State ─────────────── */

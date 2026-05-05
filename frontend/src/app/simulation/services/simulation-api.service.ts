@@ -11,7 +11,7 @@ import {
 } from '../models/simulation';
 
 /**
- * HTTP client for /api/simulation and /api/locations/{location}/ambient-temperature.
+ * HTTP client for simulation control and ambient temperature adjustments.
  */
 @Injectable({ providedIn: 'root' })
 export class SimulationApiService {
@@ -19,30 +19,51 @@ export class SimulationApiService {
   private readonly simBase = `${environment.apiUrl}/simulation`;
   private readonly locBase = `${environment.apiUrl}/locations`;
 
-  /** GET /api/simulation — current speed and clock. */
+  /**
+   * Retrieves the current simulation state, including speed and clock.
+   *
+   * @returns An observable of the simulation state response.
+   */
   getState(): Observable<SimulationStateResponse> {
     return this.http.get<SimulationStateResponse>(this.simBase);
   }
 
-  /** GET /api/simulation/allowed-speeds — permitted multipliers for the speed dropdown. */
+  /**
+   * Fetches the list of allowed simulation speeds.
+   *
+   * @returns An observable containing the permitted speed multipliers.
+   */
   getAllowedSpeeds(): Observable<AllowedSpeedsResponse> {
     return this.http.get<AllowedSpeedsResponse>(`${this.simBase}/allowed-speeds`);
   }
 
-  /** PUT /api/simulation/speed — change the simulation speed. */
+  /**
+   * Changes the speed of the simulation.
+   *
+   * @param speed - The new simulation speed multiplier.
+   * @returns An observable that completes when the speed is updated.
+   */
   setSpeed(speed: number): Observable<void> {
     const body: SetSimulationSpeedRequest = { speedMultiplier: speed };
     return this.http.put<void>(`${this.simBase}/speed`, body);
   }
 
-  /** POST /api/simulation/reset — reset all devices to defaults. */
+  /**
+   * Resets all devices to their default states.
+   *
+   * @returns An observable that completes when the reset is finished.
+   */
   resetAllDevices(): Observable<void> {
     return this.http.post<void>(`${this.simBase}/reset`, null);
   }
 
   /**
-   * PUT /api/locations/{location}/ambient-temperature.
-   * Affects every thermostat at that location.
+   * Updates the ambient temperature for a specific location.
+   * This affects the behavior of thermostats in that location.
+   *
+   * @param location - The name of the location to update.
+   * @param temperature - The new ambient temperature value.
+   * @returns An observable of the response after setting the temperature.
    */
   setAmbientTemperature(
     location: string,

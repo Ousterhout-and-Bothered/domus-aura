@@ -25,6 +25,13 @@ import { FanSpinning } from '../fan-spinning/fan-spinning';
 import { LightBulb } from '../light-bulb/light-bulb';
 import { DoorLock } from '../door-lock/door-lock';
 
+/**
+ * Container component for a single smart home device.
+ *
+ * It dynamically renders the appropriate specialized component (e.g.,
+ * `ThermostatGauge`, `LightBulb`) based on the device type and handles
+ * command execution and device removal requests.
+ */
 @Component({
   selector: 'aura-device-card',
   standalone: true,
@@ -108,10 +115,13 @@ export class DeviceCard {
   private readonly messages = inject(MessageService);
   private readonly confirms = inject(ConfirmationService);
 
+  /** The device object to display and manage. */
   readonly device = input.required<AnyDevice>();
 
+  /** Emits the updated device object after a state change. */
   readonly deviceUpdated = output<AnyDevice>();
 
+  /** Emits the unique identifier of the device when it is successfully removed. */
   readonly deviceRemoved = output<string>();
 
   readonly DeviceType = DeviceType;

@@ -3,6 +3,12 @@ import { AnyDevice } from '../../models/device-types';
 import { DeviceCard } from '../device-card/device-card';
 import { isDeviceOn } from '../../services/filter';
 
+/**
+ * Represents a group of devices within a specific room or location.
+ *
+ * It displays the location name, a summary of active devices, and a grid of
+ * `DeviceCard` components for each device in that location.
+ */
 @Component({
   selector: 'aura-room-block',
   standalone: true,
@@ -34,10 +40,14 @@ import { isDeviceOn } from '../../services/filter';
   styleUrl: './room-block.scss',
 })
 export class RoomBlock {
+  /** The name of the room or location. */
   readonly location = input.required<string>();
+  /** The list of devices currently in this location. */
   readonly devices = input.required<AnyDevice[]>();
 
+  /** Emits when a device within this room has been updated. */
   readonly deviceUpdated = output<AnyDevice>();
+  /** Emits the unique identifier of a device that has been removed from this room. */
   readonly deviceRemoved = output<string>();
 
   readonly activeCount = computed(() =>

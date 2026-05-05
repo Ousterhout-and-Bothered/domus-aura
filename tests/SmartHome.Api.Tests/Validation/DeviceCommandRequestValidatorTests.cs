@@ -1,3 +1,4 @@
+using FluentValidation.TestHelper;
 using SmartHome.Api.Contracts.Devices;
 using SmartHome.Api.Validation;
 
@@ -6,6 +7,19 @@ namespace SmartHome.Api.Tests.Validation;
 public class DeviceCommandRequestValidatorTests
 {
     private readonly DeviceCommandRequestValidator _validator = new();
+
+    [Fact]
+    public void DeviceCommandRequest_MissingCommand_Fails()
+    {
+        // Arrange
+        var request = new DeviceCommandRequest(null!, "on");
+
+        // Act
+        var result = _validator.TestValidate(request);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Command);
+    }
 
     // --- SetBrightness ---
 
@@ -42,6 +56,23 @@ public class DeviceCommandRequestValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Theory]
+    [InlineData(9, "Brightness must be between 10 and 100.")]
+    [InlineData(101, "Brightness must be between 10 and 100.")]
+    [InlineData("not-a-number", "Brightness must be a valid integer.")]
+    public void SetBrightness_SpecificErrors(object value, string expectedError)
+    {
+        // Arrange
+        var request = new DeviceCommandRequest("setBrightness", value);
+
+        // Act
+        var result = _validator.TestValidate(request);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Value)
+              .WithErrorMessage(expectedError);
+    }
+
     // --- SetPower ---
 
     [Theory]
@@ -72,6 +103,22 @@ public class DeviceCommandRequestValidatorTests
 
         // Assert
         Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData(59, "Temperature must be between 60 and 80.")]
+    [InlineData(81, "Temperature must be between 60 and 80.")]
+    public void SetDesiredTemperature_SpecificErrors(object value, string expectedError)
+    {
+        // Arrange
+        var request = new DeviceCommandRequest("setDesiredTemperature", value);
+
+        // Act
+        var result = _validator.TestValidate(request);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Value)
+              .WithErrorMessage(expectedError);
     }
 
     // --- SetSpeed ---
@@ -108,6 +155,20 @@ public class DeviceCommandRequestValidatorTests
     }
 
     // --- SetMode ---
+
+    [Fact]
+    public void SetSpeed_InvalidFanSpeed_FailsWithSpecificMessage()
+    {
+        // Arrange
+        var request = new DeviceCommandRequest("setSpeed", "UltraFast");
+
+        // Act
+        var result = _validator.TestValidate(request);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.Value)
+              .WithErrorMessage("Fan speed must be one of: Low, Medium, High.");
+    }
 
     [Theory]
     [InlineData("setMode", "invalid")]

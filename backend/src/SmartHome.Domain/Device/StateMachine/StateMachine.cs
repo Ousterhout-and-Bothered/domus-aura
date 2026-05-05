@@ -34,12 +34,25 @@ public sealed class StateMachine<TState> : IStateMachine<TState>
         _allowedTransitions = allowedTransitions;
     }
 
+    /// <summary>
+    /// Gets the current state the machine is in.
+    /// </summary>
     public TState CurrentState => _currentState;
 
+    /// <summary>
+    /// Checks if a transition to the target state is allowed from the current state.
+    /// </summary>
+    /// <param name="target">The target state to check.</param>
+    /// <returns>True if the transition is permitted; otherwise, false.</returns>
     public bool CanTransition(TState target) =>
         _allowedTransitions.TryGetValue(_currentState, out var allowed)
         && allowed.Contains(target);
 
+    /// <summary>
+    /// Performs a state transition.
+    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the transition is illegal.
+    /// </summary>
+    /// <param name="target">The target state to transition to.</param>
     public void Transition(TState target)
     {
         if (!CanTransition(target))

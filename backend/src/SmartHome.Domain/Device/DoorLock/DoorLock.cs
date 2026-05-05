@@ -31,12 +31,23 @@ public sealed class DoorLock : Device, ILockable
         LockState = DoorLockState.Unlocked;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DoorLock"/> class with a specified identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier for the door lock.</param>
+    /// <param name="name">The human-readable name of the door lock.</param>
+    /// <param name="location">The location where the door lock is installed.</param>
     public DoorLock(Guid id, string name, string location)
         : base(id, name, location, DeviceType.DoorLock)
     {
         LockState = DoorLockState.Unlocked;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DoorLock"/> class with a generated identifier.
+    /// </summary>
+    /// <param name="name">The human-readable name of the door lock.</param>
+    /// <param name="location">The location where the door lock is installed.</param>
     public DoorLock(string name, string location)
         : base(name, location, DeviceType.DoorLock)
     {

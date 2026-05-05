@@ -39,6 +39,13 @@ function hexWithAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+/**
+ * Specialized component for smart light bulbs.
+ *
+ * It provides a visual representation of a light bulb with adjustable
+ * brightness, color, and power state. The bulb's visual glow and filament
+ * intensity react to the current settings.
+ */
 @Component({
   selector: 'aura-light-bulb',
   standalone: true,
@@ -212,14 +219,22 @@ function hexWithAlpha(hex: string, alpha: number): string {
 export class LightBulb {
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** The display name of the light. */
   readonly name = input.required<string>();
+  /** The location where the light is installed. */
   readonly location = input.required<string>();
+  /** The current power state of the light (On/Off). */
   readonly powerState = input.required<PowerState>();
+  /** The current brightness level (10-100%). */
   readonly brightness = input.required<number>();
+  /** The current color of the light in hex format (e.g., '#FF0000'). */
   readonly colorHex = input.required<string>();
 
+  /** Emits when the power state is toggled. */
   readonly powerStateChange = output<PowerState>();
+  /** Emits when the brightness level is committed. */
   readonly brightnessChange = output<number>();
+  /** Emits when the light color is changed. */
   readonly colorHexChange = output<string>();
 
   /* ─────────────── Template constants ─────────────── */

@@ -25,14 +25,10 @@ const HUB_R = 12;
 const BLADE_COUNT = 3;
 
 /**
- * Animated three-blade ceiling fan. The blades spin via CSS animation
- * whose duration shortens with speed; at High the blades blur slightly
- * to evoke motion.
+ * Animated three-blade ceiling fan component.
  *
- * Power is a ToggleSwitch; speed is a SelectButton (Low/Medium/High) —
- * the textbook three-option-pick-one use case for SelectButton. Speed
- * controls disable when powered off; the toggle stays available so
- * the user can power back on.
+ * It provides a visual representation of a spinning fan with adjustable
+ * speed and power state. The spinning animation speed depends on the selected fan speed.
  */
 @Component({
   selector: 'aura-fan-spinning',
@@ -141,12 +137,18 @@ export class FanSpinning {
 
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** The display name of the fan. */
   readonly name = input.required<string>();
+  /** The location where the fan is installed. */
   readonly location = input.required<string>();
+  /** The current power state of the fan (On/Off). */
   readonly powerState = input.required<PowerState>();
+  /** The current speed setting of the fan (Low, Medium, High). */
   readonly speed = input.required<FanSpeed>();
 
+  /** Emits when the power state is toggled. */
   readonly powerStateChange = output<PowerState>();
+  /** Emits when the fan speed is changed. */
   readonly speedChange = output<FanSpeed>();
 
   /* ─────────────── Template constants ─────────────── */

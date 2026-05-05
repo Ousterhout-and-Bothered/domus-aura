@@ -27,15 +27,12 @@ import {
 } from '../../services/filter';
 
 /**
- * The /devices route. Fetches every device on init, applies the active
- * filters, groups results by location, and renders one RoomBlock per room.
+ * Main dashboard component representing the `/devices` route.
  *
- * Owns the filter state. The DeviceFilters bar is a controlled child —
- * it receives the current filter object and emits changes; we hold the
- * canonical signal and recompute the visible room list reactively.
+ * Fetches all devices on initialization, applies active filters, groups results
+ * by location, and renders a `RoomBlock` for each room. It also manages the
+ * real-time device event connection.
  */
-const USE_PAYLOAD_DIRECTLY = false;
-
 @Component({
   selector: 'aura-device-list',
   standalone: true,
@@ -116,14 +113,29 @@ export class DeviceList implements OnInit, OnDestroy {
 
   /* ─────────────── State signals ─────────────── */
 
+  /**
+   * List of all devices fetched from the API.
+   */
   readonly devices = signal<AnyDevice[]>([]);
+
+  /**
+   * Indicates if the device list is currently being loaded.
+   */
   readonly loading = signal(true);
+
+  /**
+   * Holds any error message encountered during device loading.
+   */
   readonly error = signal<string | null>(null);
 
-  /** Active filter state. Mutated only via onFiltersChange. */
+  /**
+   * The current set of active device filters.
+   */
   readonly filters = signal<DeviceFilters>(DEFAULT_FILTERS);
 
-  /** Whether the Add Device dialog is open. */
+  /**
+   * Controls the visibility of the "Add Device" dialog.
+   */
   readonly registerDialogVisible = signal<boolean>(false);
 
   /* ─────────────── Derived signals ─────────────── */
@@ -165,6 +177,11 @@ export class DeviceList implements OnInit, OnDestroy {
   }
 
 
+  /**
+   * Handles device state updates from child components.
+   *
+   * @param updated - The updated device object.
+   */
   onDeviceUpdated(updated: AnyDevice): void {
     this.devices.update((current) =>
       current.map((d) => (d.id === updated.id ? updated : d))
@@ -172,6 +189,11 @@ export class DeviceList implements OnInit, OnDestroy {
   }
 
 
+  /**
+   * Updates the active filters and triggers a re-filtering of devices.
+   *
+   * @param next - The new set of filters to apply.
+   */
   onFiltersChange(next: DeviceFilters): void {
     this.filters.set(next);
   }
@@ -182,6 +204,11 @@ export class DeviceList implements OnInit, OnDestroy {
   }
 
 
+  /**
+   * Handles the registration of a new device.
+   *
+   * @param created - The newly created device object.
+   */
   onDeviceCreated(created: AnyDevice): void {
     this.devices.update((current) => {
       if (current.some((d) => d.id === created.id)) return current;
@@ -189,6 +216,11 @@ export class DeviceList implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Removes a device from the local list.
+   *
+   * @param deviceId - The unique identifier of the device to remove.
+   */
   onDeviceRemoved(deviceId: string): void {
     this.devices.update((current) => current.filter((d) => d.id !== deviceId));
   }

@@ -19,15 +19,11 @@ const VIEWBOX = 200;
 const CX = 100;
 
 /**
- * Animated padlock with shackle pop-open. The SVG itself is the primary
- * tap target — clicking the lock toggles it. A p-toggleswitch below
- * gives a redundant standard control surface for keyboard users and
- * for visual consistency with the other device cards.
+ * Component for smart door locks.
  *
- * Door Lock is a *latch* device per 1.1 of the spec — always energized,
- * no power state. The state machine operates entirely at the lock/unlock
- * level. "On" for filtering purposes always means "this device is here";
- * latch devices are excluded from "Off" filters.
+ * It provides a visual representation of a padlock with an animated shackle.
+ * Users can toggle the lock state by clicking the SVG directly or using the
+ * provided switch control.
  */
 @Component({
   selector: 'aura-door-lock',
@@ -119,10 +115,14 @@ const CX = 100;
 export class DoorLock {
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** The display name of the door lock. */
   readonly name = input.required<string>();
+  /** The location where the door lock is installed. */
   readonly location = input.required<string>();
+  /** The current state of the lock (Locked, Unlocked). */
   readonly lockState = input.required<DoorLockState>();
 
+  /** Emits when the lock state is toggled. */
   readonly lockStateChange = output<DoorLockState>();
 
   /* ─────────────── Template constants ─────────────── */

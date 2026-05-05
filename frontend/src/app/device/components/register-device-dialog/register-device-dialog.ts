@@ -23,26 +23,11 @@ import { AnyDevice } from '../../models/device-types';
 import { DeviceApiService } from '../../services/device-api.service';
 
 /**
- * Modal for registering a new device.
+ * Dialog component for registering a new smart home device.
  *
- * Three fields: Type (dropdown), Name (text), Location (editable dropdown
- * that allows both selecting an existing room and typing a new one).
- *
- * Submission rules:
- *   - All three fields required, name trimmed of whitespace
- *   - Location is normalized: case-insensitive match against existing
- *     locations is treated as the existing canonical version
- *   - Backend errors (409 thermostat conflict, 400 validation) display
- *     inline and keep the dialog open so the user can fix and retry
- *   - Success closes the dialog, fires a toast, and emits deviceCreated
- *     so the parent can update its device list optimistically (the SSE
- *     event will also arrive, but the optimistic update keeps the UI
- *     responsive)
- *
- * The dialog is *controlled* — its visible state is owned by the parent
- * via [(visible)] two-way binding. We open it by setting visible=true
- * from the parent and close it by setting visible=false (either from a
- * successful submit, the cancel button, or the X in the dialog header).
+ * It provides a form to specify the device type, name, and location.
+ * The location field allows selecting from existing locations or entering a new one.
+ * The component handles backend validation and error display.
  */
 @Component({
   selector: 'aura-register-device-dialog',
@@ -157,10 +142,14 @@ export class RegisterDeviceDialog {
 
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** Whether the dialog is currently visible. */
   readonly visible = input.required<boolean>();
+  /** List of existing locations to populate the location selector. */
   readonly existingLocations = input.required<string[]>();
 
+  /** Emits when the visibility of the dialog changes. */
   readonly visibleChange = output<boolean>();
+  /** Emits the newly created device object upon successful registration. */
   readonly deviceCreated = output<AnyDevice>();
 
   /* ─────────────── Form state ─────────────── */

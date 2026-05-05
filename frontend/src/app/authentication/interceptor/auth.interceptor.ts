@@ -5,11 +5,15 @@ import { AuthService } from '../service/auth.service';
 import { environment } from '../../../environments/environment';
 
 /**
- * Attaches `Authorization: Bearer <token>` to requests targeting the API,
- * and triggers re-authentication if the API replies 401.
+ * Interceptor that attaches the OIDC access token to outgoing API requests.
  *
- * Only API requests are decorated — the OIDC discovery and token endpoints
- * must NOT carry an Authorization header (Keycloak rejects them).
+ * @param req - The outgoing HTTP request.
+ * @param next - The next interceptor or backend handler.
+ * @returns An observable of the HTTP event stream.
+ *
+ * It adds an `Authorization: Bearer <token>` header to requests targeting the API.
+ * If the API responds with a 401 Unauthorized error, it triggers the authentication flow.
+ * Note: Discovery and token endpoints are excluded to prevent Keycloak rejection.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);

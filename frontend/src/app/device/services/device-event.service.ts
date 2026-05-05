@@ -5,16 +5,8 @@ import { DeviceChangedEvent } from '../models/device';
 import { AuthService } from '../../authentication/service/auth.service';
 
 /**
- * Subscribes to /api/devices/events (SSE) and exposes incoming events as
- * an Observable. Each event is delivered exactly once to every subscriber.
- *
- * Usage in a component:
- *   private events = inject(DeviceEventService);
- *   constructor() {
- *     this.events.events$
- *       .pipe(takeUntilDestroyed())
- *       .subscribe((evt) => this.applyChange(evt));
- *   }
+ * Subscribes to the `/api/devices/events` Server-Sent Events (SSE) endpoint.
+ * Exposes incoming device state changes as an Observable.
  */
 @Injectable({ providedIn: 'root' })
 export class DeviceEventService implements OnDestroy {
@@ -24,9 +16,25 @@ export class DeviceEventService implements OnDestroy {
   private subscriberCount = 0;
 
   private readonly _events$ = new Subject<DeviceChangedEvent>();
+<<<<<<< Updated upstream
   readonly events$: Observable<DeviceChangedEvent> = this._events$.asObservable();
+=======
+
+  /**
+   * Observable stream of device change events.
+   */
+  readonly events$: Observable<DeviceChangedEvent> = this._events$.asObservable();
+
+  /**
+   * Signal indicating the current connection status to the SSE endpoint.
+   */
+>>>>>>> Stashed changes
   readonly connected = signal(false);
 
+  /**
+   * Establishes a connection to the device events SSE endpoint.
+   * If a connection already exists, this method does nothing.
+   */
   connect(): void {
     this.subscriberCount++;
     if (this.source) return;
@@ -57,6 +65,9 @@ export class DeviceEventService implements OnDestroy {
     });
   }
 
+  /**
+   * Closes the connection to the device events SSE endpoint and updates the status.
+   */
   disconnect(): void {
     this.subscriberCount = Math.max(0, this.subscriberCount - 1);
     if (this.subscriberCount > 0) return;

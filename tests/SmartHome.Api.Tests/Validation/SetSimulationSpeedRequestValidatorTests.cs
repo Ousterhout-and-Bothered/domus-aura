@@ -5,12 +5,12 @@ using SmartHome.Domain.Simulation;
 
 namespace SmartHome.Api.Tests.Validation;
 
-public class ValidationLogicTests
+public class SetSimulationSpeedRequestValidatorTests
 {
     private readonly SetSimulationSpeedRequestValidator _validator;
     private readonly Mock<ISimulationSpeedRegistry> _registryMock;
 
-    public ValidationLogicTests()
+    public SetSimulationSpeedRequestValidatorTests()
     {
         _registryMock = new Mock<ISimulationSpeedRegistry>();
         _registryMock.Setup(r => r.AllowedSpeeds).Returns(new HashSet<SimulationSpeed> { SimulationSpeed.X1, SimulationSpeed.X2 });

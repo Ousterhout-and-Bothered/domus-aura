@@ -39,26 +39,14 @@ const TICK_INNER_R = OUTER_R - 14;   // how far in the ticks/needle reach
 const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
 
 /**
- * Speedometer-style thermostat gauge. Renders a half-donut band whose
- * color reflects the active state, a chunky needle pointing at the
- * desired temperature, embedded tick marks at every 5°F, and a center
- * readout for desired temp + state label.
+ * Speedometer-style thermostat gauge component.
  *
- * The needle is draggable along the arc for primary interaction.
- * A p-inputnumber below provides keyboard-accessible ±1°F nudging.
- * Mode is set via a SelectButton (Heat/Cool/Auto), and the on/off
- * ToggleSwitch transitions the underlying state machine between Off
- * and Idle. When state is Off, mode and
- * setpoint controls are disabled; the toggle remains available so
- * the user can power back on.
+ * Renders a half-donut band representing the thermostat's state, a needle pointing
+ * to the desired temperature, and controls for adjusting mode, set point, and power.
  *
- * Note: Thermostat does NOT implement IPowerable. Its on/off semantics
- * live in the state machine itself — `state === Off` means powered off.
- *
- * Temperature ranges match the backend authoritatively:
- *   - Desired:  60-80°F (Domain clamp + DeviceCommandRequestValidator)
- *   - Ambient marker visible for 60-80°F; off-dial values just hide
- *     the marker (the readout still shows the real value)
+ * Temperature ranges:
+ * - Desired: 60-80°F
+ * - Ambient: Displayed if within 60-80°F range
  */
 @Component({
   selector: 'aura-thermostat-gauge',
@@ -229,21 +217,24 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
 export class ThermostatGauge {
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** The display name of the thermostat. */
   readonly name = input.required<string>();
+  /** The location where the thermostat is installed. */
   readonly location = input.required<string>();
+  /** The target temperature set by the user (60-80°F). */
   readonly desiredTemperature = input.required<number>();
+  /** The current measured temperature of the room. */
   readonly ambientTemperature = input.required<number>();
+  /** The current operating mode (Heat, Cool, Auto). */
   readonly mode = input.required<ThermostatMode>();
+  /** The current active state (Heating, Cooling, Idle, Off). */
   readonly state = input.required<ThermostatState>();
 
-  /**
-   * Fires the on/off transition. Toggling on emits Idle (the natural
-   * post-power-on state); toggling off emits Off. The downstream
-   * Heating/Cooling transitions happen on the backend automatically
-   * based on ambient vs. desired temp — those aren't user-driven.
-   */
+  /** Emits when the thermostat state is toggled (On/Off). */
   readonly stateChange = output<ThermostatState>();
+  /** Emits when the desired temperature is changed by the user. */
   readonly desiredTemperatureChange = output<number>();
+  /** Emits when the operating mode is changed by the user. */
   readonly modeChange = output<ThermostatMode>();
 
   /* ─────────────── Template constants ─────────────── */

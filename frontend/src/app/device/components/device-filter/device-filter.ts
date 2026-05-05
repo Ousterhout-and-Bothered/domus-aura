@@ -22,21 +22,12 @@ import {
 } from '../../services/filter';
 
 /**
- * Dashboard filter bar. Drives a DeviceFilters object that the parent
- * applies to its device list.
+ * Component providing a filter bar for the device dashboard.
  *
- * State is owned by the parent — this component only renders the
- * current state and emits change events. That means the filter bar
- * is trivially testable in isolation (give it filter state, snapshot
- * the render) and never desynced from what's actually being filtered.
- *
- * The four filters are:
- *   - On/Off (combinable as a single tri-state: All/On/Off)
- *   - Location (single-select)
- *   - Device Type (multi-select)
- * All filters combine with AND.
+ * It allows users to filter the device list by status (On/Off/All),
+ * location, and device type. The filtering logic itself is handled
+ * by the parent component or service.
  */
-
 @Component({
   selector: 'aura-device-filters',
   standalone: true,
@@ -111,11 +102,13 @@ import {
 export class DeviceFiltersComponent {
   /* ─────────────── Inputs / outputs ─────────────── */
 
+  /** The current state of the device filters. */
   readonly filters = input.required<DeviceFilters>();
 
-  /** Distinct location strings present in the current device list. */
+  /** The list of available locations to filter by. */
   readonly locations = input.required<string[]>();
 
+  /** Emits when the filter criteria have changed. */
   readonly filtersChange = output<DeviceFilters>();
 
   /* ─────────────── Static option lists ─────────────── */

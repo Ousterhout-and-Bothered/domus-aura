@@ -4,12 +4,11 @@ import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../service/auth.service';
 
 /**
- * Landing page for unauthenticated users. Presents a "Sign in" button that
- * redirects to Keycloak's hosted login page (Authorization Code + PKCE).
+ * Component for the login page, serving as the entry point for unauthenticated users.
  *
- * If the user is already authenticated when they land here (e.g. they
- * bookmarked /login), they're forwarded to /devices or to the originally
- * requested route via the `returnUrl` query param set by the auth guard.
+ * It provides a sign-in button that initiates the OIDC authentication flow.
+ * If the user is already authenticated, they are automatically redirected to
+ * their intended destination or the default dashboard.
  */
 @Component({
   selector: 'app-login',
@@ -36,6 +35,9 @@ export class Login {
     });
   }
 
+  /**
+   * Triggers the OIDC login process.
+   */
   signIn(): void {
     this.auth.login();
   }
