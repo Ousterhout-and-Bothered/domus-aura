@@ -5,8 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests"
+    "watch": "ng build --watch --configuration development"
   },
   "prettier": {
     "printWidth": 100,
@@ -42,8 +41,6 @@
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
     "@angular/platform-browser-dynamic": "^21.2.7",
-    "jsdom": "^27.1.0",
-    "typescript": "~5.9.2",
-    "vitest": "^4.0.8"
+    "typescript": "~5.9.2"
   }
 }
