@@ -270,24 +270,11 @@ export class DeviceList implements OnInit, OnDestroy {
       }
 
       case DeviceChangeType.Updated:
-        if (USE_PAYLOAD_DIRECTLY) {
-          this.devices.update((current) =>
-            current.map((d) =>
-              d.id === evt.deviceId ? (evt.payload as unknown as AnyDevice) : d
-            )
-          );
-        } else {
-          this.deviceApi.getById(evt.deviceId).subscribe({
-            next: (fresh) => {
-              this.devices.update((current) =>
-                current.map((d) => (d.id === fresh.id ? fresh : d))
-              );
-            },
-            error: (err) => {
-              if (err?.status !== 404) console.error('Refetch failed', err);
-            },
-          });
-        }
+        this.devices.update((current) =>
+          current.map((d) =>
+            d.id === evt.deviceId ? (evt.payload as unknown as AnyDevice) : d
+          )
+        );
         break;
 
       case DeviceChangeType.Deleted:

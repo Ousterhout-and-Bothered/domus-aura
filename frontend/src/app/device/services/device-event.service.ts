@@ -16,9 +16,6 @@ export class DeviceEventService implements OnDestroy {
   private subscriberCount = 0;
 
   private readonly _events$ = new Subject<DeviceChangedEvent>();
-<<<<<<< Updated upstream
-  readonly events$: Observable<DeviceChangedEvent> = this._events$.asObservable();
-=======
 
   /**
    * Observable stream of device change events.
@@ -28,7 +25,6 @@ export class DeviceEventService implements OnDestroy {
   /**
    * Signal indicating the current connection status to the SSE endpoint.
    */
->>>>>>> Stashed changes
   readonly connected = signal(false);
 
   /**
@@ -47,12 +43,6 @@ export class DeviceEventService implements OnDestroy {
 
     const url = `${environment.apiUrl}/devices/events?access_token=${encodeURIComponent(token)}`;
     this.source = new EventSource(url);
-
-    this.source.addEventListener('deviceChanged', (e) => {
-      const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
-      console.log('[SSE] deviceChanged:', data.deviceId, data.changeType);
-      this.zone.run(() => this._events$.next(data));
-    });
 
     this.source.addEventListener('deviceChanged', (e) => {
       const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
