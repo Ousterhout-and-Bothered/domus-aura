@@ -1,63 +1,35 @@
-using System.Text.Json;
+using System.ComponentModel;
 using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Thermostat;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Handles chat tool requests for setting thermostat desired temperatures by location or across all thermostats.
+/// Provides MCP tools for controlling thermostat desired temperatures.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve thermostat devices and execute thermostat commands.</param>
-public sealed class ThermostatTempToolHandler(
-    IDeviceService deviceService) : IChatToolHandler
+[McpServerToolType]
+public sealed class ThermostatTempTool(
+    IDeviceService deviceService)
 {
     /// <summary>
-    /// Gets the tool name exposed to the language model.
+    /// Sets the desired temperature of thermostats by location or across all thermostats.
     /// </summary>
-    public string ToolName => "set_thermostat_temperature";
-
-    /// <summary>
-    /// Gets the tool definition sent to the language model.
-    /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = "Set the desired temperature of a thermostat in a location.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new { type = "string", description = "Room name like Living Room, or all" },
-                    temperature = new { type = "integer", description = "Desired temperature in °F" }
-                },
-                required = new[] { "location", "temperature" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the thermostat temperature tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="location">Room name like Living Room, or all.</param>
+    /// <param name="temperature">Desired temperature in °F.</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the thermostat temperature operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = "set_thermostat_temperature")]
+    [Description("Set the desired temperature of a thermostat in a location.")]
+    public async Task<string> SetThermostatTemperatureAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
+        [Description("Desired temperature in °F.")]
+        int temperature,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetInt(arguments, "temperature", out var temp))
-        {
-            return "Please provide a valid temperature.";
-        }
-
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
-        {
-            return "I need a location to set thermostat temperature.";
-        }
+        var temp = temperature;
 
         var thermostats = (await deviceService.GetAllDevicesAsync(
             ChatToolHelpers.ToLocationFilter(location),

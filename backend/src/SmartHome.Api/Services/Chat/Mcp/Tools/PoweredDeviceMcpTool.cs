@@ -1,63 +1,56 @@
+using System.ComponentModel;
 using SmartHome.Domain.Device;
-using System.Text.Json;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Handles chat tool requests for turning powered devices on or off by location or across all matching devices.
+/// Provides MCP tools for turning powered devices on or off by location or across all matching devices.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve devices and execute power commands.</param>
 /// <param name="deviceType">The type of powered device targeted by this handler.</param>
 /// <param name="deviceLabel">The readable device label used in tool names and responses.</param>
-/// <param name="turnOn">A value indicating whether this handler turns devices on or off.</param>
-public sealed class PoweredDeviceToolHandler(
+[McpServerToolType]
+public sealed class PoweredDeviceTool(
     IDeviceService deviceService,
     DeviceType deviceType,
-    string deviceLabel,
-    bool turnOn) : IChatToolHandler
+    string deviceLabel)
 {
     /// <summary>
-    /// Gets the tool name exposed to the language model.
+    /// Turns on powered devices.
     /// </summary>
-    public string ToolName => $"turn_{(turnOn ? "on" : "off")}_{deviceLabel}s";
-
-    /// <summary>
-    /// Gets the tool definition sent to the language model.
-    /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = $"Turn {(turnOn ? "on" : "off")} {deviceLabel}s in a location, or use 'all' to target every {deviceLabel}.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new
-                    {
-                        type = "string",
-                        description = "Room name like Living Room, or all"
-                    }
-                },
-                required = new[] { "location" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the powered device tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
-    /// <param name="cancellationToken">A token used to cancel the operation.</param>
-    /// <returns>A message describing the result of the power operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = "turn_on_devices")]
+    [Description("Turn on devices of a specific type in a location, or use 'all'.")]
+    public Task<string> TurnOnAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
+        return HandleAsync(location, true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Turns off powered devices.
+    /// </summary>
+    [McpServerTool(Name = "turn_off_devices")]
+    [Description("Turn off devices of a specific type in a location, or use 'all'.")]
+    public Task<string> TurnOffAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
+        CancellationToken cancellationToken = default)
+    {
+        return HandleAsync(location, false, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes the powered device tool logic.
+    /// </summary>
+    private async Task<string> HandleAsync(
+        string location,
+        bool turnOn,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(location))
         {
             return $"I need a location to control {deviceLabel}s.";
         }
@@ -98,17 +91,13 @@ public sealed class PoweredDeviceToolHandler(
             changed++;
         }
 
-        return BuildResponse(location, changed, alreadyCorrect);
+        return BuildResponse(location, changed, alreadyCorrect, turnOn);
     }
 
     /// <summary>
     /// Builds a user-facing response summarizing the powered device operation.
     /// </summary>
-    /// <param name="location">The requested device location, or all for every matching device.</param>
-    /// <param name="changed">The number of devices changed by the operation.</param>
-    /// <param name="alreadyCorrect">The number of devices already in the requested power state.</param>
-    /// <returns>A message summarizing the operation result.</returns>
-    private string BuildResponse(string location, int changed, int alreadyCorrect)
+    private string BuildResponse(string location, int changed, int alreadyCorrect, bool turnOn)
     {
         var all = ChatToolHelpers.IsAll(location);
         var action = turnOn ? "Turned on" : "Turned off";

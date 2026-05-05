@@ -1,69 +1,41 @@
-using System.Text.Json;
+using System.ComponentModel;
 using SmartHome.Domain.Device;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
 /// Handles chat tool requests for setting light brightness by location or across all lights.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve light devices and execute light commands.</param>
-public sealed class LightBrightnessToolHandler(
-    IDeviceService deviceService) : IChatToolHandler
+[McpServerToolType]
+public sealed class LightBrightnessTool(
+    IDeviceService deviceService)
 {
     /// <summary>
     /// Gets the tool name exposed to the language model.
     /// </summary>
-    public string ToolName => "set_light_brightness";
+    public const string ToolName = "set_light_brightness";
 
     /// <summary>
-    /// Gets the tool definition sent to the language model.
+    /// Sets brightness for lights in a location, or use 'all' to set every light.
     /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = "Set brightness for lights in a location, or use 'all' to set every light.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new
-                    {
-                        type = "string",
-                        description = "Room name like Living Room, or all"
-                    },
-                    brightness = new
-                    {
-                        type = "integer",
-                        description = "Brightness percentage from 10 to 100"
-                    }
-                },
-                required = new[] { "location", "brightness" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the light brightness tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="location">Room name like Living Room, or all</param>
+    /// <param name="brightness">Brightness percentage from 10 to 100</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the light brightness operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = ToolName)]
+    [Description("Set brightness for lights in a location, or use 'all' to set every light.")]
+    public async Task<string> SetLightBrightnessAsync(
+        [Description("Room name like Living Room, or all")]
+        string location,
+        [Description("Brightness percentage from 10 to 100")]
+        int brightness,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
+        if (string.IsNullOrWhiteSpace(location))
         {
             return "I need a location to set light brightness.";
-        }
-
-        if (!ChatToolHelpers.TryGetInt(arguments, "brightness", out var brightness))
-        {
-            return "I need a valid brightness value.";
         }
 
         var lights = (await deviceService.GetAllDevicesAsync(
@@ -114,7 +86,6 @@ public sealed class LightBrightnessToolHandler(
         int unchanged,
         int poweredOff)
     {
-
         var isAll = ChatToolHelpers.IsAll(location);
         var parts = new List<string>();
 

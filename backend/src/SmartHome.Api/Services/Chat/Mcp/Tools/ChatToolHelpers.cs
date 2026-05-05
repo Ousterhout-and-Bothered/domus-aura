@@ -1,11 +1,10 @@
-using System.Text.Json;
 using SmartHome.Domain.Device;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Provides shared helper methods for parsing chat tool arguments,
-/// formatting responses, and executing commands against powered devices.
+/// Provides shared helper methods for formatting responses
+/// and executing commands against powered devices.
 /// </summary>
 internal static class ChatToolHelpers
 {
@@ -24,64 +23,6 @@ internal static class ChatToolHelpers
     /// <returns><see langword="null"/> when all locations should be included; otherwise, the requested location.</returns>
     public static string? ToLocationFilter(string? location) =>
         IsAll(location) ? null : location;
-
-    /// <summary>
-    /// Attempts to read a non-empty string argument from a tool call.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
-    /// <param name="name">The argument name to read.</param>
-    /// <param name="value">The parsed string value when the argument is present and non-empty.</param>
-    /// <returns><see langword="true"/> when a non-empty string value is found; otherwise, <see langword="false"/>.</returns>
-    public static bool TryGetString(
-        Dictionary<string, JsonElement> arguments,
-        string name,
-        out string? value)
-    {
-        value = null;
-
-        if (!arguments.TryGetValue(name, out var element))
-            return false;
-
-        if (element.ValueKind == JsonValueKind.String)
-        {
-            value = element.GetString();
-            return !string.IsNullOrWhiteSpace(value);
-        }
-
-        if (element.ValueKind == JsonValueKind.Number)
-        {
-            value = element.ToString();
-            return !string.IsNullOrWhiteSpace(value);
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Attempts to read an integer argument from a tool call.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
-    /// <param name="name">The argument name to read.</param>
-    /// <param name="value">The parsed integer value when the argument is present and valid.</param>
-    /// <returns><see langword="true"/> when a valid integer value is found; otherwise, <see langword="false"/>.</returns>
-    public static bool TryGetInt(
-        Dictionary<string, JsonElement> arguments,
-        string name,
-        out int value)
-    {
-        value = 0;
-
-        if (!arguments.TryGetValue(name, out var element))
-            return false;
-
-        if (element.ValueKind == JsonValueKind.Number)
-            return element.TryGetInt32(out value);
-
-        if (element.ValueKind == JsonValueKind.String)
-            return int.TryParse(element.GetString(), out value);
-
-        return false;
-    }
 
     /// <summary>
     /// Formats a count and noun using a simple singular or plural form.

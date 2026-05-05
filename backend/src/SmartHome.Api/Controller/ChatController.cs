@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Chat;
-using SmartHome.Api.Services.Chat;
+using SmartHome.Api.Services.Chat.Mcp;
 
 namespace SmartHome.Api.Controller;
 

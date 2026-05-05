@@ -3,8 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Moq.Protected;
-using SmartHome.Api.Services.Chat;
-using SmartHome.Api.Services.Chat.Tools;
+using SmartHome.Api.Services.Chat.Mcp;
 
 namespace SmartHome.Api.Tests.Services.Chat;
 
@@ -13,7 +12,6 @@ public class OpenAiChatServiceTests
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
     private readonly HttpClient _httpClient;
     private readonly Mock<IConfiguration> _configurationMock;
-    private readonly Mock<IChatToolHandler> _toolHandlerMock;
     private readonly OpenAiChatService _service;
 
     public OpenAiChatServiceTests()
@@ -21,37 +19,23 @@ public class OpenAiChatServiceTests
         _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
         _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
         _configurationMock = new Mock<IConfiguration>();
-        _toolHandlerMock = new Mock<IChatToolHandler>();
 
         _configurationMock.Setup(c => c["OpenAI:ApiKey"]).Returns("test-key");
         _configurationMock.Setup(c => c["OpenAI:Model"]).Returns("gpt-4o-mini");
-
-        _toolHandlerMock.Setup(t => t.ToolName).Returns("test_tool");
-        _toolHandlerMock.Setup(t => t.ToolDefinition).Returns(new { name = "test_tool" });
+        _configurationMock.Setup(c => c["OpenAI:McpServerUrl"]).Returns("http://test-mcp-server");
 
         _service = new OpenAiChatService(
             _httpClient,
-            _configurationMock.Object,
-            new[] { _toolHandlerMock.Object });
+            _configurationMock.Object);
     }
 
     [Fact]
-    public async Task GetResponseAsync_ReturnsContent_WhenNoToolCalls()
+    public async Task GetResponseAsync_ReturnsOutputText_WhenPresent()
     {
         // Arrange
         var responseContent = new
         {
-            choices = new[]
-            {
-                new
-                {
-                    message = new
-                    {
-                        role = "assistant",
-                        content = "Hello, how can I help you?"
-                    }
-                }
-            }
+            output_text = "Hello, how can I help you?"
         };
 
         SetupHttpResponse(HttpStatusCode.OK, JsonSerializer.Serialize(responseContent));
@@ -64,44 +48,30 @@ public class OpenAiChatServiceTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_ExecutesTool_WhenModelRequestsToolCall()
+    public async Task GetResponseAsync_ReturnsContentText_WhenOutputTextMissing()
     {
         // Arrange
         var responseContent = new
         {
-            choices = new[]
+            output = new[]
             {
                 new
                 {
-                    message = new
+                    content = new[]
                     {
-                        role = "assistant",
-                        tool_calls = new[]
-                        {
-                            new
-                            {
-                                function = new
-                                {
-                                    name = "test_tool",
-                                    arguments = "{\"arg1\": \"val1\"}"
-                                }
-                            }
-                        }
+                        new { text = "Nested response text" }
                     }
                 }
             }
         };
 
         SetupHttpResponse(HttpStatusCode.OK, JsonSerializer.Serialize(responseContent));
-        _toolHandlerMock.Setup(t => t.HandleAsync(It.IsAny<Dictionary<string, JsonElement>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Tool executed successfully.");
 
         // Act
-        var result = await _service.GetResponseAsync("Run tool");
+        var result = await _service.GetResponseAsync("Hi");
 
         // Assert
-        Assert.Equal("Tool executed successfully.", result);
-        _toolHandlerMock.Verify(t => t.HandleAsync(It.IsAny<Dictionary<string, JsonElement>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal("Nested response text", result);
     }
 
     [Fact]
@@ -109,6 +79,16 @@ public class OpenAiChatServiceTests
     {
         // Arrange
         _configurationMock.Setup(c => c["OpenAI:ApiKey"]).Returns(string.Empty);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetResponseAsync("Hi"));
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_ThrowsException_WhenMcpServerUrlMissing()
+    {
+        // Arrange
+        _configurationMock.Setup(c => c["OpenAI:McpServerUrl"]).Returns(string.Empty);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetResponseAsync("Hi"));

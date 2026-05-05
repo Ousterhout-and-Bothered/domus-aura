@@ -1,67 +1,39 @@
-using System.Text.Json;
+using System.ComponentModel;
 using SmartHome.Domain.Device;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Handles chat tool requests for setting light color by location or across all lights.
+/// Provides MCP tools for setting light color by location or across all lights.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve light devices and execute light commands.</param>
-public sealed class LightColorToolHandler(
-    IDeviceService deviceService) : IChatToolHandler
+[McpServerToolType]
+public sealed class LightColorTool(
+    IDeviceService deviceService)
 {
     /// <summary>
-    /// Gets the tool name exposed to the language model.
+    /// Sets the color for lights in a location or across all lights.
     /// </summary>
-    public string ToolName => "set_light_color";
-
-    /// <summary>
-    /// Gets the tool definition sent to the language model.
-    /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = "Set the color for lights in a location, or use 'all' to set every light.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new
-                    {
-                        type = "string",
-                        description = "Room name like Living Room, or all"
-                    },
-                    color = new
-                    {
-                        type = "string",
-                        description = "Light color as a hex value like #FF0000, #00FF00, or #FFFFFF"
-                    }
-                },
-                required = new[] { "location", "color" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the light color tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="location">Room name like Living Room, or all.</param>
+    /// <param name="color">Light color as a hex value like #FF0000.</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the light color operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = "set_light_color")]
+    [Description("Set the color for lights in a location, or use 'all' to set every light.")]
+    public async Task<string> SetLightColorAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
+        [Description("Light color as a hex value like #FF0000, #00FF00, or #FFFFFF.")]
+        string color,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
+        if (string.IsNullOrWhiteSpace(location))
         {
             return "I need a location to set light color.";
         }
 
-        if (!ChatToolHelpers.TryGetString(arguments, "color", out var color) || color is null)
+        if (string.IsNullOrWhiteSpace(color))
         {
             return "Please provide a valid color.";
         }

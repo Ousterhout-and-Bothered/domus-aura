@@ -24,8 +24,7 @@ using SmartHome.Domain.Simulation;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
-using SmartHome.Api.Services.Chat;
-using SmartHome.Api.Services.Chat.Tools;
+using SmartHome.Api.Services.Chat.Mcp;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
@@ -160,60 +159,10 @@ builder.Services.AddScoped<ISceneService, SceneService>();
 
 // LLM Chat Service
 builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
-
-// Chat Tool Handlers
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Light,
-        "light",
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Light,
-        "light",
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Fan,
-        "fan",
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Fan,
-        "fan",
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new DoorLockToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new DoorLockToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatTempToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatPowerToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatPowerToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new LightBrightnessToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new LightColorToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new FanSpeedToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
 
 // Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
@@ -255,10 +204,9 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    KnownIPNetworks = { },
-    KnownProxies = { }
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
 app.UseCors();
 if (app.Environment.IsDevelopment())
 {
@@ -283,6 +231,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapControllers();
+
+app.MapMcp("/mcp").AllowAnonymous();
 
 await app.RunAsync();
 

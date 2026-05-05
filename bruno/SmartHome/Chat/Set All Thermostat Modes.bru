@@ -1,0 +1,26 @@
+meta {
+  name: Set All Thermostat Modes
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set all thermostats to Heating."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

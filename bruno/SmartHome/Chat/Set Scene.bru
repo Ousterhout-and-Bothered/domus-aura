@@ -1,0 +1,26 @@
+meta {
+  name: Set Scene
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set welcome home scene."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
