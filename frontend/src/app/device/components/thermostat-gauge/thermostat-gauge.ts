@@ -206,7 +206,10 @@ const TICK_OUTER_R = OUTER_R;        // outer edge (matches the band edge)
           decrementButtonIcon="pi pi-minus"
           suffix="°F"
           [disabled]="!isOn()"
-          styleClass="setpoint-input"></p-inputnumber>
+          class="setpoint-input"
+          [pt]="{ pcInputText: { root: { inputmode: 'none' } } }"
+        ></p-inputnumber>
+
       </div>
 
       <!-- Mode: 3 options, disabled when thermostat is Off -->
