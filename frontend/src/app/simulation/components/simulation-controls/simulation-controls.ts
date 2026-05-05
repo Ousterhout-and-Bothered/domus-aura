@@ -118,7 +118,9 @@ interface SpeedOption {
                     buttonLayout="horizontal"
                     incrementButtonIcon="pi pi-plus"
                     decrementButtonIcon="pi pi-minus"
-                    styleClass="sim-temp-input"></p-inputnumber>
+                    class="sim-temp-input"
+                    [pt]="{ pcInputText: { root: { inputmode: 'none' } } }"
+                  ></p-inputnumber>
                 </div>
               }
             </div>
