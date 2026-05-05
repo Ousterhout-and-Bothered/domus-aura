@@ -78,6 +78,15 @@ public sealed class ThermostatModeTool(
                 continue;
             }
 
+            if (!thermostat.IsOn())
+            {
+                await deviceService.ExecuteCommandAsync(
+                    thermostat.Id,
+                    "SetPower",
+                    "On",
+                    cancellationToken);
+            }
+
             await deviceService.ExecuteCommandAsync(
                 thermostat.Id,
                 "SetMode",

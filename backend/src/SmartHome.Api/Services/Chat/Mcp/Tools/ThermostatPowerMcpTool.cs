@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.Thermostat;
 using ModelContextProtocol.Server;
 
 namespace SmartHome.Api.Services.Chat.Mcp.Tools;
@@ -78,7 +79,7 @@ public sealed class ThermostatPowerTool(
         var changed = 0;
         var alreadyCorrect = 0;
 
-        foreach (var thermostat in thermostats)
+        foreach (var thermostat in thermostats.Cast<Thermostat>())
         {
             var isAlreadyCorrect = turnOn
                 ? thermostat.IsOn()
