@@ -85,3 +85,93 @@ h1, h2, h3 {
   line-height: 1.2;
 }
 
+/* ─────────────── aura-dialog: mobile-first dialog wrapper ─────────────── */
+
+.p-dialog-mask:has(.aura-dialog) {
+  z-index: 1100;          // above bottom tab bar (900)
+}
+
+.p-dialog.aura-dialog {
+  // Mobile defaults: full-screen takeover, no margins, no border radius
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: var(--aura-bg);
+
+  display: flex;
+  flex-direction: column;
+
+  // Header: tighter padding, bigger close button
+  .p-dialog-header {
+    padding: 0.85rem 1rem;
+    background: var(--aura-bg);
+    border-bottom: 1px solid var(--aura-border);
+    flex-shrink: 0;
+
+    .p-dialog-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--aura-text);
+    }
+  }
+
+  .p-dialog-close-button {
+    width: 2.5rem !important;       // 40px tap target
+    height: 2.5rem !important;
+  }
+
+  // Content: takes all available space, scrolls when overflow
+  .p-dialog-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+    background: var(--aura-bg);
+    // Scroll inertia on iOS
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // Footer: pinned to bottom, safe-area inset, doesn't scroll with content
+  .p-dialog-footer {
+    flex-shrink: 0;
+    padding: 0.85rem 1rem;
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+    background: var(--aura-bg);
+    border-top: 1px solid var(--aura-border);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+}
+
+// Tablet+: revert to conventional centered floating dialog
+@media (min-width: 768px) {
+  .p-dialog.aura-dialog {
+    width: auto !important;
+    max-width: 90vw !important;
+    height: auto !important;
+    max-height: 90dvh !important;
+    margin: auto !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid var(--aura-border) !important;
+
+    .p-dialog-header {
+      padding: 1.25rem 1.5rem;
+    }
+
+    .p-dialog-content {
+      padding: 1.25rem 1.5rem;
+    }
+
+    .p-dialog-footer {
+      padding: 1rem 1.5rem;
+      padding-bottom: 1rem;
+    }
+  }
+}
+

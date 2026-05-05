@@ -79,8 +79,8 @@ const REVEAL_DELAY_MS = 1500;
       [resizable]="false"
       [showHeader]="false"
       [dismissableMask]="true"
-      styleClass="scene-execution-dialog"
-      [style]="{ width: '420px' }"
+      styleClass="scnen-execution-dialog"
+      [style]="{ width: '90vw', maxWidth: '420px' }"
     >
       @if (currentStep(); as step) {
         <div class="dlg-shell">
@@ -97,7 +97,7 @@ const REVEAL_DELAY_MS = 1500;
             [class.is-fading]="fading()"
           >
             @if (boundDevice(); as device) {
-              <div class="dlg-card">
+              <div class="dlg-card preview">
                 @switch (device.type) {
                   @case (DeviceType.Light) {
                     @if (isLight(device)) {

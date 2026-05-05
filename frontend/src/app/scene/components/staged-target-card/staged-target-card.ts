@@ -92,7 +92,7 @@ type TouchedProperty =
   imports: [LightBulb, FanSpinning, ThermostatGauge, DoorLock],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="staged-target">
+    <article class="staged-target" [class.is-expanded]="expanded()">
       <header class="staged-target-head">
         <div class="staged-target-titles">
           <h3 class="staged-target-name">{{ device().name }}</h3>
@@ -109,66 +109,94 @@ type TouchedProperty =
         </button>
       </header>
 
-      @switch (device().type) {
-        @case (DeviceType.DoorLock) {
-          @let s = stagedState();
-          @if (s !== null && s.type === DeviceType.DoorLock) {
-            <aura-door-lock
-              [name]="device().name"
-              [location]="device().location"
-              [lockState]="s.lockState"
-              (lockStateChange)="onLockStateChange($event)"
-            />
-          }
-        }
+      <!-- Collapsed summary: shown when not expanded -->
+      <div class="staged-target-summary">
+        <p class="summary-text">{{ summary() }}</p>
+        <button
+          type="button"
+          class="staged-target-configure"
+          (click)="onToggleExpanded()"
+        >
+          <i class="pi pi-pencil"></i>
+          Configure
+        </button>
+      </div>
 
-        @case (DeviceType.Light) {
-          @let s = stagedState();
-          @if (s !== null && s.type === DeviceType.Light) {
-            <aura-light-bulb
-              [name]="device().name"
-              [location]="device().location"
-              [powerState]="s.powerState"
-              [brightness]="s.brightness"
-              [colorHex]="s.colorHex"
-              (powerStateChange)="onLightPowerChange($event)"
-              (brightnessChange)="onLightBrightnessChange($event)"
-              (colorHexChange)="onLightColorChange($event)"
-            />
-          }
-        }
+      <!-- Expanded body: always in DOM (kept alive for state),
+           CSS-hidden when collapsed -->
+      <div class="staged-target-body">
+        <div class="staged-target-body-actions">
+          <button
+            type="button"
+            class="staged-target-done"
+            (click)="onToggleExpanded()"
+          >
+            <i class="pi pi-check"></i>
+            Done
+          </button>
+        </div>
 
-        @case (DeviceType.Fan) {
-          @let s = stagedState();
-          @if (s !== null && s.type === DeviceType.Fan) {
-            <aura-fan-spinning
-              [name]="device().name"
-              [location]="device().location"
-              [powerState]="s.powerState"
-              [speed]="s.speed"
-              (powerStateChange)="onFanPowerChange($event)"
-              (speedChange)="onFanSpeedChange($event)"
-            />
+        @switch (device().type) {
+          @case (DeviceType.DoorLock) {
+            @let s = stagedState();
+            @if (s !== null && s.type === DeviceType.DoorLock) {
+              <aura-door-lock
+                [name]="device().name"
+                [location]="device().location"
+                [lockState]="s.lockState"
+                (lockStateChange)="onLockStateChange($event)"
+              />
+            }
           }
-        }
 
-        @case (DeviceType.Thermostat) {
-          @let s = stagedState();
-          @if (s !== null && s.type === DeviceType.Thermostat) {
-            <aura-thermostat-gauge
-              [name]="device().name"
-              [location]="device().location"
-              [desiredTemperature]="s.desiredTemperature"
-              [ambientTemperature]="getAmbientTemperature()"
-              [mode]="s.mode"
-              [state]="s.state"
-              (stateChange)="onThermostatStateChange($event)"
-              (desiredTemperatureChange)="onThermostatDesiredTempChange($event)"
-              (modeChange)="onThermostatModeChange($event)"
-            />
+          @case (DeviceType.Light) {
+            @let s = stagedState();
+            @if (s !== null && s.type === DeviceType.Light) {
+              <aura-light-bulb
+                [name]="device().name"
+                [location]="device().location"
+                [powerState]="s.powerState"
+                [brightness]="s.brightness"
+                [colorHex]="s.colorHex"
+                (powerStateChange)="onLightPowerChange($event)"
+                (brightnessChange)="onLightBrightnessChange($event)"
+                (colorHexChange)="onLightColorChange($event)"
+              />
+            }
+          }
+
+          @case (DeviceType.Fan) {
+            @let s = stagedState();
+            @if (s !== null && s.type === DeviceType.Fan) {
+              <aura-fan-spinning
+                [name]="device().name"
+                [location]="device().location"
+                [powerState]="s.powerState"
+                [speed]="s.speed"
+                (powerStateChange)="onFanPowerChange($event)"
+                (speedChange)="onFanSpeedChange($event)"
+              />
+            }
+          }
+
+          @case (DeviceType.Thermostat) {
+            @let s = stagedState();
+            @if (s !== null && s.type === DeviceType.Thermostat) {
+              <aura-thermostat-gauge
+                [name]="device().name"
+                [location]="device().location"
+                [desiredTemperature]="s.desiredTemperature"
+                [ambientTemperature]="getAmbientTemperature()"
+                [mode]="s.mode"
+                [state]="s.state"
+                (stateChange)="onThermostatStateChange($event)"
+                (desiredTemperatureChange)="onThermostatDesiredTempChange($event)"
+                (modeChange)="onThermostatModeChange($event)"
+              />
+            }
           }
         }
-      }
+      </div>
     </article>
   `,
   styleUrl: './staged-target-card.scss',
@@ -196,8 +224,39 @@ export class StagedTargetCard implements OnInit {
    */
   protected readonly touched = signal<ReadonlySet<TouchedProperty>>(new Set());
 
+  /**
+   * Whether this card's full configuration UI is visible. Default false:
+   * cards start collapsed so users can scan a long list of staged
+   * devices without scrolling through the full visualization for each.
+   */
+  protected readonly expanded = signal<boolean>(false);
+
   // Drives the "N actions" badge in the header.
   protected readonly actionCount = computed(() => this.touched().size);
+
+  protected readonly summary = computed<string>(() => {
+    const s = this.stagedState();
+    if (s === null) return '';
+
+    switch (s.type) {
+      case DeviceType.Light: {
+        const power = s.powerState === PowerState.On ? 'On' : 'Off';
+        if (s.powerState === PowerState.Off) return power;
+        return `${power} · ${s.brightness}% · ${s.colorHex.toUpperCase()}`;
+      }
+      case DeviceType.Fan: {
+        const power = s.powerState === PowerState.On ? 'On' : 'Off';
+        if (s.powerState === PowerState.Off) return power;
+        return `${power} · ${s.speed}`;
+      }
+      case DeviceType.Thermostat: {
+        if (s.state === ThermostatState.Off) return 'Off';
+        return `${s.mode} · ${s.desiredTemperature}°F`;
+      }
+      case DeviceType.DoorLock:
+        return s.lockState === DoorLockState.Locked ? 'Locked' : 'Unlocked';
+    }
+  });
 
   ngOnInit(): void {
     console.log('[card] ngOnInit for', this.device().name, 'id:', this.device().id);
@@ -205,6 +264,13 @@ export class StagedTargetCard implements OnInit {
   }
 
   /* ─────────────── Change handlers ─────────────── */
+
+  /**
+   * Toggle handler for the Configure / Done button.
+   */
+  protected onToggleExpanded(): void {
+    this.expanded.update(v => !v);
+  }
 
   protected onLockStateChange(next: DoorLockState): void {
     this.stagedState.update(s =>

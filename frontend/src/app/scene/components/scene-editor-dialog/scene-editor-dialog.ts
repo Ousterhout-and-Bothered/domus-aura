@@ -66,7 +66,7 @@ const MAX_NAME_LENGTH = 100;
       [resizable]="false"
       [style]="{ width: '720px', maxWidth: '95vw' }"
       header="New Scene"
-      styleClass="scene-editor-dialog"
+      styleClass="aura-dialog"
     >
       <div class="scene-editor-body">
         <div class="scene-editor-view" [class.is-hidden]="view() !== 'editor'">

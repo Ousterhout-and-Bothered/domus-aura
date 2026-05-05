@@ -93,7 +93,7 @@
 .aura-main {
   flex: 1;
   padding: 1rem;
-  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));
 
   &--full {
     padding: 0;
@@ -102,10 +102,6 @@
   @include from($bp-md) {
     padding: 1.5rem 2rem;
     padding-bottom: 1.5rem;
-  }
-
-  @include from($bp-lg) {
-    padding: 2.5rem 3rem;
   }
 }
 

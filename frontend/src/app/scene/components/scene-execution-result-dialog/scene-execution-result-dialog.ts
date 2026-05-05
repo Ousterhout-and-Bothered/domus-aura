@@ -47,7 +47,7 @@ import { SceneExecutionResponse, SceneExecutionResultResponse } from '../../mode
       [resizable]="false"
       [closable]="true"
       [header]="header()"
-      styleClass="scene-result-dialog"
+      styleClass="scene-result-dialog aura-dialog"
       [style]="{ width: '36rem' }"
     >
       @if (result(); as r) {
