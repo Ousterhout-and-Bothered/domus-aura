@@ -40,42 +40,43 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
   },
   template: `
     <article class="scene-card">
+      <button
+        type="button"
+        class="scene-card-remove"
+        [attr.aria-label]="'Remove ' + scene().name"
+        [disabled]="executing()"
+        (click)="onRequestRemove($event)"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+
       <header class="scene-card-head">
         <div class="scene-card-titles">
           <h2 class="scene-card-name">{{ scene().name }}</h2>
           <p class="scene-card-summary">{{ summary() }}</p>
         </div>
-
-        <div class="scene-card-actions">
-          <button
-            type="button"
-            class="scene-card-chevron"
-            [class.is-expanded]="expanded()"
-            [attr.aria-label]="(expanded() ? 'Collapse' : 'Expand') + ' ' + scene().name"
-            [attr.aria-expanded]="expanded()"
-            (click)="onToggleExpanded()"
-          >
-            <i class="pi pi-chevron-down"></i>
-          </button>
-          <p-button
-            label="Execute"
-            icon="pi pi-play"
-            severity="primary"
-            [loading]="executing()"
-            [disabled]="executing()"
-            (onClick)="onExecute()"
-          />
-          <button
-            type="button"
-            class="scene-card-remove"
-            [attr.aria-label]="'Remove ' + scene().name"
-            [disabled]="executing()"
-            (click)="onRequestRemove($event)"
-          >
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
       </header>
+
+      <div class="scene-card-actions">
+        <button
+          type="button"
+          class="scene-card-chevron"
+          [class.is-expanded]="expanded()"
+          [attr.aria-label]="(expanded() ? 'Collapse' : 'Expand') + ' ' + scene().name"
+          [attr.aria-expanded]="expanded()"
+          (click)="onToggleExpanded()"
+        >
+          <i class="pi pi-chevron-down"></i>
+        </button>
+        <p-button
+          label="Execute"
+          icon="pi pi-play"
+          severity="primary"
+          [loading]="executing()"
+          [disabled]="executing()"
+          (onClick)="onExecute()"
+        />
+      </div>
 
       @if (expanded()) {
         <div class="scene-card-recipe">
@@ -92,14 +93,9 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
                 >
                   <span class="recipe-num">{{ step.ordinal }}.</span>
                   <span class="recipe-label">
-                    {{ step.label }}
-                    @if (step.willPowerOn) {
-                      <span class="recipe-annotation">(turned on)</span>
-                    }
-                    </span>
-                  @if (step.typeLabel) {
-                    <span class="recipe-type">{{ step.typeLabel }}</span>
-                  }
+                {{ step.label }}
+              </span>
+                  <span class="recipe-type">{{ step.typeLabel }}</span>
                 </li>
               }
             </ol>

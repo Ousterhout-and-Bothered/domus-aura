@@ -1,95 +1,21 @@
+@use 'styles' as *;
+
 .aura-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
+/* ─────────────── Header (mobile-first) ─────────────── */
+
 .aura-header {
   display: flex;
   align-items: center;
-  gap: 3rem;
-  padding: 1rem 1rem 0.75rem;
-  background: #0F0E0D;
-  border-bottom: 1px solid #2D2A28;
-
-  .aura-wordmark {
-    color: #F5F0E8;
-  }
-
-  .aura-nav {
-    display: flex;
-    gap: 1rem;
-    align-self: flex-end;
-    padding-bottom: 0.72rem;
-    flex: 1;
-
-    a {
-      display: inline-block;
-      color: #A8A29A;
-      text-decoration: none;
-      font-size: 1.5rem;
-      font-weight: 350;
-      position: relative;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: #F5F0E8;
-      }
-
-      &.active {
-        color: #F5F0E8;
-
-        &::after {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: -3px;
-          height: 2px;
-          background: #FB923C;
-        }
-      }
-    }
-  }
-
-  .aura-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .aura-user {
-    color: #A8A29A;
-    font-size: 0.95rem;
-    margin-right: 0.5rem;
-    max-width: 16ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .aura-icon-button {
-    background: transparent;
-    border: 1px solid #2D2A28;
-    color: #F5F0E8;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease, border-color 0.2s ease;
-
-    &:hover {
-      background: #232120;
-      border-color: #A8A29A;
-    }
-
-    i {
-      font-size: 14px;
-    }
-  }
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--aura-bg);
+  border-bottom: 1px solid var(--aura-border);
 }
 
 .aura-wordmark {
@@ -97,33 +23,98 @@
   align-items: center;
   gap: 0.05rem;
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-weight: 600;
   font-variation-settings: 'opsz' 144;
   color: var(--aura-text);
   text-decoration: none;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .aura-logo {
-  height: 4rem;
-  width: 4rem;
+  height: 2rem;
+  width: 2rem;
   object-fit: contain;
+  flex-shrink: 0;
 }
+
+.aura-nav {
+  display: none;
+}
+
+.aura-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.aura-user {
+  display: none;
+
+  @include from($bp-md) {
+    display: inline;
+    color: var(--aura-text-muted);
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.aura-icon-button {
+  background: transparent;
+  border: 1px solid var(--aura-border);
+  color: var(--aura-text);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: var(--aura-surface-muted);
+    border-color: var(--aura-text-muted);
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+/* ─────────────── Main content ─────────────── */
 
 .aura-main {
   flex: 1;
-  padding: 2.5rem 3rem;
+  padding: 1rem;
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
 
   &--full {
     padding: 0;
   }
+
+  @include from($bp-md) {
+    padding: 1.5rem 2rem;
+    padding-bottom: 1.5rem;
+  }
+
+  @include from($bp-lg) {
+    padding: 2.5rem 3rem;
+  }
 }
+
+/* ─────────────── Chat FAB ─────────────── */
 
 .aura-chat-fab {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: calc(5rem + env(safe-area-inset-bottom));
+  right: 1rem;
   width: 3.5rem;
   height: 3.5rem;
   border: none;
@@ -148,11 +139,64 @@
     opacity: 0;
     pointer-events: none;
   }
+
+  @include from($bp-md) {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
 }
 
-@media (max-width: 480px) {
-  .aura-chat-fab {
-    bottom: 1rem;
-    right: 1rem;
+/* ─────────────── Desktop overrides ─────────────── */
+
+@include from($bp-md) {
+  .aura-header {
+    gap: 3rem;
+    padding: 1rem 1rem 0.75rem;
+    justify-content: flex-start;
+
+    .aura-nav {
+      display: flex;
+      gap: 1rem;
+      align-self: flex-end;
+      padding-bottom: 0.72rem;
+      flex: 1;
+
+      a {
+        display: inline-block;
+        color: var(--aura-text-muted);
+        text-decoration: none;
+        font-size: 1.5rem;
+        font-weight: 350;
+        position: relative;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: var(--aura-text);
+        }
+
+        &.active {
+          color: var(--aura-text);
+
+          &::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -3px;
+            height: 2px;
+            background: var(--aura-accent);
+          }
+        }
+      }
+    }
+  }
+
+  .aura-wordmark {
+    font-size: 3rem;
+  }
+
+  .aura-logo {
+    height: 4rem;
+    width: 4rem;
   }
 }

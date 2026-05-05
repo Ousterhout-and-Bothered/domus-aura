@@ -1,3 +1,5 @@
+@use 'styles' as *;
+
 :host {
   display: contents;
 }
@@ -6,15 +8,14 @@
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 400px;
-  max-width: 100vw;
-  height: 600px;
-  max-height: 100vh;
+
+  // Mobile-first: full-screen takeover
+  width: 100vw;
+  height: 100dvh;                   // was 100vh in old override
+  border-radius: 0;
+  border: none;
+
   background: var(--aura-surface);
-  border: 1px solid var(--aura-border);
-  border-bottom: none;
-  border-right: none;
-  border-top-left-radius: 0.75rem;
   display: flex;
   flex-direction: column;
   box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.25);
@@ -27,14 +28,17 @@
     transform: translate(0, 0);
     pointer-events: auto;
   }
-}
 
-@media (max-width: 480px) {
-  .chat-panel {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    border: none;
+  // Desktop: drawer in the corner
+  @include from($bp-md) {
+    width: 400px;
+    max-width: 100vw;
+    height: 600px;
+    max-height: 100dvh;
+    border: 1px solid var(--aura-border);
+    border-bottom: none;
+    border-right: none;
+    border-top-left-radius: 0.75rem;
   }
 }
 
@@ -72,8 +76,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
   border: none;
   background: transparent;
@@ -204,5 +208,5 @@
 }
 
 .chat-input {
-  flex: 1;
+  flex: 3;
 }

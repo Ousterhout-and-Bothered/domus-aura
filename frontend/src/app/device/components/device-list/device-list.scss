@@ -1,3 +1,5 @@
+@use 'styles' as *;
+
 .device-list {
   max-width: 1200px;
   margin: 0 auto;
@@ -6,10 +8,17 @@
 .device-list-header {
   margin: 0 0 1.5rem;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;        // mobile default: stacked
+  align-items: stretch;
+  gap: 0.75rem;
+
+  @include from($bp-md) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
 }
 
 .device-list-titles {
@@ -18,18 +27,26 @@
 
   h1 {
     font-family: var(--font-display);
-    font-size: 3rem;
+    font-size: 2rem;             // mobile
     font-weight: 400;
     letter-spacing: -0.02em;
     margin: 0 0 0.25rem;
     color: var(--aura-text);
+
+    @include from($bp-md) {
+      font-size: 3rem;           // desktop
+    }
   }
 }
 
 .device-list-summary {
-  font-size: 1.5rem;
+  font-size: 1rem;               // mobile
   color: var(--aura-text-muted);
   margin: 0;
+
+  @include from($bp-md) {
+    font-size: 1.5rem;           // desktop
+  }
 }
 
 .device-list-status {
@@ -39,7 +56,7 @@
   padding: 3rem 0;
 
   &.error {
-    color: #C2410C;
+    color: var(--aura-accent);   // was hardcoded #C2410C
   }
 
   &.muted {
@@ -59,21 +76,8 @@
   transition: background 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 
   &.connected {
-    background: #16a34a;
+    background: #16a34a;         // success green — left as-is, not in palette
     opacity: 1;
     box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
-  }
-}
-
-/* ─────────────── Mobile ─────────────── */
-
-@media (max-width: 600px) {
-  .device-list-header {
-    flex-direction: column;
-    align-items: stretch;
-
-    h1 {
-      font-size: 2.25rem;
-    }
   }
 }

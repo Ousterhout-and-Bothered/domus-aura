@@ -6,6 +6,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ThemeService } from './shared/services/theme.service';
 import { AuthService } from './authentication/service/auth.service';
 import { ChatPanel } from './chat/components/chat-panel/chat-panel';
+import {BottomTabBar} from './shared/components/bottom-tab-bar';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ import { ChatPanel } from './chat/components/chat-panel/chat-panel';
     ToastModule,
     ConfirmDialogModule,
     ChatPanel,
+    BottomTabBar
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

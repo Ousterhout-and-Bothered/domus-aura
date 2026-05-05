@@ -1,3 +1,5 @@
+@use 'styles' as *;
+
 /* ─────────────── PrimeNG p-card overrides ─────────────── */
 
 :host ::ng-deep .thermo-card {
@@ -290,5 +292,25 @@
   :host ::ng-deep .setpoint-input,
   :host ::ng-deep .mode-select {
     justify-self: center;
+  }
+}
+
+/* ─────────────── Mobile: disable keyboard input on setpoint ─────────────── */
+
+// On mobile, the user adjusts the setpoint via +/− buttons or by dragging
+// the needle. Suppressing pointer events on the inner input prevents focus,
+// which prevents the OS keyboard from opening. Buttons remain interactive
+// because they are separate DOM elements outside the input.
+:host ::ng-deep .setpoint-input {
+  input {
+    pointer-events: none;
+    user-select: none;
+    caret-color: transparent;        // hide the blinking caret if focused programmatically
+
+    @include from($bp-md) {
+      pointer-events: auto;
+      user-select: auto;
+      caret-color: auto;
+    }
   }
 }

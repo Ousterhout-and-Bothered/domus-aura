@@ -4,6 +4,20 @@
 // PrimeIcons
 @import "primeicons/primeicons.css";
 
+/* ─────────────── Breakpoints ─────────────── */
+
+// Mobile-first. Default styles target phones; @include from($bp-X)
+// scopes overrides to that breakpoint and up.
+$bp-sm: 480px;   // large phone
+$bp-md: 768px;   // tablet
+$bp-lg: 1024px;  // desktop
+
+@mixin from($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
 /* ─────────────── Theme tokens ─────────────── */
 
 :root {
@@ -52,6 +66,16 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px;
+
+  @include from($bp-md) {
+    font-size: inherit;
+  }
 }
 
 h1, h2, h3 {
