@@ -163,6 +163,7 @@
 }
 
 :host ::ng-deep .setpoint-input {
+  position: relative;
   --p-inputnumber-button-background: transparent;
   --p-inputnumber-button-border-color: var(--aura-border);
   --p-inputnumber-button-color: var(--aura-text-muted);
@@ -190,6 +191,35 @@
   &.p-disabled,
   &[ng-reflect-disabled='true'] {
     opacity: 0.6;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2.5rem;            // start after the − button
+    right: 2.5rem;           // end before the + button
+    bottom: 0;
+    z-index: 2;
+    background: transparent;
+  }
+
+  input {
+    pointer-events: none;
+    user-select: none;
+    caret-color: transparent;
+  }
+
+  @include from($bp-md) {
+    &::after {
+      display: none;
+    }
+
+    input {
+      pointer-events: auto;
+      user-select: auto;
+      caret-color: auto;
+    }
   }
 }
 
