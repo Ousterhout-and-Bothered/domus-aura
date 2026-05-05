@@ -129,7 +129,7 @@ public class DeviceServiceTests
         device.TurnOn(); // Must be on to change brightness
 
         _repositoryMock.Setup(r => r.GetByIdAsync(deviceId, It.IsAny<CancellationToken>())).ReturnsAsync(device);
-        
+
         var commandMock = new Mock<IDeviceCommand>();
         _commandFactoryMock.Setup(f => f.Create("setBrightness", "50", device)).Returns(commandMock.Object);
 
@@ -141,7 +141,7 @@ public class DeviceServiceTests
             deviceId,
             "setBrightness: 50",
             It.IsAny<CancellationToken>()), Times.Once);
-        
+
         commandMock.Verify(c => c.Execute(), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -154,13 +154,13 @@ public class DeviceServiceTests
         // Arrange
         var deviceId = Guid.NewGuid();
         var device = new Light(deviceId, "Lamp", "Bedroom");
-        
+
         // We can't easily mock the timestamp since it's set in constructor to DateTime.UtcNow,
         // but we can control the order by creating them sequentially.
         var history1 = new CommandHistory(deviceId, "TurnOn");
         await Task.Delay(10); // Ensure different timestamps
         var history2 = new CommandHistory(deviceId, "SetBrightness: 50");
-        
+
         var history = new List<CommandHistory> { history1, history2 };
 
         _repositoryMock.Setup(r => r.GetByIdAsync(deviceId, It.IsAny<CancellationToken>())).ReturnsAsync(device);
