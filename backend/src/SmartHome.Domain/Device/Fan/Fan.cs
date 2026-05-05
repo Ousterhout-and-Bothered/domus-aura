@@ -1,4 +1,5 @@
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Domain.Device.Fan;
 
@@ -6,12 +7,6 @@ namespace SmartHome.Domain.Device.Fan;
 /// Represents a smart fan device that supports power and speed control.
 /// Speed is retained when the fan is powered off and restored when powered back on.
 /// </summary>
-/// <remarks>
-/// As of the implicit-power-on refactor, calling <see cref="SetSpeed"/> on a
-/// powered-off fan no longer throws. The command layer (<c>SetSpeedCommand</c>)
-/// is responsible for invoking <see cref="PoweredDevice.TurnOn"/> first when
-/// needed.
-/// </remarks>
 public sealed class Fan : PoweredDevice, IFanControllable
 {
     /// <summary>
@@ -50,14 +45,24 @@ public sealed class Fan : PoweredDevice, IFanControllable
 
     /// <summary>
     /// Sets the speed of the fan.
-    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainArgumentException"/>
-    /// if the speed value is not defined on the enum.
     /// </summary>
     /// <param name="speed">The desired speed to set.</param>
+    /// <exception cref="SmartHome.Domain.Common.Exceptions.InvalidDomainArgumentException">
+    /// Thrown when the speed value is not defined.
+    /// </exception>
+    /// <exception cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException">
+    /// Thrown when the fan is powered off.
+    /// </exception>
     public void SetSpeed(FanSpeed speed)
     {
-        // No power-state guard — command layer ensures precondition.
         Guard.EnumDefined(speed, nameof(speed));
+
+        if (PowerState != PowerState.On)
+        {
+            throw new InvalidDomainOperationException(
+                "Speed can only be changed while the fan is on.");
+        }
+
         Speed = speed;
     }
 
