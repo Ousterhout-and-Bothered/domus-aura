@@ -7,8 +7,9 @@
   output,
   signal,
 } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { SceneApiService } from '../../services/scene-api.service';
@@ -19,21 +20,25 @@ import {
 import { AnyDevice } from '../../../device/models/device-types';
 import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
 
-
 /**
  * One row in the scene list. Renders the scene name, a brief summary,
- * Execute and Remove buttons, and an expandable recipe panel showing
- * the numbered list of actions the scene will perform.
+ * Execute button, an expandable recipe panel, and a kebab menu (⋮)
+ * exposing Edit and Delete.
  *
  * Execute fires the API call and emits a sceneExecuted event with the
  * recipe attached. The parent (SceneList) owns the execution dialog —
  * we don't open a modal from here, because only the parent has the
  * live device list signal that drives the dialog's animations.
+ *
+ * Edit and Delete are surfaced as outputs (editRequested,
+ * deleteRequested) and handled at the list level. The list owns the
+ * editor dialog and the confirmation flow because it also owns the
+ * scenes() array that needs mutating on success.
  */
 @Component({
   selector: 'aura-scene-card',
   standalone: true,
-  imports: [ButtonModule],
+  imports: [ButtonModule, MenuModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.is-expanded]': 'expanded()',
@@ -42,13 +47,20 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
     <article class="scene-card">
       <button
         type="button"
-        class="scene-card-remove"
-        [attr.aria-label]="'Remove ' + scene().name"
+        class="scene-card-menu-trigger"
+        [attr.aria-label]="'More actions for ' + scene().name"
         [disabled]="executing()"
-        (click)="onRequestRemove($event)"
+        (click)="menu.toggle($event)"
       >
-        <i class="pi pi-times"></i>
+        <i class="pi pi-ellipsis-v"></i>
       </button>
+
+      <p-menu
+        #menu
+        [model]="menuItems()"
+        [popup]="true"
+        appendTo="body"
+      />
 
       <header class="scene-card-head">
         <div class="scene-card-titles">
@@ -93,8 +105,8 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
                 >
                   <span class="recipe-num">{{ step.ordinal }}.</span>
                   <span class="recipe-label">
-                {{ step.label }}
-              </span>
+                    {{ step.label }}
+                  </span>
                   <span class="recipe-type">{{ step.typeLabel }}</span>
                 </li>
               }
@@ -109,11 +121,9 @@ import { RecipeStep, buildRecipe } from '../../services/scene-recipe';
 export class SceneCard {
   private readonly api = inject(SceneApiService);
   private readonly messages = inject(MessageService);
-  private readonly confirms = inject(ConfirmationService);
 
   readonly scene = input.required<SceneResponse>();
   readonly allDevices = input<readonly AnyDevice[]>([]);
-
 
   /** Fired after execute resolves. Parent opens the execution dialog with the recipe. */
   readonly sceneExecuted = output<{
@@ -122,11 +132,33 @@ export class SceneCard {
     beforeDevices: readonly AnyDevice[];
   }>();
 
-  /** Fired after a successful remove. */
-  readonly sceneRemoved = output<string>();
+  /** Emitted when the user picks "Edit" from the kebab menu. */
+  readonly editRequested = output<SceneResponse>();
+
+  /** Emitted when the user picks "Delete" from the kebab menu. */
+  readonly deleteRequested = output<SceneResponse>();
 
   readonly executing = signal(false);
   readonly expanded = signal(false);
+
+  /**
+   * Items shown in the kebab popup menu. Computed so they re-evaluate
+   * if the scene input ever changes — keeps `command` callbacks bound
+   * to the current scene reference rather than a stale capture.
+   */
+  protected readonly menuItems = computed<MenuItem[]>(() => [
+    {
+      label: 'Edit',
+      icon: 'pi pi-pencil',
+      command: () => this.editRequested.emit(this.scene()),
+    },
+    {
+      label: 'Delete',
+      icon: 'pi pi-trash',
+      styleClass: 'menu-item-danger',
+      command: () => this.deleteRequested.emit(this.scene()),
+    },
+  ]);
 
   readonly summary = computed(() => {
     const actions = this.scene().actions;
@@ -202,45 +234,6 @@ export class SceneCard {
             err.error?.detail ??
             err.error?.title ??
             'Could not execute scene. Please try again.',
-        });
-      },
-    });
-  }
-
-  onRequestRemove(event: MouseEvent): void {
-    this.confirms.confirm({
-      target: event.currentTarget as HTMLElement,
-      header: 'Remove scene',
-      message: `Remove "${this.scene().name}"? This cannot be undone.`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Remove',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectLabel: 'Cancel',
-      accept: () => this.executeRemove(),
-    });
-  }
-
-  private executeRemove(): void {
-    const id = this.scene().id;
-    const name = this.scene().name;
-
-    this.api.remove(id).subscribe({
-      next: () => {
-        this.sceneRemoved.emit(id);
-        this.messages.add({
-          severity: 'success',
-          summary: 'Scene removed',
-          detail: `"${name}" was deleted.`,
-        });
-      },
-      error: (err: HttpErrorResponse) => {
-        this.messages.add({
-          severity: 'error',
-          summary: 'Remove failed',
-          detail:
-            err.error?.detail ??
-            err.error?.title ??
-            'Could not remove scene. Please try again.',
         });
       },
     });

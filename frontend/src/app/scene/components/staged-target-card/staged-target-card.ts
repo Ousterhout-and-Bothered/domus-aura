@@ -57,12 +57,6 @@ type StagedDeviceState =
  * Property keys that can be marked as user-touched for a staged target.
  * On Save, the dialog asks each card for toActions(), which walks this
  * set to emit one SceneActionRequest per touched property.
- *
- * Note: 'power' is the canonical name for any toggle that maps to a
- * SetPower action — for thermostats this is bound to the gauge's state
- * change event, even though the staged shape carries `state` rather
- * than `powerState`. The touched-property name reflects the emitted
- * action, not the leaf-visual binding.
  */
 type TouchedProperty =
   | 'power'
@@ -78,13 +72,18 @@ type TouchedProperty =
  * dashboard leaf visual and tracks the user's edits as a discriminated
  * staged state plus a touched-properties set.
  *
+ * Two modes:
+ *   - Create mode: card initialises from the device snapshot only;
+ *     `touched` starts empty.
+ *   - Edit mode: card additionally accepts `prefilledActions` from an
+ *     existing scene; for each action it overrides the matching staged
+ *     value and marks the property as touched. The user's subsequent
+ *     edits work identically.
+ *
  * The device input is treated as a snapshot, captured once in
  * ngOnInit. The staged signal has no reactive dependency on the input,
  * so upstream SSE-driven updates to the device list cannot reset the
- * user's in-progress edits. The parent dialog is also responsible for
- * keeping the same device reference bound (it stores AnyDevice
- * snapshots, not ids) — together these guarantee stable card state
- * across the dialog's lifetime.
+ * user's in-progress edits.
  */
 @Component({
   selector: 'aura-staged-target-card',
@@ -109,7 +108,6 @@ type TouchedProperty =
         </button>
       </header>
 
-      <!-- Collapsed summary: shown when not expanded -->
       <div class="staged-target-summary">
         <p class="summary-text">{{ summary() }}</p>
         <button
@@ -122,8 +120,6 @@ type TouchedProperty =
         </button>
       </div>
 
-      <!-- Expanded body: always in DOM (kept alive for state),
-           CSS-hidden when collapsed -->
       <div class="staged-target-body">
         <div class="staged-target-body-actions">
           <button
@@ -206,33 +202,21 @@ export class StagedTargetCard implements OnInit {
   protected readonly DeviceType = DeviceType;
 
   readonly device = input.required<AnyDevice>();
+
+  /**
+   * Optional pre-existing scene actions for this device. When present,
+   * the card initialises in "edit mode": each action overrides its
+   * matching property in stagedState and marks the property as touched.
+   * Absent in create mode.
+   */
+  readonly prefilledActions = input<readonly SceneActionRequest[] | null>(null);
+
   readonly remove = output<void>();
 
-  /**
-   * Staged values for this target. Null until ngOnInit snapshots the
-   * device input. After that point, only the user's change handlers
-   * mutate it — upstream input changes (from SSE updates) never
-   * reset it because the signal has no reactive dependencies.
-   */
   protected readonly stagedState = signal<StagedDeviceState | null>(null);
-
-  /**
-   * Set of property keys the user has explicitly modified. A property
-   * counts as touched the moment its handler fires, even if the value
-   * matches the original. This is deliberate: an explicit choice to
-   * "set brightness to its current value" is still a scene action.
-   */
   protected readonly touched = signal<ReadonlySet<TouchedProperty>>(new Set());
-
-  /**
-   * Whether this card's full configuration UI is visible. Default false:
-   * cards start collapsed so users can scan a long list of staged
-   * devices without scrolling through the full visualization for each.
-   */
-  protected readonly expanded = signal<boolean>(false);
-
-  // Drives the "N actions" badge in the header.
   protected readonly actionCount = computed(() => this.touched().size);
+  protected readonly expanded = signal<boolean>(false);
 
   protected readonly summary = computed<string>(() => {
     const s = this.stagedState();
@@ -258,19 +242,35 @@ export class StagedTargetCard implements OnInit {
     }
   });
 
-  ngOnInit(): void {
-    console.log('[card] ngOnInit for', this.device().name, 'id:', this.device().id);
-    this.stagedState.set(this.buildInitialState(this.device()));
-  }
-
-  /* ─────────────── Change handlers ─────────────── */
-
-  /**
-   * Toggle handler for the Configure / Done button.
-   */
   protected onToggleExpanded(): void {
     this.expanded.update(v => !v);
   }
+
+  ngOnInit(): void {
+    // Always start from the device snapshot — this provides defaults
+    // for properties the scene actions don't touch.
+    let state = this.buildInitialState(this.device());
+    let touched: TouchedProperty[] = [];
+
+    // If editing an existing scene, fold each action into the state
+    // and record it as touched.
+    const actions = this.prefilledActions();
+    if (actions !== null && actions.length > 0) {
+      for (const action of actions) {
+        const result = this.applyActionToState(state, action);
+        if (result === null) continue; // unknown op — skip silently
+        state = result.state;
+        touched.push(result.touched);
+      }
+    }
+
+    this.stagedState.set(state);
+    if (touched.length > 0) {
+      this.touched.set(new Set(touched));
+    }
+  }
+
+  /* ─────────────── Change handlers ─────────────── */
 
   protected onLockStateChange(next: DoorLockState): void {
     this.stagedState.update(s =>
@@ -313,12 +313,10 @@ export class StagedTargetCard implements OnInit {
   }
 
   protected onFanSpeedChange(next: FanSpeed): void {
-    console.log('[card] onFanSpeedChange for', this.device().name, 'next:', next, 'before:', this.stagedState());
     this.stagedState.update(s =>
       s !== null && s.type === DeviceType.Fan
         ? { ...s, speed: next }
         : s);
-    console.log('[card] onFanSpeedChange after:', this.stagedState());
     this.markTouched('speed');
   }
 
@@ -346,11 +344,6 @@ export class StagedTargetCard implements OnInit {
     this.markTouched('mode');
   }
 
-  /**
-   * Idempotent touch marker. If the property is already touched, returns
-   * the same set without allocating a new one — this avoids spurious
-   * re-renders when the user wiggles a control that's already touched.
-   */
   private markTouched(prop: TouchedProperty): void {
     this.touched.update(t => {
       if (t.has(prop)) return t;
@@ -360,20 +353,11 @@ export class StagedTargetCard implements OnInit {
     });
   }
 
-  /**
-   * Returns the live ambient temperature for thermostat targets.
-   * Ambient is environmental — not a stageable property — so it's read
-   * straight from the device input rather than the staged signal.
-   */
   protected getAmbientTemperature(): number {
     const d = this.device();
     return d.type === DeviceType.Thermostat ? d.ambientTemperature : 0;
   }
 
-  /**
-   * Builds the initial staged state from the device snapshot. Called
-   * once from ngOnInit.
-   */
   private buildInitialState(d: AnyDevice): StagedDeviceState {
     switch (d.type) {
       case DeviceType.Light:
@@ -405,14 +389,115 @@ export class StagedTargetCard implements OnInit {
   }
 
   /**
+   * Folds a single SceneAction into a staged state, returning the new
+   * state and the property key to mark as touched. Returns null if the
+   * action's operation does not match the device's type — defensive,
+   * since scene actions and device types should be paired correctly,
+   * but a stale scene targeting a now-different device shouldn't crash
+   * the editor.
+   */
+  private applyActionToState(
+    state: StagedDeviceState,
+    action: SceneActionRequest,
+  ): { state: StagedDeviceState; touched: TouchedProperty } | null {
+    const value = action.value;
+
+    switch (action.operation) {
+      case 'SetPower': {
+        if (state.type === DeviceType.Light || state.type === DeviceType.Fan) {
+          return {
+            state: {
+              ...state,
+              powerState: value === 'On' ? PowerState.On : PowerState.Off,
+            },
+            touched: 'power',
+          };
+        }
+        if (state.type === DeviceType.Thermostat) {
+          // "Off" sets state to Off; "On" preserves the device's current
+          // non-Off state (set by buildInitialState from the snapshot).
+          return {
+            state: value === 'Off'
+              ? { ...state, state: ThermostatState.Off }
+              : state,
+            touched: 'power',
+          };
+        }
+        return null;
+      }
+
+      case 'SetBrightness': {
+        if (state.type !== DeviceType.Light) return null;
+        const n = Number(value);
+        if (Number.isNaN(n)) return null;
+        return {
+          state: { ...state, brightness: n },
+          touched: 'brightness',
+        };
+      }
+
+      case 'SetColor': {
+        if (state.type !== DeviceType.Light) return null;
+        if (typeof value !== 'string') return null;
+        return {
+          state: { ...state, colorHex: value },
+          touched: 'color',
+        };
+      }
+
+      case 'SetSpeed': {
+        if (state.type !== DeviceType.Fan) return null;
+        if (typeof value !== 'string') return null;
+        return {
+          state: { ...state, speed: value as FanSpeed },
+          touched: 'speed',
+        };
+      }
+
+      case 'SetMode': {
+        if (state.type !== DeviceType.Thermostat) return null;
+        if (typeof value !== 'string') return null;
+        return {
+          state: { ...state, mode: value as ThermostatMode },
+          touched: 'mode',
+        };
+      }
+
+      case 'SetDesiredTemperature': {
+        if (state.type !== DeviceType.Thermostat) return null;
+        const n = Number(value);
+        if (Number.isNaN(n)) return null;
+        return {
+          state: { ...state, desiredTemperature: n },
+          touched: 'desiredTemperature',
+        };
+      }
+
+      case 'Lock': {
+        if (state.type !== DeviceType.DoorLock) return null;
+        return {
+          state: { ...state, lockState: DoorLockState.Locked },
+          touched: 'lockState',
+        };
+      }
+
+      case 'Unlock': {
+        if (state.type !== DeviceType.DoorLock) return null;
+        return {
+          state: { ...state, lockState: DoorLockState.Unlocked },
+          touched: 'lockState',
+        };
+      }
+
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Walks the touched set and emits one SceneActionRequest per touched
-   * property, using the canonical backend operation strings:
-   * SetPower, SetBrightness, SetColor, SetSpeed, SetMode,
-   * SetDesiredTemperature, Lock, Unlock.
-   *
-   * Called by the parent dialog on Save. Order within the returned
-   * array is not significant — SceneActionNormalizer (server-side)
-   * applies the priority table.
+   * property. Order within the array is not significant — the server's
+   * SceneActionNormalizer applies the priority table.
    */
   toActions(): SceneActionRequest[] {
     const actions: SceneActionRequest[] = [];
