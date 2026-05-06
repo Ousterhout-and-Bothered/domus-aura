@@ -1,0 +1,104 @@
+﻿/* ─────────────── PrimeNG p-dialog overrides ─────────────── */
+
+:host ::ng-deep .edit-dialog {
+  background: var(--aura-surface);
+  border: 0.5px solid var(--aura-border);
+  border-radius: 14px;
+  font-family: var(--font-body);
+
+  .p-dialog-header {
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--aura-border);
+
+    .p-dialog-title {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 500;
+      color: var(--aura-text);
+    }
+  }
+
+  .p-dialog-content {
+    padding: 1.5rem;
+    background: transparent;
+  }
+
+  .p-dialog-footer {
+    padding: 0.75rem 1.5rem 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    background: transparent;
+    border-top: 1px solid var(--aura-border);
+  }
+}
+
+/* ─────────────── Form layout ─────────────── */
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 1rem;
+    color: var(--aura-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+}
+
+:host ::ng-deep .form-control {
+  width: 100%;
+}
+
+:host ::ng-deep input.form-control.p-inputtext,
+:host ::ng-deep .form-control input.p-inputtext,
+:host ::ng-deep input[pInputText].form-control {
+  width: 100%;
+}
+
+input.form-control {
+  width: 100%;
+  font-family: inherit;
+}
+
+/* ─────────────── New-location hint ─────────────── */
+
+.form-hint {
+  font-size: 0.8rem;
+  color: var(--aura-accent);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  .pi {
+    font-size: 0.85rem;
+  }
+}
+
+/* ─────────────── Inline error message ─────────────── */
+
+:host ::ng-deep .form-error {
+  margin-top: 0.25rem;
+
+  .p-message {
+    width: 100%;
+  }
+}
+
+/* ─────────────── Mobile (< 480px) ─────────────── */
+
+@media (max-width: 480px) {
+  :host ::ng-deep .edit-dialog {
+    width: calc(100vw - 2rem) !important;
+    max-width: 480px;
+  }
+}

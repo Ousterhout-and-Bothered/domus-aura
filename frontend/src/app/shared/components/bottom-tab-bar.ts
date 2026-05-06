@@ -31,6 +31,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         <i class="pi pi-play bottom-tab-icon" aria-hidden="true"></i>
         <span class="bottom-tab-label">Scenes</span>
       </a>
+      <a routerLink="/history"
+         routerLinkActive="is-active"
+         class="bottom-tab"
+      >
+        <i class="pi pi-clock bottom-tab-icon" aria-hidden="true"></i>
+        <span class="bottom-tab-label">History</span>
+      </a>
     </nav>
   `,
   styleUrl: './bottom-tab-bar.scss',

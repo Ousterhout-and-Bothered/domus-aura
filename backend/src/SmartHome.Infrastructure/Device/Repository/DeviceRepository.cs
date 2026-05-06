@@ -123,6 +123,7 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
     }
     
+    
     /// <inheritdoc />
     public async Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
         int page,
@@ -133,44 +134,48 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         DateTime? to = null,
         CancellationToken cancellationToken = default)
     {
-        // Base query: history rows joined with devices for the location filter.
-        // Joined upfront so 'location' filters server-side rather than fetching unfiltered
-        // history and pruning in memory.
-        var query =
-            from history in dbContext.DeviceHistory.AsNoTracking()
-            join device in dbContext.Devices.AsNoTracking()
-                on history.DeviceId equals device.Id
-            select new { history, device };
-
-        if (!string.IsNullOrWhiteSpace(location))
-        {
-            query = query.Where(x => x.device.Location == location);
-        }
+        // Resolve the location filter via a subquery on Devices rather than an
+        // inner join. Both Devices.Id and CommandHistory.DeviceId now share the
+        // TEXT COLLATE NOCASE storage, so a join would also be correct — the
+        // subquery is kept for clarity (intent: "history rows whose device is
+        // at this location") and to avoid bringing the Device row into a result
+        // shape that only needs the DeviceId.
+        var query = dbContext.DeviceHistory.AsNoTracking().AsQueryable();
 
         if (deviceId.HasValue)
         {
-            query = query.Where(x => x.history.DeviceId == deviceId.Value);
+            query = query.Where(h => h.DeviceId == deviceId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            // Resolve the location filter via a subquery on Devices rather than
+            // a join. The subquery is materialized once by EF Core and the
+            // resulting set of device IDs is compared inline.
+            var deviceIdsAtLocation = dbContext.Devices
+                .AsNoTracking()
+                .Where(d => d.Location == location)
+                .Select(d => d.Id);
+
+            query = query.Where(h => deviceIdsAtLocation.Contains(h.DeviceId));
         }
 
         if (from.HasValue)
         {
-            query = query.Where(x => x.history.Timestamp >= from.Value);
+            query = query.Where(h => h.Timestamp >= from.Value);
         }
 
         if (to.HasValue)
         {
-            query = query.Where(x => x.history.Timestamp <= to.Value);
+            query = query.Where(h => h.Timestamp <= to.Value);
         }
 
-        // CountAsync runs as a separate SELECT COUNT(*) against the same filter set.
-        // Two round trips total; for SQLite at this scale, well under any latency budget.
         var total = await query.CountAsync(cancellationToken);
 
         var items = await query
-            .OrderByDescending(x => x.history.Timestamp)
+            .OrderByDescending(h => h.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => x.history)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<CommandHistory>(items, total, page, pageSize);

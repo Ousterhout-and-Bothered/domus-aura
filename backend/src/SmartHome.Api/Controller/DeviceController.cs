@@ -159,7 +159,7 @@ public class DeviceController : ControllerBase
     /// Retrieves a paged feed of command history across all devices, with optional filters.
     /// Ordered most recent first.
     /// </summary>
-    /// <param name="page">1-indexed page number. Defaults to 1.</param>
+    /// <param name="page">1-indexed page number. Defaults to 1. Empty string and missing both yield 1.</param>
     /// <param name="pageSize">Entries per page. Defaults to 50, capped at 200.</param>
     /// <param name="location">Optional location filter (matches device's current location).</param>
     /// <param name="deviceId">Optional device filter.</param>
@@ -171,19 +171,36 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(PagedResult<CommandHistory>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResult<CommandHistory>>> GetAllHistory(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] string? page = null,
+        [FromQuery] string? pageSize = null,
         [FromQuery] string? location = null,
         [FromQuery] Guid? deviceId = null,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
         CancellationToken cancellationToken = default)
     {
+        // Accept page and pageSize as strings so that empty values (?page=&pageSize=)
+        // are treated the same as the parameter being absent. Binding directly to int
+        // produces a confusing 400 from the model binder when a client sends an
+        // empty string, even though "no value" is the intent in both cases.
+        var resolvedPage = ParseIntOrDefault(page, defaultValue: 1, min: 1);
+        var resolvedPageSize = ParseIntOrDefault(pageSize, defaultValue: 50, min: 1, max: 200);
+
         var result = await _deviceService.GetAllHistoryAsync(
-            page, pageSize, location, deviceId, from, to, cancellationToken);
+            resolvedPage, resolvedPageSize, location, deviceId, from, to, cancellationToken);
 
         return Ok(result);
     }
+
+private static int ParseIntOrDefault(string? raw, int defaultValue, int min = int.MinValue, int max = int.MaxValue)
+{
+    if (string.IsNullOrWhiteSpace(raw) || !int.TryParse(raw, out var value))
+    {
+        return defaultValue;
+    }
+
+    return Math.Clamp(value, min, max);
+}
 
     /// <summary>
     /// Executes a state change command on a device (e.g., turn on/off, set brightness).

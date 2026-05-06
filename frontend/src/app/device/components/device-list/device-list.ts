@@ -94,6 +94,7 @@ const USE_PAYLOAD_DIRECTLY = false;
           <aura-room-block
             [location]="room.location"
             [devices]="room.devices"
+            [existingLocations]="allLocations()"
             (deviceUpdated)="onDeviceUpdated($event)"
             (deviceRemoved)="onDeviceRemoved($event)"
           />

@@ -34,6 +34,13 @@ export const routes: Routes = [
             (m) => m.SceneList
           ),
       },
+      {
+        path: 'history',
+        loadComponent: () =>
+          import('./history/components/history-page/history-page').then(
+            (m) => m.HistoryPage
+          ),
+      },
     ],
   },
 ];

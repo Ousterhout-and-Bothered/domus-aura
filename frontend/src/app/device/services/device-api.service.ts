@@ -6,7 +6,10 @@ import {
   CommandHistory,
   DeviceCommandRequest,
   DeviceFilters,
+  HistoryFilters,
+  PagedResult,
   RegisterDeviceRequest,
+  UpdateDeviceRequest,
 } from '../models/device';
 import { AnyDevice } from '../models/device-types';
 
@@ -39,6 +42,11 @@ export class DeviceApiService {
     return this.http.post<AnyDevice>(this.baseUrl, req);
   }
 
+  /** PATCH /api/devices/{id} — update editable metadata (name, location). 409 if a relocate would conflict with the thermostat-per-location rule. */
+  update(id: string, req: UpdateDeviceRequest): Observable<AnyDevice> {
+    return this.http.patch<AnyDevice>(`${this.baseUrl}/${id}`, req);
+  }
+
   /** DELETE /api/devices/{id}. */
   remove(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
@@ -52,5 +60,19 @@ export class DeviceApiService {
   /** GET /api/devices/{id}/history — chronological list of past commands. */
   getHistory(id: string): Observable<CommandHistory[]> {
     return this.http.get<CommandHistory[]>(`${this.baseUrl}/${id}/history`);
+  }
+
+  /** GET /api/devices/history — paged feed of command history across all devices. */
+  getAllHistory(filters: HistoryFilters = {}): Observable<PagedResult<CommandHistory>> {
+    let params = new HttpParams();
+
+    if (filters.page !== undefined) params = params.set('page', filters.page);
+    if (filters.pageSize !== undefined) params = params.set('pageSize', filters.pageSize);
+    if (filters.location) params = params.set('location', filters.location);
+    if (filters.deviceId) params = params.set('deviceId', filters.deviceId);
+    if (filters.from) params = params.set('from', filters.from);
+    if (filters.to) params = params.set('to', filters.to);
+
+    return this.http.get<PagedResult<CommandHistory>>(`${this.baseUrl}/history`, { params });
   }
 }
