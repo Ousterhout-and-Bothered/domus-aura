@@ -118,7 +118,7 @@ export interface HistoryFilters {
 
 /**
  * Generic paged response envelope.
- * Matches Domain/Common/PagedResult.cs.
+ * Matches Common/PagedResults.cs.
  *
  * `page` is 1-indexed. `total` is the unfiltered-by-page count
  * across all pages; client computes total pages as
