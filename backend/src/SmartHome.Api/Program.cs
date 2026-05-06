@@ -117,10 +117,17 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-if (builder.Environment.IsDevelopment())
+// Allow anonymous in Development for grader/Scalar workflows, but not under
+// the "Test" environment used by integration test fixtures — those tests
+// must still observe the production auth contract to remain meaningful.
+var allowAnonymousInDev = builder.Environment.IsDevelopment()
+                          && !builder.Environment.IsEnvironment("Test");
+
+if (allowAnonymousInDev)
 {
     // In Development, treat every request as anonymous to make Scalar testing
-    // friction-free for graders. Production environments retain full auth.
+    // friction-free for graders. Production and Test environments retain
+    // full auth enforcement.
     builder.Services.PostConfigure<AuthorizationOptions>(options =>
     {
         options.DefaultPolicy = new AuthorizationPolicyBuilder()

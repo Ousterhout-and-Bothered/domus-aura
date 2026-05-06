@@ -12,11 +12,11 @@ using System.Text.Encodings.Web;
 
 namespace SmartHome.Api.Tests;
 
-public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class AuthIntegrationTests : IClassFixture<TestApiFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestApiFactory _factory;
 
-    public AuthIntegrationTests(WebApplicationFactory<Program> factory)
+    public AuthIntegrationTests(TestApiFactory factory)
     {
         _factory = factory;
     }
