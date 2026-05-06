@@ -55,7 +55,7 @@ public interface IDeviceService
     /// </remarks>
     Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default);
 
-    
+
     /// <summary>
     /// Updates a device's editable metadata (name and location).
     /// Detects which fields actually changed and logs only the deltas to command history.
@@ -81,8 +81,8 @@ public interface IDeviceService
         string name,
         string location,
         CancellationToken cancellationToken = default);
-    
-    
+
+
     /// <summary>
     /// Retrieves all devices, optionally filtered by location, type, and power state.
     /// </summary>
@@ -110,7 +110,7 @@ public interface IDeviceService
         DeviceType? type,
         bool? isOn,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves a paged feed of command history across all devices, with optional filters.
     /// Ordered most recent first.

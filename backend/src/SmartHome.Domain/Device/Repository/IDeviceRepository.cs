@@ -72,14 +72,14 @@ public interface IDeviceRepository
     /// Records a command operation in the device's history.
     /// </summary>
     Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves the command history for a specific device, ordered most recent first.
     /// </summary>
     Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(
         Guid deviceId,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Retrieves command history entries across all devices, with optional filters.
     /// Ordered most recent first.

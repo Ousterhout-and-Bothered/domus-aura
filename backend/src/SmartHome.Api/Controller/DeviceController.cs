@@ -114,7 +114,7 @@ public class DeviceController : ControllerBase
         await _deviceService.RemoveDeviceAsync(id, cancellationToken);
         return NoContent();
     }
-    
+
     /// <summary>
     /// Updates a device's editable metadata (name and location).
     /// Returns the updated device. If neither field changed, returns the device unchanged
@@ -154,7 +154,7 @@ public class DeviceController : ControllerBase
         var history = await _deviceService.GetDeviceHistoryAsync(id, cancellationToken);
         return Ok(history);
     }
-    
+
     /// <summary>
     /// Retrieves a paged feed of command history across all devices, with optional filters.
     /// Ordered most recent first.
@@ -192,15 +192,15 @@ public class DeviceController : ControllerBase
         return Ok(result);
     }
 
-private static int ParseIntOrDefault(string? raw, int defaultValue, int min = int.MinValue, int max = int.MaxValue)
-{
-    if (string.IsNullOrWhiteSpace(raw) || !int.TryParse(raw, out var value))
+    private static int ParseIntOrDefault(string? raw, int defaultValue, int min = int.MinValue, int max = int.MaxValue)
     {
-        return defaultValue;
-    }
+        if (string.IsNullOrWhiteSpace(raw) || !int.TryParse(raw, out var value))
+        {
+            return defaultValue;
+        }
 
-    return Math.Clamp(value, min, max);
-}
+        return Math.Clamp(value, min, max);
+    }
 
     /// <summary>
     /// Executes a state change command on a device (e.g., turn on/off, set brightness).

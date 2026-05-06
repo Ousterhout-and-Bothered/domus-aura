@@ -122,8 +122,8 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         var entry = new CommandHistory(deviceId, operation);
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
     }
-    
-    
+
+
     /// <inheritdoc />
     public async Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
         int page,

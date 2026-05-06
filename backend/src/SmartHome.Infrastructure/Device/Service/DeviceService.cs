@@ -137,7 +137,7 @@ public sealed class DeviceService(
             payload,
             cancellationToken);
     }
-    
+
     /// <inheritdoc />
     public async Task<Domain.Device.Device> UpdateDeviceAsync(
         Guid deviceId,
@@ -254,7 +254,7 @@ public sealed class DeviceService(
 
         return await repository.GetHistoryAsync(deviceId, cancellationToken);
     }
-    
+
     /// <inheritdoc />
     public async Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
         int page,
