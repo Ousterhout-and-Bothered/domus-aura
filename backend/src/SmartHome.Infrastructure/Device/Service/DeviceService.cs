@@ -45,6 +45,11 @@ public sealed class DeviceService(
 
         await repository.AddAsync(device, cancellationToken);
 
+        await repository.LogActionAsync(
+            device.Id,
+            $"Registered: {type} at '{location}'",
+            cancellationToken);
+
         await repository.SaveChangesAsync(cancellationToken);
 
         await deviceEventNotifier.PublishAsync(
@@ -113,6 +118,14 @@ public sealed class DeviceService(
         var affectedScenes = await sceneRepository
             .RemoveActionsForDeviceAsync(deviceId, cancellationToken);
 
+        // Log the removal itself, before deleting. The scene cleanup entry (if any)
+        // is logged alongside in the same transaction so both are persisted as a
+        // unit; the actual ExecuteDeleteAsync below runs as a separate SQL DELETE.
+        await repository.LogActionAsync(
+            deviceId,
+            $"Removed: {device.Type} '{device.Name}' from '{device.Location}'",
+            cancellationToken);
+
         if (affectedScenes.Count > 0)
         {
             var sceneList = string.Join(", ", affectedScenes);
@@ -123,14 +136,14 @@ public sealed class DeviceService(
                 cancellationToken);
         }
 
+        await repository.SaveChangesAsync(cancellationToken);
+
         var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
 
         if (!removed)
         {
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
-
-        await repository.SaveChangesAsync(cancellationToken);
 
         await deviceEventNotifier.PublishDeletedAsync(
             deviceId,

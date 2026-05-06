@@ -46,8 +46,12 @@ export function classifyOperation(operation: string): OperationClassification {
     return {category: 'scene', icon: CATEGORY_ICONS.scene};
   }
 
+  if (op.startsWith('Registered:')) {
+    return { category: 'metadata', icon: 'pi-plus-circle' };
+  }
+
   if (op.startsWith('Updated:')) {
-    return {category: 'metadata', icon: CATEGORY_ICONS.metadata};
+    return { category: 'metadata', icon: CATEGORY_ICONS.metadata };
   }
 
   if (op.startsWith('SetPower')) {
@@ -117,6 +121,11 @@ function humanizeBaseOperation(op: string): string {
   // Pass through unchanged — the format is already readable.
   if (op.startsWith('Updated:')) {
     return op;
+  }
+
+  // Registered: Light at 'Kitchen' — the device's lifecycle birth event.
+  if (op.startsWith('Registered:')) {
+    return op;  // Already readable, pass through.
   }
 
   // Lock / Unlock — present tense, no value.
