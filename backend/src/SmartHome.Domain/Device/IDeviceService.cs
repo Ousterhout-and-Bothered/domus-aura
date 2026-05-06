@@ -1,6 +1,6 @@
 using SmartHome.Domain.Common.Exceptions;
 using SmartHome.Domain.Device.Events;
-using SmartHome.Domain.Device.Commands;
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Domain.Device;
 
@@ -55,6 +55,34 @@ public interface IDeviceService
     /// </remarks>
     Task RemoveDeviceAsync(Guid deviceId, CancellationToken cancellationToken = default);
 
+    
+    /// <summary>
+    /// Updates a device's editable metadata (name and location).
+    /// Detects which fields actually changed and logs only the deltas to command history.
+    /// </summary>
+    /// <param name="deviceId">The unique identifier of the device.</param>
+    /// <param name="name">The new name for the device.</param>
+    /// <param name="location">The new location for the device.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated device.</returns>
+    /// <exception cref="ResourceNotFoundException">Thrown if the device is not found.</exception>
+    /// <exception cref="DuplicateThermostatException">
+    /// Thrown if relocating a thermostat to a location that already has one.
+    /// </exception>
+    /// <remarks>
+    /// When neither field changes, no audit entry is written and no event is published —
+    /// the call is a no-op that returns the unchanged device. When at least one field
+    /// changes, a single combined audit entry is written and a
+    /// <see cref="DeviceChangeType.Updated"/> event is published so connected SSE clients
+    /// can refresh.
+    /// </remarks>
+    Task<Device> UpdateDeviceAsync(
+        Guid deviceId,
+        string name,
+        string location,
+        CancellationToken cancellationToken = default);
+    
+    
     /// <summary>
     /// Retrieves all devices, optionally filtered by location, type, and power state.
     /// </summary>
@@ -81,6 +109,27 @@ public interface IDeviceService
         string? location,
         DeviceType? type,
         bool? isOn,
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Retrieves a paged feed of command history across all devices, with optional filters.
+    /// Ordered most recent first.
+    /// </summary>
+    /// <param name="page">1-indexed page number.</param>
+    /// <param name="pageSize">Entries per page.</param>
+    /// <param name="location">Optional location filter.</param>
+    /// <param name="deviceId">Optional device filter.</param>
+    /// <param name="from">Optional inclusive UTC lower bound on entry timestamp.</param>
+    /// <param name="to">Optional inclusive UTC upper bound on entry timestamp.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The page of matching command history entries plus the total count.</returns>
+    Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
+        int page,
+        int pageSize,
+        string? location = null,
+        Guid? deviceId = null,
+        DateTime? from = null,
+        DateTime? to = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
