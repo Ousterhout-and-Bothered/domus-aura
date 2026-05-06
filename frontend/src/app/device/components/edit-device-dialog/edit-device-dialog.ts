@@ -279,7 +279,7 @@ export class EditDeviceDialog {
     }
 
     if (err.status === 404) {
-      return 'This device no longer exists. The window will close.';
+      return 'This device no longer exists. Please close this window.';
     }
 
     if (err.status === 400) {
