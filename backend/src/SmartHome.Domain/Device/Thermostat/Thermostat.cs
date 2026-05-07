@@ -11,9 +11,20 @@ namespace SmartHome.Domain.Device.Thermostat;
 /// is appropriate for the current conditions.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The thermostat distinguishes between Off and Idle. Idle means the thermostat is powered
 /// on but not actively heating or cooling. For filtering and reporting purposes, only
 /// Heating and Cooling are considered active "on" states.
+/// </para>
+/// <para>
+/// As of the implicit-power-on refactor, calling <see cref="SetDesiredTemperature"/> on
+/// an Off thermostat no longer throws — the command layer
+/// (<c>SetDesiredTemperatureCommand</c>) is responsible for invoking <see cref="TurnOn"/>
+/// and ensuring the mode is appropriate for reaching the target before delegating here.
+/// <see cref="SetMode"/> retains its guard because mode changes are an explicit user
+/// operation and silently powering the thermostat on inside that call would obscure
+/// caller intent.
+/// </para>
 /// </remarks>
 public sealed class Thermostat : TickableDevice, IThermostatControllable, IPowerable
 {
@@ -164,6 +175,12 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// Sets the operating mode and immediately re-evaluates state.
     /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the thermostat is off.
     /// </summary>
+    /// <remarks>
+    /// The off-state guard is intentional. SetMode is an explicit user operation
+    /// and the caller (UI or command layer) must turn the thermostat on first.
+    /// Auto-powering inside SetMode would silently change the device's power
+    /// state in a method that doesn't advertise that behavior.
+    /// </remarks>
     public void SetMode(ThermostatMode mode)
     {
         Guard.AgainstInvalidState(
@@ -177,14 +194,15 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// <summary>
     /// Sets the desired temperature in Fahrenheit.
     /// Values outside 60–80°F are clamped to the nearest bound.
-    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the thermostat is off.
     /// </summary>
+    /// <remarks>
+    /// As of the implicit-power-on refactor, the off-state guard has been removed.
+    /// Callers (the command layer) are responsible for transitioning the thermostat
+    /// to a non-Off state.
+    /// </remarks>
     public void SetDesiredTemperature(int temperature)
     {
-        Guard.AgainstInvalidState(
-            State != ThermostatState.Off,
-            "Temperature can only be changed while the thermostat is on.");
-
+        // No power-state guard — command layer ensures precondition.
         DesiredTemperature = Guard.Clamp(temperature, MinTemperature, MaxTemperature);
         EvaluateState();
     }

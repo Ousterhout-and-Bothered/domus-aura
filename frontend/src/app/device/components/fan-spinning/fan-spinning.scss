@@ -1,4 +1,6 @@
-﻿/* ─────────────── PrimeNG p-card overrides ─────────────── */
+﻿@use 'styles' as *;
+
+/* ─────────────── PrimeNG p-card overrides ─────────────── */
 
 :host ::ng-deep .fan-card {
   background: var(--p-card-background, var(--aura-surface));
@@ -105,12 +107,13 @@
 .fan-readout {
   text-align: center;
   margin-top: 1rem;
+  padding: 0 0.5rem;
 }
 
 .fan-state-label {
   font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.35em;
   font-weight: 600;
   color: var(--aura-text-muted);
 }
@@ -126,13 +129,18 @@
 .control-row {
   margin-top: 1.25rem;
   display: grid;
-  grid-template-columns: 90px 1fr auto;
+  grid-template-columns: 80px 1fr 80px;     // was: 80px 1fr auto
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   transition: opacity 0.2s ease;
 
   &.is-disabled {
     opacity: 0.5;
+  }
+
+  @include from($bp-md) {
+    grid-template-columns: 90px 1fr 90px;   // was: 90px 1fr auto
+    gap: 12px;
   }
 }
 
@@ -152,7 +160,7 @@
 }
 
 .power-row p-toggleswitch {
-  justify-self: start;
+  justify-self: center;
   --p-toggleswitch-width: 4rem;
   --p-toggleswitch-height: 2rem;
   --p-toggleswitch-handle-size: 1.5rem;
@@ -202,12 +210,16 @@
 
 /* ─────────────── Container-based narrow layout ─────────────── */
 
+/* ─────────────── Container-based narrow layout ─────────────── */
+
 :host {
   container-type: inline-size;
   container-name: fan-card;
 }
 
-@container fan-card (max-width: 340px) {
+// Stacks speed buttons under the SPEED label when the card itself is narrow.
+// Threshold raised so it fires on mobile single-column layouts.
+@container fan-card (max-width: 400px) {
   .speed-row {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -220,10 +232,8 @@
 
   :host ::ng-deep .speed-select {
     justify-self: center;
+    max-width: 280px;
+    margin: 0 auto;
   }
 }
-
-  :host ::ng-deep .speed-select {
-    justify-self: center;
-  }
 

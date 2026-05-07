@@ -8,6 +8,15 @@ namespace SmartHome.Domain.Device.Light;
 /// Represents a smart light device that supports power, brightness, and color control.
 /// Brightness and color are retained when the light is powered off and restored when powered back on.
 /// </summary>
+/// <remarks>
+/// As of the implicit-power-on refactor, calling <see cref="SetBrightness"/> or
+/// <see cref="SetColor"/> on a powered-off light no longer throws. Callers (the
+/// command layer) check the power state and invoke <see cref="PoweredDevice.TurnOn"/>
+/// before mutating brightness/color. Direct calls to these methods on an off light
+/// will silently set the value but the change won't be visible until the light is
+/// powered on — this is acceptable because the only legitimate caller is the command
+/// layer, which always satisfies the precondition.
+/// </remarks>
 public sealed class Light : PoweredDevice, IDimmable, IColorable
 {
     /// <summary>
@@ -54,25 +63,21 @@ public sealed class Light : PoweredDevice, IDimmable, IColorable
     }
 
     /// <inheritdoc />
-    /// <param name="brightness">The desired brightness value.</param>
+    /// <param name="brightness">The desired brightness value, clamped to [10, 100].</param>
     public void SetBrightness(int brightness)
     {
-        Guard.AgainstInvalidState(PowerState == PowerState.On, "Brightness can only be changed while the light is on.");
-
-        // Clamped to [10, 100] as per README requirement.
+        // No power-state guard — command layer ensures precondition.
         Brightness = Guard.Clamp(brightness, 10, 100);
     }
 
     /// <summary>
     /// Sets the color of the light using a hex color string.
-    /// Throws <see cref="InvalidDomainOperationException"/> if the light is off.
     /// Throws <see cref="InvalidDomainArgumentException"/> if the hex format is invalid.
     /// </summary>
     /// <param name="colorHex">The hex color value to apply (e.g. "#FF8800").</param>
     public void SetColor(string colorHex)
     {
-        Guard.AgainstInvalidState(PowerState == PowerState.On, "Color can only be changed while the light is on.");
-
+        // No power-state guard — command layer ensures precondition.
         colorHex = Guard.NotNullOrWhitespace(colorHex, "Color is required.");
 
         // Validate hex format — prevents garbage values

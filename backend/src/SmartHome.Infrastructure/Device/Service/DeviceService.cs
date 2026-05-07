@@ -45,6 +45,11 @@ public sealed class DeviceService(
 
         await repository.AddAsync(device, cancellationToken);
 
+        await repository.LogActionAsync(
+            device.Id,
+            $"Registered: {type} at '{location}'",
+            cancellationToken);
+
         await repository.SaveChangesAsync(cancellationToken);
 
         await deviceEventNotifier.PublishAsync(
@@ -113,6 +118,14 @@ public sealed class DeviceService(
         var affectedScenes = await sceneRepository
             .RemoveActionsForDeviceAsync(deviceId, cancellationToken);
 
+        // Log the removal itself, before deleting. The scene cleanup entry (if any)
+        // is logged alongside in the same transaction so both are persisted as a
+        // unit; the actual ExecuteDeleteAsync below runs as a separate SQL DELETE.
+        await repository.LogActionAsync(
+            deviceId,
+            $"Removed: {device.Type} '{device.Name}' from '{device.Location}'",
+            cancellationToken);
+
         if (affectedScenes.Count > 0)
         {
             var sceneList = string.Join(", ", affectedScenes);
@@ -123,6 +136,8 @@ public sealed class DeviceService(
                 cancellationToken);
         }
 
+        await repository.SaveChangesAsync(cancellationToken);
+
         var removed = await repository.RemoveByIdAsync(deviceId, cancellationToken);
 
         if (!removed)
@@ -130,12 +145,86 @@ public sealed class DeviceService(
             throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
         }
 
-        await repository.SaveChangesAsync(cancellationToken);
-
         await deviceEventNotifier.PublishDeletedAsync(
             deviceId,
             payload,
             cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Domain.Device.Device> UpdateDeviceAsync(
+        Guid deviceId,
+        string name,
+        string location,
+        CancellationToken cancellationToken = default)
+    {
+        var device = await repository.GetByIdAsync(deviceId, cancellationToken);
+
+        if (device is null)
+        {
+            throw new ResourceNotFoundException($"Device with id {deviceId} not found.");
+        }
+
+        var oldName = device.Name;
+        var oldLocation = device.Location;
+
+        var nameChanged = !string.Equals(oldName, name, StringComparison.Ordinal);
+        var locationChanged = !string.Equals(oldLocation, location, StringComparison.Ordinal);
+
+        // No-op short-circuit: nothing to persist, log, or broadcast.
+        if (!nameChanged && !locationChanged)
+        {
+            return device;
+        }
+
+        // Thermostat-per-location invariant. Only enforced when the location actually
+        // changes — a thermostat being renamed in place must not trip its own existence check.
+        if (locationChanged && device.Type == DeviceType.Thermostat &&
+            await repository.ThermostatExistsAtLocationAsync(location, cancellationToken))
+        {
+            throw new DuplicateThermostatException(location);
+        }
+
+        if (nameChanged)
+        {
+            device.Rename(name);
+        }
+
+        if (locationChanged)
+        {
+            device.Relocate(location);
+        }
+
+        var operation = BuildUpdateOperation(oldName, oldLocation, device);
+
+        await repository.LogActionAsync(device.Id, operation, cancellationToken);
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        await deviceEventNotifier.PublishAsync(
+            device,
+            DeviceChangeType.Updated,
+            cancellationToken);
+
+        return device;
+    }
+
+    // Composes the audit log entry for an update, including only the fields that changed.
+    private static string BuildUpdateOperation(string oldName, string oldLocation, Domain.Device.Device device)
+    {
+        var parts = new List<string>(2);
+
+        if (!string.Equals(oldName, device.Name, StringComparison.Ordinal))
+        {
+            parts.Add($"name '{oldName}' \u2192 '{device.Name}'");
+        }
+
+        if (!string.Equals(oldLocation, device.Location, StringComparison.Ordinal))
+        {
+            parts.Add($"location '{oldLocation}' \u2192 '{device.Location}'");
+        }
+
+        return $"Updated: {string.Join(", ", parts)}";
     }
 
     /// <inheritdoc />
@@ -177,5 +266,19 @@ public sealed class DeviceService(
         }
 
         return await repository.GetHistoryAsync(deviceId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
+        int page,
+        int pageSize,
+        string? location = null,
+        Guid? deviceId = null,
+        DateTime? from = null,
+        DateTime? to = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await repository.GetAllHistoryAsync(
+            page, pageSize, location, deviceId, from, to, cancellationToken);
     }
 }

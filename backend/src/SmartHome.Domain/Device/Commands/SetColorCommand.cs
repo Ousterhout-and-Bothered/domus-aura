@@ -8,6 +8,7 @@ namespace SmartHome.Domain.Device.Commands;
 /// </summary>
 public sealed class SetColorCommand(
     IColorable receiver,
+    IPowerable power,
     string colorHex,
     Device device) : DeviceCommandBase(device)
 {
@@ -18,7 +19,23 @@ public sealed class SetColorCommand(
     /// <inheritdoc />
     public override CommandResult Execute()
     {
+        var wasOff = power.PowerState == PowerState.Off;
+
+        // Color comparison is case-insensitive — the device stores upper-case,
+        // but a user-supplied value may be lower or mixed case.
+        var colorAlreadyAtTarget = string.Equals(
+            receiver.ColorHex,
+            colorHex,
+            StringComparison.OrdinalIgnoreCase);
+
+        if (wasOff)
+        {
+            power.TurnOn();
+        }
+
         receiver.SetColor(colorHex);
+
+        var isNoOp = colorAlreadyAtTarget && !wasOff;
 
         return new CommandResult(
             DeviceId: DeviceId!.Value,
@@ -27,6 +44,10 @@ public sealed class SetColorCommand(
             Operation: OperationName,
             Value: Value,
             Success: true,
-            Message: null);
+            Message: isNoOp
+                ? "Device is already in the requested state."
+                : null,
+            IsNoOp: isNoOp,
+            ImplicitPowerOn: wasOff);
     }
 }

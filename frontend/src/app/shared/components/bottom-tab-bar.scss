@@ -1,0 +1,54 @@
+@use 'styles' as *;
+
+:host {
+  display: contents;
+}
+
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--aura-surface);
+  border-top: 1px solid var(--aura-border);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 900;
+
+  // Hide on tablet+ — header nav takes over
+  @include from($bp-md) {
+    display: none;
+  }
+}
+
+.bottom-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.5rem;
+  text-decoration: none;
+  color: var(--aura-text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 0.15s ease, background 0.15s ease;
+  min-height: 4rem;
+
+  &:hover {
+    background: var(--aura-surface-muted);
+  }
+
+  &.is-active {
+    color: var(--aura-accent);
+  }
+}
+
+.bottom-tab-icon {
+  font-size: 1.25rem;
+}
+
+.bottom-tab-label {
+  letter-spacing: 0.02em;
+}

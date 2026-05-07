@@ -1,0 +1,195 @@
+@use 'styles' as *;
+
+:host {
+  display: block;
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
+  border-radius: 0.75rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:host(:hover) {
+  border-color: var(--aura-accent-soft);
+}
+
+.staged-target {
+  display: flex;
+  flex-direction: column;
+  padding: 0.85rem 1rem;
+  gap: 0.85rem;
+}
+
+/* ─────────────── Header ─────────────── */
+
+.staged-target-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.staged-target-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.staged-target-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--aura-text);
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staged-target-loc {
+  font-size: 0.8rem;
+  color: var(--aura-text-muted);
+  margin: 0.1rem 0 0;
+}
+
+.staged-target-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--aura-accent-soft);
+  color: var(--aura-accent);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.staged-target-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--aura-text-muted);
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--aura-surface-muted);
+    color: var(--aura-text);
+  }
+}
+
+/* ─────────────── Collapsed summary ─────────────── */
+
+.staged-target-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.summary-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--aura-text);
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staged-target-configure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--aura-border);
+  border-radius: 0.5rem;
+  color: var(--aura-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--aura-accent);
+    background: var(--aura-surface-muted);
+  }
+
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+/* ─────────────── Expanded body ─────────────── */
+
+.staged-target-body {
+  // Always in DOM for state preservation; CSS-hidden when collapsed
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.staged-target-body-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.staged-target-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--aura-accent-soft);
+  border: 1px solid var(--aura-accent);
+  border-radius: 0.5rem;
+  color: var(--aura-accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--aura-accent);
+    color: var(--aura-bg);
+  }
+
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+/* ─────────────── Expanded state toggle ─────────────── */
+
+// When the card is expanded, hide the summary, show the body
+.staged-target.is-expanded {
+  .staged-target-summary {
+    display: none;
+  }
+
+  .staged-target-body {
+    display: flex;
+  }
+}
+
+/* ─────────────── Hide redundant card-head inside the embedded visual ─────────────── */
+
+
+:host ::ng-deep .staged-target-body {
+  .light-card-head,
+  .fan-card-head,
+  .thermo-card-head,
+  .lock-card-head {
+    display: none;
+  }
+}

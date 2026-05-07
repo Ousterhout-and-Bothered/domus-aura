@@ -1,4 +1,4 @@
-<<div class="aura-shell">
+<div class="aura-shell">
   @if (isAuthenticated()) {
     <header class="aura-header">
       <a routerLink="/devices" class="aura-wordmark">
@@ -9,6 +9,7 @@
       <nav class="aura-nav">
         <a routerLink="/devices" routerLinkActive="active">Devices</a>
         <a routerLink="/scenes" routerLinkActive="active">Scenes</a>
+        <a routerLink="/history" routerLinkActive="active">History</a>
       </nav>
 
       <div class="aura-header-actions">
@@ -36,6 +37,24 @@
         </button>
       </div>
     </header>
+
+    <button
+      type="button"
+      class="aura-chat-fab"
+      [class.is-active]="chatOpen()"
+      (click)="toggleChat()"
+      [attr.aria-label]="chatOpen() ? 'Close assistant' : 'Open assistant'"
+      [attr.aria-expanded]="chatOpen()"
+    >
+      <i class="pi pi-comments"></i>
+    </button>
+
+    <aura-chat-panel
+      [open]="chatOpen()"
+      (close)="closeChat()"
+    />
+
+    <aura-bottom-tab-bar />
   }
 
   <main class="aura-main" [class.aura-main--full]="!isAuthenticated()">

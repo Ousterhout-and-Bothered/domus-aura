@@ -53,56 +53,60 @@ import {
   template: `
     <p-toolbar styleClass="filter-toolbar">
       <ng-template pTemplate="start">
-        <div class="filter-group">
-          <span class="filter-label">Status</span>
-          <p-selectbutton
-            [options]="powerOptions"
-            [ngModel]="filters().powerStatus"
-            (onChange)="onPowerChange($event.value)"
-            [allowEmpty]="false"
-            optionLabel="label"
-            optionValue="value"
-            styleClass="filter-power"></p-selectbutton>
-        </div>
+        <div class="filter-start">
+          <div class="filter-group">
+            <span class="filter-label">Status</span>
+            <p-selectbutton
+              [options]="powerOptions"
+              [ngModel]="filters().powerStatus"
+              (onChange)="onPowerChange($event.value)"
+              [allowEmpty]="false"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="filter-power"></p-selectbutton>
+          </div>
 
-        <div class="filter-group">
-          <span class="filter-label">Location</span>
-          <p-select
-            [options]="locationOptions()"
-            [ngModel]="filters().location"
-            (ngModelChange)="onLocationChange($event)"
-            placeholder="All rooms"
-            [showClear]="true"
-            optionLabel="label"
-            optionValue="value"
-            class="filter-location"
-          />
-        </div>
+          <div class="filter-group">
+            <span class="filter-label">Location</span>
+            <p-select
+              [options]="locationOptions()"
+              [ngModel]="filters().location"
+              (ngModelChange)="onLocationChange($event)"
+              placeholder="All rooms"
+              [showClear]="true"
+              optionLabel="label"
+              optionValue="value"
+              class="filter-location"
+            />
+          </div>
 
-        <div class="filter-group">
-          <span class="filter-label">Type</span>
-          <p-multiselect
-            [options]="typeOptions"
-            [ngModel]="selectedTypesArray()"
-            (ngModelChange)="onTypesChange($event)"
-            placeholder="All types"
-            optionLabel="label"
-            optionValue="value"
-            display="chip"
-            styleClass="filter-types"></p-multiselect>
+          <div class="filter-group">
+            <span class="filter-label">Type</span>
+            <p-multiselect
+              [options]="typeOptions"
+              [ngModel]="selectedTypesArray()"
+              (ngModelChange)="onTypesChange($event)"
+              placeholder="All types"
+              optionLabel="label"
+              optionValue="value"
+              display="chip"
+              class="filter-types"></p-multiselect>
+          </div>
         </div>
       </ng-template>
 
       <ng-template pTemplate="end">
-        @if (anyActive()) {
-          <p-button
-            label="Clear"
-            icon="pi pi-times"
-            severity="secondary"
-            [text]="true"
-            (onClick)="onClear()"
-          />
-        }
+        <div class="filter-end">
+          @if (anyActive()) {
+            <p-button
+              label="Clear"
+              icon="pi pi-times"
+              severity="secondary"
+              [text]="true"
+              (onClick)="onClear()"
+            />
+          }
+        </div>
       </ng-template>
     </p-toolbar>
   `,

@@ -122,9 +122,13 @@ public sealed class SceneService(
 
             if (deviceId != Guid.Empty)
             {
+                var operationDescription = result.Value is null
+                    ? result.Operation
+                    : $"{result.Operation}: {result.Value}";
+
                 var operationLabel = result.Success
-                    ? $"{result.Operation} (scene: {scene.Name})"
-                    : $"{result.Operation} [FAILED: {result.Message}] (scene: {scene.Name})";
+                    ? $"{operationDescription} (scene: {scene.Name})"
+                    : $"{operationDescription} [FAILED: {result.Message}] (scene: {scene.Name})";
 
                 await deviceRepository.LogActionAsync(deviceId, operationLabel, cancellationToken);
             }

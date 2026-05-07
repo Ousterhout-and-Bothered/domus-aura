@@ -4,6 +4,7 @@ using DomainDevice = SmartHome.Domain.Device.Device;
 using SmartHome.Domain.Device.Repository;
 using SmartHome.Infrastructure.Persistence;
 using ThermostatDevice = SmartHome.Domain.Device.Thermostat.Thermostat;
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Infrastructure.Device.Repository;
 
@@ -120,6 +121,64 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
     {
         var entry = new CommandHistory(deviceId, operation);
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
+    }
+
+
+    /// <inheritdoc />
+    public async Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
+        int page,
+        int pageSize,
+        string? location = null,
+        Guid? deviceId = null,
+        DateTime? from = null,
+        DateTime? to = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Resolve the location filter via a subquery on Devices rather than an
+        // inner join. Both Devices.Id and CommandHistory.DeviceId now share the
+        // TEXT COLLATE NOCASE storage, so a join would also be correct — the
+        // subquery is kept for clarity (intent: "history rows whose device is
+        // at this location") and to avoid bringing the Device row into a result
+        // shape that only needs the DeviceId.
+        var query = dbContext.DeviceHistory.AsNoTracking().AsQueryable();
+
+        if (deviceId.HasValue)
+        {
+            query = query.Where(h => h.DeviceId == deviceId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            // Resolve the location filter via a subquery on Devices rather than
+            // a join. The subquery is materialized once by EF Core and the
+            // resulting set of device IDs is compared inline.
+            var deviceIdsAtLocation = dbContext.Devices
+                .AsNoTracking()
+                .Where(d => d.Location == location)
+                .Select(d => d.Id);
+
+            query = query.Where(h => deviceIdsAtLocation.Contains(h.DeviceId));
+        }
+
+        if (from.HasValue)
+        {
+            query = query.Where(h => h.Timestamp >= from.Value);
+        }
+
+        if (to.HasValue)
+        {
+            query = query.Where(h => h.Timestamp <= to.Value);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(h => h.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<CommandHistory>(items, total, page, pageSize);
     }
 
     /// <inheritdoc/>

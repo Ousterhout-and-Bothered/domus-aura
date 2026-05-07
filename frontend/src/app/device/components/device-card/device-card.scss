@@ -1,3 +1,5 @@
+@use 'styles' as *;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -18,7 +20,7 @@
   flex-direction: column;
 }
 
-.device-card-remove {
+.device-card-kebab {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -44,8 +46,8 @@
   &:hover,
   &:focus-visible {
     opacity: 1;
-    background: rgba(194, 65, 12, 0.1);
-    color: #C2410C;
+    background: var(--aura-accent-soft);
+    color: var(--aura-accent);
   }
 
   &:focus-visible {
@@ -58,21 +60,30 @@
   background: var(--aura-surface-muted);
   border: 0.5px dashed var(--aura-border);
   border-radius: 12px;
-  padding: 1.5rem 1rem;
+  padding: 1.25rem 1rem;
   text-align: center;
-  min-height: 200px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.4rem;
+
+  @include from($bp-md) {
+    padding: 1.5rem 1rem;
+    min-height: 200px;
+  }
 }
 
 .placeholder-name {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-weight: 500;
   margin: 0;
   color: var(--aura-text);
+
+  @include from($bp-md) {
+    font-size: 3rem;
+  }
 }
 
 .placeholder-type {

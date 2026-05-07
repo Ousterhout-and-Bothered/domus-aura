@@ -24,6 +24,7 @@ import { isDeviceOn } from '../../services/filter';
         @for (device of devices(); track device.id) {
           <aura-device-card
             [device]="device"
+            [existingLocations]="existingLocations()"
             (deviceUpdated)="deviceUpdated.emit($event)"
             (deviceRemoved)="deviceRemoved.emit($event)"
           />
@@ -36,6 +37,7 @@ import { isDeviceOn } from '../../services/filter';
 export class RoomBlock {
   readonly location = input.required<string>();
   readonly devices = input.required<AnyDevice[]>();
+  readonly existingLocations = input.required<string[]>();
 
   readonly deviceUpdated = output<AnyDevice>();
   readonly deviceRemoved = output<string>();

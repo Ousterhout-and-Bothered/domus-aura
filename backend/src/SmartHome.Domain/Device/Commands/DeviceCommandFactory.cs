@@ -24,13 +24,13 @@ public sealed class DeviceCommandFactory : IDeviceCommandFactory
                 new SetPowerCommand(p, ParseEnum<PowerState>(value), device),
 
             ("setbrightness", IDimmable d) =>
-                new SetBrightnessCommand(d, ParseInt(value), device),
+                new SetBrightnessCommand(d, (IPowerable)d, ParseInt(value), device),
 
             ("setcolor", IColorable c) =>
-                new SetColorCommand(c, value?.ToString() ?? string.Empty, device),
+                new SetColorCommand(c, (IPowerable)c, value?.ToString() ?? string.Empty, device),
 
             ("setspeed", IFanControllable f) =>
-                new SetSpeedCommand(f, ParseEnum<FanSpeed>(value), device),
+                new SetSpeedCommand(f, (IPowerable)f, ParseEnum<FanSpeed>(value), device),
 
             ("setmode", IThermostatControllable t) =>
                 new SetModeCommand(t, ParseEnum<ThermostatMode>(value), device),

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using SmartHome.Api.Contracts.Devices;
 using SmartHome.Domain.Device;
 using SmartHome.Infrastructure.Device.Events;
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Api.Controller;
 
@@ -115,6 +116,31 @@ public class DeviceController : ControllerBase
     }
 
     /// <summary>
+    /// Updates a device's editable metadata (name and location).
+    /// Returns the updated device. If neither field changed, returns the device unchanged
+    /// without writing to history.
+    /// </summary>
+    /// <param name="id">The unique identifier of the device.</param>
+    /// <param name="request">The new name and location for the device.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The updated device, or 404 if not found, or 409 if a relocate would conflict with the thermostat-per-location rule.</returns>
+    [HttpPatch("{id:guid}")]
+    [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<Device>> Update(
+        Guid id,
+        [FromBody] UpdateDeviceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var device = await _deviceService.UpdateDeviceAsync(
+            id, request.Name, request.Location, cancellationToken);
+
+        return Ok(device);
+    }
+
+    /// <summary>
     /// Retrieves the command history for a specific device.
     /// </summary>
     /// <param name="id">The unique identifier of the device.</param>
@@ -127,6 +153,53 @@ public class DeviceController : ControllerBase
     {
         var history = await _deviceService.GetDeviceHistoryAsync(id, cancellationToken);
         return Ok(history);
+    }
+
+    /// <summary>
+    /// Retrieves a paged feed of command history across all devices, with optional filters.
+    /// Ordered most recent first.
+    /// </summary>
+    /// <param name="page">1-indexed page number. Defaults to 1. Empty string and missing both yield 1.</param>
+    /// <param name="pageSize">Entries per page. Defaults to 50, capped at 200.</param>
+    /// <param name="location">Optional location filter (matches device's current location).</param>
+    /// <param name="deviceId">Optional device filter.</param>
+    /// <param name="from">Optional inclusive UTC lower bound on entry timestamp.</param>
+    /// <param name="to">Optional inclusive UTC upper bound on entry timestamp.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>A page of command history entries plus the total count across all pages.</returns>
+    [HttpGet("history")]
+    [ProducesResponseType(typeof(PagedResult<CommandHistory>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<CommandHistory>>> GetAllHistory(
+        [FromQuery] string? page = null,
+        [FromQuery] string? pageSize = null,
+        [FromQuery] string? location = null,
+        [FromQuery] Guid? deviceId = null,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Accept page and pageSize as strings so that empty values (?page=&pageSize=)
+        // are treated the same as the parameter being absent. Binding directly to int
+        // produces a confusing 400 from the model binder when a client sends an
+        // empty string, even though "no value" is the intent in both cases.
+        var resolvedPage = ParseIntOrDefault(page, defaultValue: 1, min: 1);
+        var resolvedPageSize = ParseIntOrDefault(pageSize, defaultValue: 50, min: 1, max: 200);
+
+        var result = await _deviceService.GetAllHistoryAsync(
+            resolvedPage, resolvedPageSize, location, deviceId, from, to, cancellationToken);
+
+        return Ok(result);
+    }
+
+    private static int ParseIntOrDefault(string? raw, int defaultValue, int min = int.MinValue, int max = int.MaxValue)
+    {
+        if (string.IsNullOrWhiteSpace(raw) || !int.TryParse(raw, out var value))
+        {
+            return defaultValue;
+        }
+
+        return Math.Clamp(value, min, max);
     }
 
     /// <summary>

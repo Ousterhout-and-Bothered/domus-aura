@@ -38,7 +38,9 @@ internal static class SceneMapper
     /// <summary>
     /// Maps a <see cref="SceneExecutionResult"/> to an API response.
     /// Converts domain-level command results into user-facing statuses,
-    /// normalizes values for JSON output, and preserves execution order.
+    /// normalizes values for JSON output, preserves execution order, and
+    /// surfaces the implicit-side-effect flags so the frontend can render
+    /// "powered on automatically" / "switched to Auto mode" annotations.
     /// </summary>
     public static SceneExecutionResponse ToResponse(SceneExecutionResult result) =>
         new(
@@ -56,7 +58,9 @@ internal static class SceneMapper
                     Operation: e.Result.Operation,
                     Value: ParseValue(e.Result.Value),
                     Status: MapStatus(e.Result),
-                    Message: SanitizeMessage(e.Result.Message)))
+                    Message: SanitizeMessage(e.Result.Message),
+                    ImplicitPowerOn: e.Result.ImplicitPowerOn,
+                    ImplicitModeChange: e.Result.ImplicitModeChange))
                 .ToList());
 
     /// <summary>

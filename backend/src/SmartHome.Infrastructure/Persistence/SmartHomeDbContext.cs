@@ -70,6 +70,15 @@ public sealed class SmartHomeDbContext : DbContext
             entity.HasKey(e => e.Id);
             // Index DeviceId for faster history lookups
             entity.HasIndex(e => e.DeviceId);
+
+            // Match the collation of Devices.Id so cross-table joins on the device
+            // identifier compare bytes consistently. Without this, a join between
+            // CommandHistory.DeviceId and Devices.Id silently drops rows whose IDs
+            // differ in casing — the same hazard that motivated the existing
+            // FixGuidCaseSensitivity migration on the Devices side.
+            entity.Property(e => e.DeviceId)
+                .HasConversion<string>()
+                .HasColumnType("TEXT COLLATE NOCASE");
         });
 
         modelBuilder.Entity<DomainDevice>(entity =>

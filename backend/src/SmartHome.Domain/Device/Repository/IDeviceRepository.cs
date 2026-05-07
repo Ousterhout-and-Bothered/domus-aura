@@ -1,4 +1,5 @@
 using ThermostatDevice = SmartHome.Domain.Device.Thermostat.Thermostat;
+using SmartHome.Domain.Common;
 
 namespace SmartHome.Domain.Device.Repository;
 
@@ -73,10 +74,39 @@ public interface IDeviceRepository
     Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves the command history for a specific device, ordered by most recent first.
+    /// Retrieves the command history for a specific device, ordered most recent first.
     /// </summary>
     Task<IReadOnlyList<CommandHistory>> GetHistoryAsync(
         Guid deviceId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves command history entries across all devices, with optional filters.
+    /// Ordered most recent first.
+    /// </summary>
+    /// <param name="location">
+    /// Optional location filter. When provided, only entries for devices in the specified
+    /// location are returned. Filtered against the device's current location, not the
+    /// location the device had at the time the entry was logged.
+    /// </param>
+    /// <param name="deviceId">
+    /// Optional device filter. When provided, only entries for the specified device are returned.
+    /// </param>
+    /// <param name="from">
+    /// Optional inclusive lower bound on entry timestamp (UTC).
+    /// </param>
+    /// <param name="to">
+    /// Optional inclusive upper bound on entry timestamp (UTC).
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The matching command history entries, ordered by timestamp descending.</returns>
+    Task<PagedResult<CommandHistory>> GetAllHistoryAsync(
+        int page,
+        int pageSize,
+        string? location = null,
+        Guid? deviceId = null,
+        DateTime? from = null,
+        DateTime? to = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

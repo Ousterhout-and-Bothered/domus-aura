@@ -1,47 +1,131 @@
-﻿/* ─────────────── PrimeNG Toolbar overrides ─────────────── */
+﻿@use 'styles' as *;
+
+/* ─────────────── Toolbar shell ─────────────── */
 
 :host ::ng-deep .filter-toolbar {
   background: var(--aura-surface);
   border: 0.5px solid var(--aura-border);
   border-radius: 14px;
-  padding: 0.85rem 1.1rem;
-  margin-bottom: 1.25rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
 
-  .p-toolbar-group-start {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    align-items: center;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+  justify-content: flex-start;
 
-  .p-toolbar-group-end {
-    margin-left: auto;
-    display: flex;
-    align-items: flex-end;
+  @include from($bp-md) {
+    flex-direction: row;
+    align-items: flex-start;
     gap: 1rem;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1.25rem;
   }
 }
 
-/* ─────────────── Filter groups (label + control pair) ─────────────── */
+/* ─────────────── Wrapper divs ─────────────── */
+
+.filter-start {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+
+  @include from($bp-md) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    width: auto;
+  }
+}
+
+.filter-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+
+  @include from($bp-md) {
+    margin-left: auto;
+    align-items: flex-end;
+    justify-content: flex-start;
+    width: auto;
+  }
+}
+
+/* ─────────────── Filter groups ─────────────── */
 
 .filter-group {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+
+  @include from($bp-md) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    width: auto;
+  }
 }
 
 .filter-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--aura-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+
+  flex: 0 0 4.5rem;
+  text-align: left;
+
+  @include from($bp-md) {
+    font-size: 0.75rem;
+    flex: 0 0 auto;
+  }
 }
 
-/* ─────────────── Power SelectButton — same look as Mode/Speed ─────────────── */
+/* ─────────────── Compact PrimeNG controls on mobile ─────────────── */
+
+
+:host ::ng-deep .filter-toolbar {
+  .p-select,
+  .p-multiselect,
+  .p-selectbutton,
+  .p-button {
+    font-size: 0.85rem;
+  }
+
+  .p-select,
+  .p-multiselect {
+    .p-select-label,
+    .p-multiselect-label {
+      padding: 0.4rem 0.6rem;
+    }
+  }
+
+  @include from($bp-md) {
+    .p-select,
+    .p-multiselect,
+    .p-selectbutton,
+    .p-button {
+      font-size: inherit;
+    }
+
+    .p-select .p-select-label,
+    .p-multiselect .p-multiselect-label {
+      padding: 0.5rem 0.75rem;
+    }
+  }
+}
+
+/* ─────────────── Power SelectButton ─────────────── */
 
 :host ::ng-deep .filter-power {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 
   .p-button,
   .p-togglebutton,
@@ -49,11 +133,12 @@
     background: transparent;
     border: 1px solid var(--aura-border);
     color: var(--aura-text-muted);
-    padding: 0.4rem 0.85rem;
+    padding: 0.3rem 0.7rem;
     border-radius: 999px;
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
     letter-spacing: 0.05em;
     transition: all 0.15s ease;
+    flex: 0 0 auto;
 
     &:hover:not(:disabled) {
       color: var(--aura-text);
@@ -66,44 +151,36 @@
       border-color: var(--aura-accent);
       color: var(--aura-accent);
     }
+
+    @include from($bp-md) {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.85rem !important;
+    }
   }
 }
 
 /* ─────────────── Location p-select ─────────────── */
 
 :host ::ng-deep .filter-location {
-  min-width: 180px;
+  flex: 1;
+  width: 100%;
+
+  @include from($bp-md) {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 180px;
+  }
 }
 
 /* ─────────────── Type p-multiselect ─────────────── */
 
 :host ::ng-deep .filter-types {
-  min-width: 220px;
-}
+  flex: 1;
+  width: 100%;
 
-/* ─────────────── Mobile (< 600px) ─────────────── */
-
-@media (max-width: 600px) {
-  :host ::ng-deep .filter-toolbar {
-    .p-toolbar-group-start {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-      width: 100%;
-    }
-
-    .p-toolbar-group-end {
-      margin: 0.5rem 0 0;
-      width: 100%;
-    }
-  }
-
-  .filter-group {
-    width: 100%;
-  }
-
-  :host ::ng-deep .filter-location,
-  :host ::ng-deep .filter-types {
-    width: 100%;
+  @include from($bp-md) {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 220px;
   }
 }

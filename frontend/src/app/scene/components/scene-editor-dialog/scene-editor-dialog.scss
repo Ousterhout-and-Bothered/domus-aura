@@ -1,0 +1,189 @@
+.scene-editor-body {
+  min-height: 320px;
+}
+
+.scene-editor-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scene-editor-name-label {
+  font-size: 0.875rem;
+  color: var(--aura-text-muted);
+  margin: 0;
+}
+
+.scene-editor-name-input {
+  width: 100%;
+}
+
+.scene-editor-error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: rgba(220, 80, 80, 0.12);
+  border: 1px solid rgba(220, 80, 80, 0.4);
+  border-radius: 0.5rem;
+  color: #e88;
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.scene-editor-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+.scene-editor-targets-placeholder {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--aura-text-muted);
+  border: 1px dashed var(--aura-border);
+  border-radius: 0.5rem;
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.scene-editor-targets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.scene-editor-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px dashed var(--aura-border);
+  border-radius: 0.5rem;
+  color: var(--aura-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--aura-accent);
+    background: var(--aura-surface-muted);
+  }
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+/* ─────────────── Picker view ─────────────── */
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.picker-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--aura-border);
+  border-radius: 0.5rem;
+  color: var(--aura-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--aura-accent-soft);
+  }
+}
+
+.picker-filter {
+  flex: 1;
+}
+
+.picker-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--aura-text-muted);
+  margin: 0;
+}
+
+/* Section labels separating Groups from Devices in the picker. */
+.picker-section-label {
+  margin: 0.5rem 0 -0.25rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--aura-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
+  border-radius: 0.5rem;
+  color: var(--aura-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--aura-accent);
+    background: var(--aura-surface-muted);
+  }
+}
+
+/**
+ * Group rules use an accent-tinted left border to differentiate
+ * from individual device rows. Visually subtle so the picker still
+ * reads as one combined list, but enough to signal "this is different".
+ */
+.picker-item-group {
+  border-left: 3px solid var(--aura-accent);
+  padding-left: calc(1rem - 2px);
+
+  &:hover {
+    border-color: var(--aura-accent);
+    border-left-color: var(--aura-accent);
+  }
+}
+
+.picker-item-name {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.picker-item-meta {
+  font-size: 0.8rem;
+  color: var(--aura-text-muted);
+  margin-top: 0.2rem;
+}

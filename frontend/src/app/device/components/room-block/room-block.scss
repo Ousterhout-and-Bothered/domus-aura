@@ -1,36 +1,58 @@
+@use 'styles' as *;
+
 .room-block {
   background: var(--aura-surface);
   border: 0.5px solid var(--aura-border);
   border-radius: 14px;
-  padding: 1.1rem 1.1rem 1.25rem;
-  margin-bottom: 1.25rem;
+  padding: 0.85rem 0.85rem 1rem;     // tighter on mobile (was 1.1rem 1.1rem 1.25rem)
+  margin-bottom: 1rem;                // tighter on mobile (was 1.25rem)
+
+  @include from($bp-md) {
+    padding: 1.1rem 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
 }
 
 .room-block-head {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  margin: 0 0 1rem;
+  flex-wrap: wrap;                    // mobile: lets pieces wrap if needed
+  gap: 0.4rem 0.6rem;                 // smaller row gap, normal column gap
+  margin: 0 0 0.85rem;
   padding-bottom: 0.55rem;
   border-bottom: 1px solid var(--aura-border);
+
+  @include from($bp-md) {
+    flex-wrap: nowrap;
+    gap: 0.6rem;
+    margin: 0 0 1rem;
+  }
 }
 
 .room-block-name {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.5rem;                  // mobile (was 2rem)
   font-weight: 500;
   margin: 0;
   color: var(--aura-text);
+
+  @include from($bp-md) {
+    font-size: 2rem;
+  }
 }
 
 .room-block-count {
-  font-size: 1.25rem;
+  font-size: 0.9rem;                  // mobile (was 1.25rem)
   color: var(--aura-text-muted);
+
+  @include from($bp-md) {
+    font-size: 1.25rem;
+  }
 }
 
 .room-block-active {
   margin-left: auto;
-  font-size: 1.25rem;
+  font-size: 0.8rem;                  // mobile (was 1.25rem)
   color: var(--aura-accent);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -39,19 +61,30 @@
   &.idle {
     color: var(--aura-text-muted);
   }
+
+  @include from($bp-md) {
+    font-size: 1.25rem;
+  }
 }
 
+/* ─────────────── Device grid ─────────────── */
+
 .room-block-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;         // mobile: single column
+  gap: 0.75rem;
+
+  @include from($bp-md) {
+    grid-template-columns: repeat(2, 1fr);   // 2 columns
+    gap: 1rem;
+  }
+
+  @include from($bp-lg) {
+    grid-template-columns: repeat(3, 1fr);   // 3 columns (original)
+    gap: 12px;
+  }
 
   > * {
-    flex: 0 1 320px;
-    min-width: 260px;
-    max-width: calc((100% - 24px) / 3);
     display: flex;
   }
 
@@ -60,4 +93,3 @@
     width: 100%;
   }
 }
-
