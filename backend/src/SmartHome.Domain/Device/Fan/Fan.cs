@@ -65,7 +65,6 @@ public sealed class Fan : PoweredDevice, IFanControllable
 
         Speed = speed;
     }
-
     /// <summary>
     /// Resets powered device attributes for the fan to their default values.
     /// </summary>

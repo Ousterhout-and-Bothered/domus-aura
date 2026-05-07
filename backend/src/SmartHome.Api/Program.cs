@@ -202,10 +202,17 @@ if (app.Environment.IsDevelopment())
 
 // Middleware Pipeline
 app.UseExceptionHandler();
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto
+};
+
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UseCors();
 if (app.Environment.IsDevelopment())
@@ -232,7 +239,7 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 
-app.MapMcp("/mcp").AllowAnonymous();
+app.MapMcp("/mcp").RequireAuthorization();
 
 await app.RunAsync();
 
