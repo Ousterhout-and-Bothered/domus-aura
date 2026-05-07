@@ -18,6 +18,7 @@ public sealed class SetColorCommandBuilder : IDeviceCommandBuilder
     {
         return new SetColorCommand(
             (IColorable)device,
+            (IPowerable)device,
             value?.ToString() ?? string.Empty,
             device);
     }

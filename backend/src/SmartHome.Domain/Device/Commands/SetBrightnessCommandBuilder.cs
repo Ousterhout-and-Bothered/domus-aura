@@ -18,6 +18,7 @@ public sealed class SetBrightnessCommandBuilder : IDeviceCommandBuilder
     {
         return new SetBrightnessCommand(
             (IDimmable)device,
+            (IPowerable)device,
             CommandValueParser.ParseInt(value),
             device);
     }

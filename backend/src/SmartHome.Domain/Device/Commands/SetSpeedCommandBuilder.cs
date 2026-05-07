@@ -18,6 +18,7 @@ public sealed class SetSpeedCommandBuilder : IDeviceCommandBuilder
     {
         return new SetSpeedCommand(
             (IFanControllable)device,
+            (IPowerable)device,
             CommandValueParser.ParseEnum<FanSpeed>(value),
             device);
     }
