@@ -501,16 +501,16 @@ http://localhost:5137/api
 
 ## Design Patterns
 
-| Pattern | Implementation / Key Classes                                                             | Rationale |
-|---|------------------------------------------------------------------------------------------|---|
-| **State** | `Device`, `PoweredDevice`, `Thermostat`, 'Light', 'Fan', 'DoorLock'                       | Models formal state machines where transitions are governed by rules (e.g., cannot set brightness if Off). |
-| **Factory** | `DeviceFactory`, `DeviceCommandFactory`                                                  | Decouples device creation and command instantiation from the service layer, allowing for easy extension of new types. |
-| **Strategy (Thermostat)** | `IThermostatStrategyProvider`, `HeatModeStrategy`, `CoolModeStrategy`, `AutoModeStrategy` | Encapsulates thermostat mode-specific behavior, allowing the simulation loop to remain independent of mode logic. |
-| **Repository** | `IDeviceRepository`, `DeviceRepository`                                                  | Provides an abstraction over EF Core and SQLite, ensuring the domain and services remain independent of persistence details. |
-| **Observer** | `DeviceEventBroker`, `IDeviceEventStream`, `IDeviceEventPublisher`                       | Implements a pub/sub mechanism for real-time updates; SSE clients subscribe to device state changes. |
-| **Command** | `IDeviceCommand`, `SetPowerCommand`, `SetBrightnessCommand`                              | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
-| **Composite** | `CompositeCommand`, `DeviceScene`                                                        | Allows a collection of commands (a Scene) to be treated as a single command, enabling complex automation sequences. |
-| **Strategy (LLM)** | `IChatToolHandler`, `LightColorToolHandler`, `ThermostatTempToolHandler`                 | Enables dynamic selection of LLM tool processing logic based on the capability requested by the language model. |
+| Pattern                   | Implementation / Key Classes                                                             | Rationale |
+|---------------------------|------------------------------------------------------------------------------------------|---|
+| **State**                 | `Device`, `PoweredDevice`, `Thermostat`, `Light`, `Fan`, `DoorLock`                      | Models formal state machines where transitions are governed by rules (e.g., cannot set brightness if Off). |
+| **Command**               | `IDeviceCommand`, `*Command`                                                             | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
+| **Strategy (Thermostat)** | `IThermostatStrategyProvider`, HeatModeStrategy`, `CoolModeStrategy`, `AutoModeStrategy` | Encapsulates thermostat mode-specific behavior, allowing the simulation loop to remain independent of mode logic. |
+| **Repository**            | `IDeviceRepository`, `DeviceRepository`                                                  | Provides an abstraction over EF Core and SQLite, ensuring the domain and services remain independent of persistence details. |
+| **Observer**              | `DeviceEventBroker`, `IDeviceEventStream`, `IDeviceEventPublisher`                       | Implements a pub/sub mechanism for real-time updates; SSE clients subscribe to device state changes. |
+| **Command**               | `IDeviceCommand`, `*Command`                                                             | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
+| **Composite**             | `CompositeCommand`, `DeviceScene`                                                        | Allows a collection of commands (a Scene) to be treated as a single command, enabling complex automation sequences. |
+| **Strategy (LLM)**        | `IChatToolHandler`, `*ToolHandler`                                                       | Enables dynamic selection of LLM tool processing logic based on the capability requested by the language model. |
 
 ---
 
