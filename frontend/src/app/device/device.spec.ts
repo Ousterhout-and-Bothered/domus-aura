@@ -284,7 +284,7 @@ describe('Smart Home Simulator Front-end Tests', () => {
       const component = fixture.componentInstance;
       const removeSpy = vi.spyOn(component.deviceRemoved, 'emit');
 
-      component.onRequestRemove({ currentTarget: {} } as any);
+      component.onRequestRemoveFromMenu();
 
       expect(confirmSpy).toHaveBeenCalled();
       const req = httpMock.expectOne('/api/devices/1');

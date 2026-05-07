@@ -125,7 +125,7 @@ import { DoorLock } from '../door-lock/door-lock';
 })
 export class DeviceCard {
   readonly device = input.required<AnyDevice>();
-  readonly existingLocations = input.required<string[]>();
+  readonly existingLocations = input<string[]>([]);
 
   private readonly deviceApi = inject(DeviceApiService);
   private readonly messages = inject(MessageService);
