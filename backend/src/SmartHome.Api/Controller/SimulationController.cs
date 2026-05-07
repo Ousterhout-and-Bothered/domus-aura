@@ -29,6 +29,7 @@ public sealed class SimulationController(
     /// <response code="200">The current simulation state.</response>
     [HttpGet]
     [ProducesResponseType(typeof(SimulationStateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public ActionResult<SimulationStateResponse> GetSimulationState() =>
         Ok(new SimulationStateResponse(
             (int)_simulationService.Speed,
@@ -41,6 +42,7 @@ public sealed class SimulationController(
     /// <response code="200">The set of permitted simulation speeds.</response>
     [HttpGet("allowed-speeds")]
     [ProducesResponseType(typeof(AllowedSpeedsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public ActionResult<AllowedSpeedsResponse> GetAllowedSpeeds() =>
         Ok(new AllowedSpeedsResponse(_registry.AllowedSpeeds.Select(s => (int)s).Order().ToList()));
 
@@ -54,6 +56,7 @@ public sealed class SimulationController(
     [HttpPut("speed")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SetSpeed(
         [FromBody] SetSimulationSpeedRequest request,
         CancellationToken cancellationToken)
@@ -86,6 +89,7 @@ public sealed class SimulationController(
     /// <response code="204">All devices successfully reset.</response>
     [HttpPost("reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Reset(CancellationToken cancellationToken)
     {
         await _simulationService.ResetAllDevicesAsync(cancellationToken);
@@ -101,7 +105,7 @@ public sealed class SimulationController(
 /// The target simulation speed multiplier. Supports multipliers 1, 2, 5, or 10. (Must be an integer).
 /// <example>5</example>
 /// </param>
-public sealed record SetSimulationSpeedRequest(object? SpeedMultiplier)
+public sealed record SetSimulationSpeedRequest(int? SpeedMultiplier)
 {
     /// <summary>
     /// Helper method to extract the integer value from the SpeedMultiplier property.

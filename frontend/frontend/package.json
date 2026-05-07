@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@analogjs/vitest-angular": "^2.5.0",
+    "@angular-devkit/build-angular": "^21.2.10",
+    "@testing-library/angular": "^19.2.1",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.5"
+  }
+}

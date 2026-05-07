@@ -1,14 +1,11 @@
-using SmartHome.Domain.Device.StateMachine;
 using SmartHome.Domain.Common;
+using SmartHome.Domain.Device.StateMachine;
 
 namespace SmartHome.Domain.Device.Thermostat;
 
 /// <summary>
 /// Represents a smart thermostat that monitors and controls the ambient temperature
 /// of a location. Supports heating, cooling, and auto modes.
-/// Transitions between Off, Idle, Heating, and Cooling are enforced by a state machine,
-/// while the active <see cref="IThermostatModeStrategy"/> determines which target state
-/// is appropriate for the current conditions.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -18,7 +15,7 @@ namespace SmartHome.Domain.Device.Thermostat;
 /// </para>
 /// <para>
 /// As of the implicit-power-on refactor, calling <see cref="SetDesiredTemperature"/> on
-/// an Off thermostat no longer throws — the command layer
+/// an Off thermostat no longer throws. The command layer
 /// (<c>SetDesiredTemperatureCommand</c>) is responsible for invoking <see cref="TurnOn"/>
 /// and ensuring the mode is appropriate for reaching the target before delegating here.
 /// <see cref="SetMode"/> retains its guard because mode changes are an explicit user
@@ -35,20 +32,25 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// </remarks>
     public PowerState PowerState => IsOn() ? PowerState.On : PowerState.Off;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Returns <c>true</c> for Idle, Heating, and Cooling because those states mean
+    /// the thermostat is powered on at the domain level.
+    /// </remarks>
+    public bool IsPoweredOn => State != ThermostatState.Off;
+
     /// <summary>
-    /// The current operational state of the thermostat.
+    /// Gets the current operational state of the thermostat.
     /// </summary>
     public ThermostatState State { get; private set; }
 
     /// <summary>
     /// The current operating mode controlling heating and cooling behavior.
-    /// Updating the mode also refreshes the active evaluation strategy so
-    /// EF Core rehydration produces a consistent runtime state.
     /// </summary>
     private ThermostatMode _mode;
 
     /// <summary>
-    /// The current thermostat mode.
+    /// Gets the current thermostat mode.
     /// </summary>
     public ThermostatMode Mode
     {
@@ -56,19 +58,19 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         private set
         {
             Guard.EnumDefined(value, nameof(value));
-
             _mode = value;
             _strategy = _strategyProvider.GetStrategy(value);
         }
     }
 
     /// <summary>
-    /// The target temperature in Fahrenheit. Values are clamped to 60–80°F.
+    /// Gets the target temperature in Fahrenheit.
+    /// Values are clamped to 60–80°F.
     /// </summary>
     public int DesiredTemperature { get; private set; }
 
     /// <summary>
-    /// The current ambient temperature of the location in Fahrenheit.
+    /// Gets the current ambient temperature of the location in Fahrenheit.
     /// </summary>
     public int AmbientTemperature { get; private set; }
 
@@ -80,16 +82,19 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     private IThermostatStrategyProvider _strategyProvider = new ThermostatStrategyProvider();
 
     /// <summary>
-    /// State machine enforcing legal transitions. Not persisted — rebuilt from
-    /// <see cref="State"/> on first use so EF-rehydrated instances honor the
-    /// same invariants as freshly constructed instances.
+    /// State machine enforcing legal thermostat transitions.
     /// </summary>
     private StateMachine<ThermostatState>? _stateMachine;
 
+    /// <summary>
+    /// Gets the lazily initialized thermostat state machine.
+    /// </summary>
     private StateMachine<ThermostatState> Machine =>
         _stateMachine ??= BuildMachine(State);
 
-    // Required for EF Core
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Thermostat"/> class for EF Core.
+    /// </summary>
     private Thermostat()
     {
         Type = DeviceType.Thermostat;
@@ -108,8 +113,8 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     public Thermostat(Guid id, string name, string location)
         : base(id, name, location, DeviceType.Thermostat)
     {
-        DesiredTemperature = 72;
-        AmbientTemperature = 72;
+        DesiredTemperature = DefaultTemperature;
+        AmbientTemperature = DefaultTemperature;
         Mode = ThermostatMode.Auto;
         State = ThermostatState.Off;
     }
@@ -148,9 +153,8 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Powers the thermostat on from the Off state, transitioning to Idle and
-    /// immediately evaluating whether heating or cooling should begin.
-    /// If the thermostat is already in a non-Off state, this operation has no effect.
+    /// Powers the thermostat on from the Off state, transitions to Idle,
+    /// and immediately evaluates whether heating or cooling should begin.
     /// </summary>
     public void TurnOn()
     {
@@ -172,14 +176,14 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Sets the operating mode and immediately re-evaluates state.
-    /// Throws <see cref="SmartHome.Domain.Common.Exceptions.InvalidDomainOperationException"/> if the thermostat is off.
+    /// Sets the operating mode and immediately re-evaluates the thermostat state.
     /// </summary>
+    /// <param name="mode">The thermostat mode to apply.</param>
     /// <remarks>
     /// The off-state guard is intentional. SetMode is an explicit user operation
-    /// and the caller (UI or command layer) must turn the thermostat on first.
+    /// and the caller, whether UI or command layer, must turn the thermostat on first.
     /// Auto-powering inside SetMode would silently change the device's power
-    /// state in a method that doesn't advertise that behavior.
+    /// state in a method that does not advertise that behavior.
     /// </remarks>
     public void SetMode(ThermostatMode mode)
     {
@@ -195,10 +199,11 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// Sets the desired temperature in Fahrenheit.
     /// Values outside 60–80°F are clamped to the nearest bound.
     /// </summary>
+    /// <param name="temperature">The requested desired temperature.</param>
     /// <remarks>
     /// As of the implicit-power-on refactor, the off-state guard has been removed.
-    /// Callers (the command layer) are responsible for transitioning the thermostat
-    /// to a non-Off state.
+    /// Callers, usually the command layer, are responsible for transitioning the thermostat
+    /// to a non-Off state before invoking this method.
     /// </remarks>
     public void SetDesiredTemperature(int temperature)
     {
@@ -208,9 +213,9 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Updates the ambient temperature of the location and re-evaluates state.
-    /// Changes are tracked even when the thermostat is off.
+    /// Updates the ambient temperature and re-evaluates the thermostat if it is powered on.
     /// </summary>
+    /// <param name="temperature">The new ambient temperature in Fahrenheit.</param>
     public void SetAmbientTemperature(int temperature)
     {
         AmbientTemperature = temperature;
@@ -223,13 +228,9 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
 
     /// <summary>
     /// Advances the thermostat by one simulation tick.
-    /// When heating, the ambient temperature increases by 1°F.
-    /// When cooling, the ambient temperature decreases by 1°F.
-    /// When Off or Idle, the tick has no effect.
     /// </summary>
     /// <returns>
-    /// <c>true</c> if the thermostat's observable state changed during the tick;
-    /// otherwise, <c>false</c>.
+    /// <c>true</c> if the thermostat's observable state changed; otherwise, <c>false</c>.
     /// </returns>
     public override bool Tick()
     {
@@ -257,9 +258,28 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Delegates state evaluation to the active mode strategy and transitions
-    /// through the state machine if a different target state is required.
-    /// The strategy is refreshed on each evaluation to ensure consistency.
+    /// Returns whether the thermostat should be considered active for filtering and display.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> when the thermostat is Heating or Cooling; otherwise, <c>false</c>.
+    /// </returns>
+    public override bool IsOn() =>
+        State is ThermostatState.Heating or ThermostatState.Cooling;
+
+    /// <summary>
+    /// Restores the thermostat to its default configuration.
+    /// </summary>
+    public override void ResetToDefaults()
+    {
+        Mode = ThermostatMode.Auto;
+        DesiredTemperature = DefaultTemperature;
+        AmbientTemperature = DefaultTemperature;
+        State = ThermostatState.Off;
+        _stateMachine = BuildMachine(State);
+    }
+
+    /// <summary>
+    /// Delegates state evaluation to the active mode strategy.
     /// </summary>
     private void EvaluateState()
     {
@@ -281,41 +301,25 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     }
 
     /// <summary>
-    /// Performs a validated state transition and keeps <see cref="State"/>
-    /// synchronized with the underlying state machine.
+    /// Performs a validated state transition and synchronizes <see cref="State"/>.
     /// </summary>
+    /// <param name="target">The target thermostat state.</param>
     private void TransitionTo(ThermostatState target)
     {
+        if (State == target)
+        {
+            return;
+        }
+
         Machine.Transition(target);
         State = Machine.CurrentState;
     }
 
     /// <summary>
-    /// Returns <c>true</c> only when actively heating or cooling.
-    /// </summary>
-    public override bool IsOn() =>
-        State is ThermostatState.Heating or ThermostatState.Cooling;
-
-    /// <summary>
-    /// Restores the thermostat to its default configuration and resets the
-    /// transition state machine to match the default Off state.
-    /// </summary>
-    public override void ResetToDefaults()
-    {
-        Mode = ThermostatMode.Auto;
-        DesiredTemperature = DefaultTemperature;
-        AmbientTemperature = DefaultTemperature;
-        State = ThermostatState.Off;
-        _stateMachine = BuildMachine(State);
-    }
-
-    /// <summary>
     /// Builds the legal thermostat transition table.
-    /// Off transitions only to Idle.
-    /// Idle transitions to Off, Heating, or Cooling.
-    /// Heating and Cooling may transition to Off, Idle, or each other.
-    /// Self-transitions are intentionally excluded.
     /// </summary>
+    /// <param name="initialState">The initial thermostat state.</param>
+    /// <returns>A state machine configured for thermostat transitions.</returns>
     private static StateMachine<ThermostatState> BuildMachine(ThermostatState initialState) =>
         new(initialState, new Dictionary<ThermostatState, IReadOnlySet<ThermostatState>>
         {
@@ -344,9 +348,9 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
         });
 
     /// <summary>
-    /// Returns a log-friendly representation including operational state,
-    /// mode, and both temperatures.
+    /// Returns a log-friendly representation of the thermostat.
     /// </summary>
+    /// <returns>A string containing the thermostat identity, state, mode, and temperatures.</returns>
     public override string ToString() =>
         $"{GetType().Name}(Id={Id}, Name='{Name}', Location='{Location}', " +
         $"State={State}, Mode={Mode}, Ambient={AmbientTemperature}°F, Desired={DesiredTemperature}°F)";

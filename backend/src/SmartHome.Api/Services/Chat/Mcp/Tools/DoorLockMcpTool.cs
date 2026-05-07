@@ -1,62 +1,73 @@
+using System.ComponentModel;
 using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.DoorLock;
-using System.Text.Json;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
 /// Handles chat tool requests for locking or unlocking door lock devices.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve devices and execute door lock commands.</param>
-/// <param name="shouldLock">A value indicating whether this handler locks or unlocks doors.</param>
-public sealed class DoorLockToolHandler(
-    IDeviceService deviceService,
-    bool shouldLock) : IChatToolHandler
+[McpServerToolType]
+public sealed class DoorLockTool(
+    IDeviceService deviceService)
 {
     /// <summary>
-    /// Gets the tool name exposed to the language model.
+    /// Gets the tool name exposed to the language model for locking doors.
     /// </summary>
-    public string ToolName => shouldLock ? "lock_door" : "unlock_door";
+    public const string LockToolName = "lock_door";
 
     /// <summary>
-    /// Gets the tool definition sent to the language model.
+    /// Gets the tool name exposed to the language model for unlocking doors.
     /// </summary>
-    public object ToolDefinition => new
+    public const string UnlockToolName = "unlock_door";
+
+    /// <summary>
+    /// Locks a door by name, or uses all to lock every door.
+    /// </summary>
+    /// <param name="name">Door name like Front Door or Back Door, or all.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A message describing the result of the door lock operation.</returns>
+    [McpServerTool(Name = LockToolName)]
+    [Description("Lock a door by name, or use 'all' to lock every door.")]
+    public Task<string> LockDoorAsync(
+        [Description("Door name like Front Door or Back Door, or all.")]
+        string name,
+        CancellationToken cancellationToken = default)
     {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = shouldLock
-                ? "Lock a door by name, or use 'all' to lock every door."
-                : "Unlock a door by name, or use 'all' to unlock every door.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    name = new
-                    {
-                        type = "string",
-                        description = "Door name like Front Door or Back Door, or all"
-                    }
-                },
-                required = new[] { "name" }
-            }
-        }
-    };
+        return HandleAsync(name, true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Unlocks a door by name, or uses all to unlock every door.
+    /// </summary>
+    /// <param name="name">Door name like Front Door or Back Door, or all.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A message describing the result of the door lock operation.</returns>
+    [McpServerTool(Name = UnlockToolName)]
+    [Description("Unlock a door by name, or use 'all' to unlock every door.")]
+    public Task<string> UnlockDoorAsync(
+        [Description("Door name like Front Door or Back Door, or all.")]
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        return HandleAsync(name, false, cancellationToken);
+    }
 
     /// <summary>
     /// Executes the door lock tool using the supplied model arguments.
     /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="doorName">The door name parsed from the model's tool call.</param>
+    /// <param name="shouldLock">A value indicating whether this handler locks or unlocks doors.</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the door lock operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    private async Task<string> HandleAsync(
+        string doorName,
+        bool shouldLock,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "name", out var doorName) || doorName is null)
+        if (string.IsNullOrWhiteSpace(doorName))
         {
             return "I need a door name to control a door lock.";
         }

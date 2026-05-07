@@ -3,102 +3,164 @@ using SmartHome.Domain.Device.StateMachine;
 namespace SmartHome.Domain.Device;
 
 /// <summary>
-/// Base class for all devices that have an explicit power state.
-/// Transitions between On and Off are enforced by a state machine;
-/// subclasses can react to transitions via <see cref="OnPoweredOn"/>
-/// and <see cref="OnPoweredOff"/> hooks.
+/// Base class for all devices that have an explicit binary power state.
+/// Transitions between <see cref="PowerState.On"/> and
+/// <see cref="PowerState.Off"/> are enforced by a reusable state machine.
 /// </summary>
+/// <remarks>
+/// Device-specific behavior should be implemented by subclasses through
+/// <see cref="OnPoweredOn"/> and <see cref="OnPoweredOff"/> rather than by
+/// external commands checking concrete device types.
+/// </remarks>
 public abstract class PoweredDevice : Device, IPowerable
 {
     /// <summary>
-    /// Current power state of the device. Exposed for persistence (EF Core)
-    /// and queries; mutations flow through <see cref="TurnOn"/> / <see cref="TurnOff"/>.
+    /// Gets the current externally visible power state of the device.
     /// </summary>
     public PowerState PowerState { get; private set; }
 
     /// <summary>
-    /// State machine enforcing legal transitions. Not persisted — rebuilt from
-    /// <see cref="PowerState"/> on first use so EF-rehydrated instances
-    /// honor the same invariants as freshly constructed ones.
+    /// Gets a value indicating whether the device is currently powered on
+    /// at the domain level.
+    /// </summary>
+    public bool IsPoweredOn => PowerState == PowerState.On;
+
+    /// <summary>
+    /// State machine enforcing legal power transitions. This field is not persisted.
+    /// It is rebuilt from <see cref="PowerState"/> on first use so EF Core-rehydrated
+    /// instances honor the same invariants as freshly constructed instances.
     /// </summary>
     private StateMachine<PowerState>? _stateMachine;
 
+    /// <summary>
+    /// Gets the lazily initialized power state machine.
+    /// </summary>
     private StateMachine<PowerState> Machine =>
         _stateMachine ??= BuildMachine(PowerState);
 
-    // Required for EF Core — ensures proper materialization with default state
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PoweredDevice"/> class for EF Core.
+    /// </summary>
     protected PoweredDevice()
     {
         PowerState = PowerState.Off;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PoweredDevice"/> class
+    /// with a specified identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier for the device.</param>
+    /// <param name="name">The human-readable device name.</param>
+    /// <param name="location">The room or area where the device is located.</param>
+    /// <param name="type">The concrete device type.</param>
     protected PoweredDevice(Guid id, string name, string location, DeviceType type)
         : base(id, name, location, type)
     {
         PowerState = PowerState.Off;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PoweredDevice"/> class
+    /// with a generated identifier.
+    /// </summary>
+    /// <param name="name">The human-readable device name.</param>
+    /// <param name="location">The room or area where the device is located.</param>
+    /// <param name="type">The concrete device type.</param>
     protected PoweredDevice(string name, string location, DeviceType type)
         : base(name, location, type)
     {
         PowerState = PowerState.Off;
     }
 
+    /// <summary>
+    /// Powers the device on if it is currently off.
+    /// If the device is already on, the operation is treated as an idempotent no-op.
+    /// </summary>
     public virtual void TurnOn()
     {
-        if (PowerState == PowerState.On) return;
+        if (PowerState == PowerState.On)
+        {
+            return;
+        }
+
         Machine.Transition(PowerState.On);
         PowerState = Machine.CurrentState;
 
-        // Allow subclasses to apply behavior on power-on (e.g., restore state).
         OnPoweredOn();
     }
 
+    /// <summary>
+    /// Powers the device off if it is currently on.
+    /// If the device is already off, the operation is treated as an idempotent no-op.
+    /// </summary>
     public virtual void TurnOff()
     {
-        if (PowerState == PowerState.Off) return;
+        if (PowerState == PowerState.Off)
+        {
+            return;
+        }
+
         Machine.Transition(PowerState.Off);
         PowerState = Machine.CurrentState;
 
-        // Allow subclasses to handle shutdown behavior.
         OnPoweredOff();
     }
 
-    // Hook for subclasses — executed after device is powered on.
-    protected virtual void OnPoweredOn() { }
+    /// <summary>
+    /// Allows subclasses to apply device-specific behavior after the device powers on.
+    /// </summary>
+    protected virtual void OnPoweredOn()
+    {
+    }
 
-    // Hook for subclasses — executed after device is powered off.
-    protected virtual void OnPoweredOff() { }
+    /// <summary>
+    /// Allows subclasses to apply device-specific behavior after the device powers off.
+    /// </summary>
+    protected virtual void OnPoweredOff()
+    {
+    }
 
+    /// <summary>
+    /// Returns whether the device should be considered on for filtering and display.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> when the device's visible power state is
+    /// <see cref="PowerState.On"/>; otherwise, <c>false</c>.
+    /// </returns>
     public override bool IsOn() => PowerState == PowerState.On;
 
+    /// <summary>
+    /// Restores the powered device to its default state and rebuilds its state machine.
+    /// </summary>
     public override void ResetToDefaults()
     {
-        // Subclasses reset their device-specific attributes first so that
-        // ResetPoweredDefaults() sees a clean slate before it sets PowerState
-        // to Off and rebuilds the state machine.
         ResetPoweredDefaults();
 
-        // Force power state to Off, bypassing the transition table.
-        // Reset is a privileged operation — it legitimately overrides normal
-        // rules (e.g., a running fan should reset to Off in one step even if
-        // the machine's currently "off" state rejects Off -> Off).
         PowerState = PowerState.Off;
         _stateMachine = BuildMachine(PowerState);
     }
 
-    // Subclasses must define how their attributes reset.
+    /// <summary>
+    /// Resets subclass-specific attributes to their default values.
+    /// </summary>
     protected abstract void ResetPoweredDefaults();
 
     /// <summary>
-    /// Builds the transition table for a powered device. Simple two-state
-    /// toggle with no identity transitions — TurnOn on an already-on device
-    /// will throw, matching the prior hand-coded behavior.
+    /// Builds the legal transition table for a powered device.
     /// </summary>
+    /// <param name="initialState">The initial power state for the state machine.</param>
+    /// <returns>A state machine configured for powered-device transitions.</returns>
     private static StateMachine<PowerState> BuildMachine(PowerState initialState) =>
         new(initialState, new Dictionary<PowerState, IReadOnlySet<PowerState>>
         {
-            [PowerState.Off] = new HashSet<PowerState> { PowerState.On },
-            [PowerState.On] = new HashSet<PowerState> { PowerState.Off }
+            [PowerState.Off] = new HashSet<PowerState>
+            {
+                PowerState.On
+            },
+            [PowerState.On] = new HashSet<PowerState>
+            {
+                PowerState.Off
+            }
         });
 }

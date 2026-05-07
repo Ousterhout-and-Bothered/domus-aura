@@ -44,6 +44,10 @@ public sealed class SimulationClock(ISimulationSpeedRegistry speedRegistry) : IS
 
     public void Reset()
     {
-        lock (_lock) _currentTime = DateTime.UtcNow;
+        lock (_lock)
+        {
+            _currentTime = DateTime.UtcNow;
+            _speed = SimulationSpeed.X1;
+        }
     }
 }

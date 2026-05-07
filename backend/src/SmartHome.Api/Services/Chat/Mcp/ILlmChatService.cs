@@ -1,4 +1,4 @@
-namespace SmartHome.Api.Services.Chat;
+namespace SmartHome.Api.Services.Chat.Mcp;
 
 /// <summary>
 /// Defines a service for interacting with a language model to generate responses

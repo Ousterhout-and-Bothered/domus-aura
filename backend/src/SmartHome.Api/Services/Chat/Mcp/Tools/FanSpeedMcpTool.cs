@@ -1,68 +1,45 @@
-using System.Text.Json;
+using System.ComponentModel;
 using SmartHome.Domain.Device;
 using SmartHome.Domain.Device.Fan;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
 /// Handles chat tool requests for setting fan speed by location or across all fans.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve fan devices and execute fan commands.</param>
-public sealed class FanSpeedToolHandler(
-    IDeviceService deviceService) : IChatToolHandler
+[McpServerToolType]
+public sealed class FanSpeedTool(
+    IDeviceService deviceService)
 {
     /// <summary>
     /// Gets the tool name exposed to the language model.
     /// </summary>
-    public string ToolName => "set_fan_speed";
+    public const string ToolName = "set_fan_speed";
 
     /// <summary>
-    /// Gets the tool definition sent to the language model.
+    /// Sets the speed for fans in a location, or use 'all' to set every fan.
     /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = "Set the speed for fans in a location, or use 'all' to set every fan.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new
-                    {
-                        type = "string",
-                        description = "Room name like Living Room, or all"
-                    },
-                    speed = new
-                    {
-                        type = "string",
-                        description = "Fan speed: Low, Medium, or High"
-                    }
-                },
-                required = new[] { "location", "speed" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the fan speed tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="location">Room name like Living Room, or all</param>
+    /// <param name="speed">Fan speed: Low, Medium, or High</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the fan speed operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = ToolName)]
+    [Description("Set the speed for fans in a location, or use 'all' to set every fan.")]
+    public async Task<string> SetFanSpeedAsync(
+        [Description("Room name like Living Room, or all")]
+        string location,
+        [Description("Fan speed: Low, Medium, or High")]
+        string speed,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
+        if (string.IsNullOrWhiteSpace(location))
         {
             return "I need a location to set fan speed.";
         }
 
-        if (!ChatToolHelpers.TryGetString(arguments, "speed", out var speed) || speed is null)
+        if (string.IsNullOrWhiteSpace(speed))
         {
             return "Please provide a valid fan speed.";
         }

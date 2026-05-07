@@ -1,61 +1,63 @@
-using System.Text.Json;
+using System.ComponentModel;
 using SmartHome.Domain.Device;
+using SmartHome.Domain.Device.Thermostat;
+using ModelContextProtocol.Server;
 
-namespace SmartHome.Api.Services.Chat.Tools;
+namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Handles chat tool requests for turning thermostats on or off by location or across all thermostats.
+/// Provides MCP tools for turning thermostats on or off by location or across all thermostats.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve thermostat devices and execute thermostat commands.</param>
-/// <param name="turnOn">A value indicating whether this handler turns thermostats on or off.</param>
-public sealed class ThermostatPowerToolHandler(
-    IDeviceService deviceService,
-    bool turnOn) : IChatToolHandler
+[McpServerToolType]
+public sealed class ThermostatPowerTool(
+    IDeviceService deviceService)
 {
     /// <summary>
-    /// Gets the tool name exposed to the language model.
+    /// Turns on thermostats in a location or across all thermostats.
     /// </summary>
-    public string ToolName => turnOn ? "turn_on_thermostats" : "turn_off_thermostats";
-
-    /// <summary>
-    /// Gets the tool definition sent to the language model.
-    /// </summary>
-    public object ToolDefinition => new
-    {
-        type = "function",
-        function = new
-        {
-            name = ToolName,
-            description = turnOn
-                ? "Turn on thermostats in a location, or use 'all' to turn on every thermostat."
-                : "Turn off thermostats in a location, or use 'all' to turn off every thermostat.",
-            parameters = new
-            {
-                type = "object",
-                properties = new
-                {
-                    location = new
-                    {
-                        type = "string",
-                        description = "Room name like Living Room, or all"
-                    }
-                },
-                required = new[] { "location" }
-            }
-        }
-    };
-
-    /// <summary>
-    /// Executes the thermostat power tool using the supplied model arguments.
-    /// </summary>
-    /// <param name="arguments">The tool arguments parsed from the model's tool call.</param>
+    /// <param name="location">Room name like Living Room, or all.</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
     /// <returns>A message describing the result of the thermostat power operation.</returns>
-    public async Task<string> HandleAsync(
-        Dictionary<string, JsonElement> arguments,
+    [McpServerTool(Name = "turn_on_thermostats")]
+    [Description("Turn on thermostats in a location, or use 'all' to turn on every thermostat.")]
+    public Task<string> TurnOnThermostatsAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
         CancellationToken cancellationToken = default)
     {
-        if (!ChatToolHelpers.TryGetString(arguments, "location", out var location) || location is null)
+        return HandleAsync(location, true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Turns off thermostats in a location or across all thermostats.
+    /// </summary>
+    /// <param name="location">Room name like Living Room, or all.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A message describing the result of the thermostat power operation.</returns>
+    [McpServerTool(Name = "turn_off_thermostats")]
+    [Description("Turn off thermostats in a location, or use 'all' to turn off every thermostat.")]
+    public Task<string> TurnOffThermostatsAsync(
+        [Description("Room name like Living Room, or all.")]
+        string location,
+        CancellationToken cancellationToken = default)
+    {
+        return HandleAsync(location, false, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes the thermostat power tool using the supplied MCP arguments.
+    /// </summary>
+    /// <param name="location">The requested thermostat location, or all for every thermostat.</param>
+    /// <param name="turnOn">A value indicating whether this operation turns thermostats on or off.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
+    /// <returns>A message describing the result of the thermostat power operation.</returns>
+    private async Task<string> HandleAsync(
+        string location,
+        bool turnOn,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(location))
         {
             return "I need a location to control thermostats.";
         }
@@ -77,7 +79,7 @@ public sealed class ThermostatPowerToolHandler(
         var changed = 0;
         var alreadyCorrect = 0;
 
-        foreach (var thermostat in thermostats)
+        foreach (var thermostat in thermostats.Cast<Thermostat>())
         {
             var isAlreadyCorrect = turnOn
                 ? thermostat.IsOn()
@@ -98,7 +100,7 @@ public sealed class ThermostatPowerToolHandler(
             changed++;
         }
 
-        return BuildResponse(location, changed, alreadyCorrect);
+        return BuildResponse(location, changed, alreadyCorrect, turnOn);
     }
 
     /// <summary>
@@ -107,8 +109,13 @@ public sealed class ThermostatPowerToolHandler(
     /// <param name="location">The requested thermostat location, or all for every thermostat.</param>
     /// <param name="changed">The number of thermostats changed by the operation.</param>
     /// <param name="alreadyCorrect">The number of thermostats already in the requested power state.</param>
+    /// <param name="turnOn">A value indicating whether this operation turns thermostats on or off.</param>
     /// <returns>A message summarizing the operation result.</returns>
-    private string BuildResponse(string location, int changed, int alreadyCorrect)
+    private static string BuildResponse(
+        string location,
+        int changed,
+        int alreadyCorrect,
+        bool turnOn)
     {
         var all = ChatToolHelpers.IsAll(location);
         var action = turnOn ? "Turned on" : "Turned off";

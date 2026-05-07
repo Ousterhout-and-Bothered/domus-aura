@@ -34,10 +34,10 @@ public class ValidationLogicTests
     }
 
     [Fact]
-    public void Request_InvalidDataTypes_ReturnsValidationError()
+    public void Request_NegativeValue_ReturnsValidationError()
     {
         // Arrange
-        var request = new SetSimulationSpeedRequest("not-a-number");
+        var request = new SetSimulationSpeedRequest(-1);
 
         // Act
         var result = _validator.Validate(request);

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using SmartHome.Api.Contracts.Devices;
+using SmartHome.Api.Mapping;
 using SmartHome.Domain.Device;
 using SmartHome.Infrastructure.Device.Events;
 using SmartHome.Domain.Common;
@@ -48,18 +49,14 @@ public class DeviceController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Device>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<Device>>> GetAll(
         [FromQuery] string? location,
         [FromQuery] DeviceType? type,
         [FromQuery] string? state,
         CancellationToken cancellationToken)
     {
-        bool? isOn = state?.ToLowerInvariant() switch
-        {
-            "on" => true,
-            "off" => false,
-            _ => null
-        };
+        var isOn = DeviceFilterMapper.MapState(state);
 
         var devices = await _deviceService.GetAllDevicesAsync(location, type, isOn, cancellationToken);
         return Ok(devices);
@@ -74,6 +71,7 @@ public class DeviceController : ControllerBase
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Device>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var device = await _deviceService.GetDeviceByIdAsync(id, cancellationToken);
@@ -90,6 +88,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(Device), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Device>> Create(
         [FromBody] RegisterDeviceRequest request,
         CancellationToken cancellationToken)
@@ -109,6 +108,7 @@ public class DeviceController : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _deviceService.RemoveDeviceAsync(id, cancellationToken);
@@ -149,6 +149,7 @@ public class DeviceController : ControllerBase
     [HttpGet("{id:guid}/history")]
     [ProducesResponseType(typeof(IEnumerable<CommandHistory>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<CommandHistory>>> GetHistory(Guid id, CancellationToken cancellationToken)
     {
         var history = await _deviceService.GetDeviceHistoryAsync(id, cancellationToken);
@@ -213,6 +214,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Device>> UpdateState(
         Guid id,
         [FromBody] DeviceCommandRequest request,
@@ -231,7 +233,7 @@ public class DeviceController : ControllerBase
     [HttpGet("events")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task GetEvents(CancellationToken cancellationToken)
     {
         Response.ContentType = "text/event-stream";

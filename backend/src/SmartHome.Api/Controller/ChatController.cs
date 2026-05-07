@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHome.Api.Contracts.Chat;
-using SmartHome.Api.Services.Chat;
+using SmartHome.Api.Services.Chat.Mcp;
 
 namespace SmartHome.Api.Controller;
 
@@ -27,6 +27,7 @@ public sealed class ChatController(
     [HttpPost]
     [ProducesResponseType(typeof(ChatResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ChatResponse>> SendMessage(
         ChatRequest request,
         CancellationToken cancellationToken)
