@@ -286,10 +286,14 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// </summary>
     private void TransitionTo(ThermostatState target)
     {
+        if (State == target)
+        {
+            return;
+        }
+
         Machine.Transition(target);
         State = Machine.CurrentState;
     }
-
     /// <summary>
     /// Returns <c>true</c> only when actively heating or cooling.
     /// </summary>
@@ -314,7 +318,7 @@ public sealed class Thermostat : TickableDevice, IThermostatControllable, IPower
     /// Off transitions only to Idle.
     /// Idle transitions to Off, Heating, or Cooling.
     /// Heating and Cooling may transition to Off, Idle, or each other.
-    /// Self-transitions are intentionally excluded.
+    /// Self-transitions are handled as no-ops before reaching the state machine.
     /// </summary>
     private static StateMachine<ThermostatState> BuildMachine(ThermostatState initialState) =>
         new(initialState, new Dictionary<ThermostatState, IReadOnlySet<ThermostatState>>
