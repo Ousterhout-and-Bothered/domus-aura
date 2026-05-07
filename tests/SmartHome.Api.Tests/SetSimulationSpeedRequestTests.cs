@@ -6,10 +6,10 @@ namespace SmartHome.Api.Tests;
 public class SetSimulationSpeedRequestTests
 {
     [Fact]
-    public void GetSpeedValue_ShouldReturnInt_WhenInputIsStringFive()
+    public void GetSpeedValue_ShouldReturnInt_WhenInputIsFive()
     {
         // Arrange
-        var request = new SetSimulationSpeedRequest("5");
+        var request = new SetSimulationSpeedRequest(5);
 
         // Act
         var result = request.GetSpeedValue();
@@ -19,18 +19,15 @@ public class SetSimulationSpeedRequestTests
     }
 
     [Fact]
-    public void GetSpeedValue_ShouldReturnInt_WhenInputIsJsonElementStringFive()
+    public void GetSpeedValue_ShouldReturnNull_WhenInputIsNull()
     {
         // Arrange
-        var json = "{\"speed\": \"5\"}";
-        var document = JsonDocument.Parse(json);
-        var speedElement = document.RootElement.GetProperty("speed");
-        var request = new SetSimulationSpeedRequest(speedElement);
+        var request = new SetSimulationSpeedRequest(null);
 
         // Act
         var result = request.GetSpeedValue();
 
         // Assert
-        Assert.Equal(5, result);
+        Assert.Null(result);
     }
 }
