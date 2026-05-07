@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using SmartHome.Infrastructure.Device.Repository;
@@ -109,33 +108,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
-
-// Allow anonymous in Development for grader/Scalar workflows, but not under
-// the "Test" environment used by integration test fixtures — those tests
-// must still observe the production auth contract to remain meaningful.
-var allowAnonymousInDev = builder.Environment.IsDevelopment()
-                          && !builder.Environment.IsEnvironment("Test");
-
-if (allowAnonymousInDev)
-{
-    // In Development, treat every request as anonymous to make Scalar testing
-    // friction-free for graders. Production and Test environments retain
-    // full auth enforcement.
-    builder.Services.PostConfigure<AuthorizationOptions>(options =>
-    {
-        options.DefaultPolicy = new AuthorizationPolicyBuilder()
-            .RequireAssertion(_ => true)
-            .Build();
-        options.FallbackPolicy = options.DefaultPolicy;
-    });
-}
-
 // SQLite setup — resolves relative paths and ensures directory exists
 var connectionString = ResolveSqliteConnectionString(builder);
 
@@ -154,6 +126,14 @@ builder.Services.AddScoped<SceneDbSeeder>();
 builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetPowerCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetBrightnessCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetColorCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetSpeedCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetModeCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetDesiredTemperatureCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, LockCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, UnlockCommandBuilder>();
 builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
 
