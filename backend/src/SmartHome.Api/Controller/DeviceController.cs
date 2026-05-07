@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using SmartHome.Api.Contracts.Devices;
+using SmartHome.Api.Mapping;
 using SmartHome.Domain.Device;
 using SmartHome.Infrastructure.Device.Events;
 using SmartHome.Domain.Common;
@@ -54,12 +55,7 @@ public class DeviceController : ControllerBase
         [FromQuery] string? state,
         CancellationToken cancellationToken)
     {
-        bool? isOn = state?.ToLowerInvariant() switch
-        {
-            "on" => true,
-            "off" => false,
-            _ => null
-        };
+        var isOn = DeviceFilterMapper.MapState(state);
 
         var devices = await _deviceService.GetAllDevicesAsync(location, type, isOn, cancellationToken);
         return Ok(devices);
