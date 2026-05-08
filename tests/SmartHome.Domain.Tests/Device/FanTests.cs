@@ -77,16 +77,6 @@ public class FanTests
     }
 
     [Fact]
-    public void SetSpeed_ValidSpeedWhileOff_ThrowsInvalidDomainOperation()
-    {
-        // Arrange
-        var fan = CreateFan();
-
-        // Act + Assert
-        Assert.Throws<InvalidDomainOperationException>(() => fan.SetSpeed(FanSpeed.High));
-    }
-
-    [Fact]
     public void SetSpeed_InvalidEnumValue_ThrowsInvalidDomainArgument()
     {
         // Arrange

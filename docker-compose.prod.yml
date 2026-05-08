@@ -8,27 +8,26 @@
 
 services:
   backend:
+    image: 608752952798.dkr.ecr.us-east-1.amazonaws.com/domus-aura-api:latest
+    build: !reset null
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/smarthome.db
-      - Authentication__Authority=http://keycloak:8080/realms/smarthome
+      - Authentication__Authority=https://auth.domus-aura.com/realms/smarthome
       - Authentication__Audience=smarthome-spa
       - Authentication__ValidIssuer=https://auth.domus-aura.com/realms/smarthome
-      - Authentication__RequireHttpsMetadata=false
+      - Authentication__RequireHttpsMetadata=true
       - AllowedOrigins__0=https://domus-aura.com
       - AllowedOrigins__1=https://www.domus-aura.com
     restart: unless-stopped
-    # Caddy fronts everything; no host port exposure.
     ports: !reset []
 
   frontend:
-    build:
-      context: frontend
-      args:
-        BUILD_CONFIG: production
+    image: 608752952798.dkr.ecr.us-east-1.amazonaws.com/domus-aura-frontend:latest
+    build: !reset null
     restart: unless-stopped
-    ports: !reset [ ]
+    ports: !reset []
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0

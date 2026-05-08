@@ -65,25 +65,6 @@ The application should start with the frontend, backend API, Keycloak identity p
 
 ---
 
-## Access the Application (Local)
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:4200 |
-| Backend API | http://localhost:5137 |
-| API Docs | http://localhost:5137/scalar/v1 |
-| Keycloak | http://localhost:8080 |
-
----
-
-## Hosted Deployment (AWS)
-
-
-| Service | URL                               |
-|---|-----------------------------------|
-| Frontend | https://domus-aura.com            |
----
-
 ## Test Credentials
 
 ### Keycloak Admin
@@ -106,6 +87,17 @@ password: TheAnswerIs42!
 
 The application is fully containerized using Docker Compose.
 
+### Access URLs
+
+Once the containers are running, the application is available at:
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:4200 |
+| Backend API | http://localhost:5137 |
+| API Docs | http://localhost:5137/scalar/v1 |
+| Keycloak | http://localhost:8080 |
+
 ### Services
 
 The following services are started automatically:
@@ -119,6 +111,23 @@ The following services are started automatically:
 
 - Application data is stored in the `/data` directory
 - Device state and history persist across restarts
+- The SQLite database file is stored at:
+
+```text
+data/smarthome.db
+```
+
+Before running the application with Docker for the first time, ensure the local data directory exists:
+
+```bash
+mkdir -p data
+```
+
+If you encounter SQLite permission issues on Linux/macOS, run:
+
+```bash
+chmod 775 data
+```
 
 ### Authentication
 
@@ -154,6 +163,15 @@ OpenAI__ApiKey=your_api_key_here
 ```
 
 The application can still run without this key, but LLM-based commands will not work unless the key is provided.
+
+---
+
+## Hosted Deployment (AWS)
+
+
+| Service | URL                               |
+|---|-----------------------------------|
+| Frontend | https://domus-aura.com            |
 
 ---
 
@@ -501,16 +519,16 @@ http://localhost:5137/api
 
 ## Design Patterns
 
-| Pattern | Implementation / Key Classes                                                             | Rationale |
-|---|------------------------------------------------------------------------------------------|---|
-| **State** | `Device`, `PoweredDevice`, `Thermostat`, 'Light', 'Fan', 'DoorLock'                       | Models formal state machines where transitions are governed by rules (e.g., cannot set brightness if Off). |
-| **Factory** | `DeviceFactory`, `DeviceCommandFactory`                                                  | Decouples device creation and command instantiation from the service layer, allowing for easy extension of new types. |
-| **Strategy (Thermostat)** | `IThermostatStrategyProvider`, `HeatModeStrategy`, `CoolModeStrategy`, `AutoModeStrategy` | Encapsulates thermostat mode-specific behavior, allowing the simulation loop to remain independent of mode logic. |
-| **Repository** | `IDeviceRepository`, `DeviceRepository`                                                  | Provides an abstraction over EF Core and SQLite, ensuring the domain and services remain independent of persistence details. |
-| **Observer** | `DeviceEventBroker`, `IDeviceEventStream`, `IDeviceEventPublisher`                       | Implements a pub/sub mechanism for real-time updates; SSE clients subscribe to device state changes. |
-| **Command** | `IDeviceCommand`, `SetPowerCommand`, `SetBrightnessCommand`                              | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
-| **Composite** | `CompositeCommand`, `DeviceScene`                                                        | Allows a collection of commands (a Scene) to be treated as a single command, enabling complex automation sequences. |
-| **Strategy (LLM)** | `IChatToolHandler`, `LightColorToolHandler`, `ThermostatTempToolHandler`                 | Enables dynamic selection of LLM tool processing logic based on the capability requested by the language model. |
+| Pattern                   | Implementation / Key Classes                                                             | Rationale |
+|---------------------------|------------------------------------------------------------------------------------------|---|
+| **State**                 | `Device`, `PoweredDevice`, `Thermostat`, `Light`, `Fan`, `DoorLock`                      | Models formal state machines where transitions are governed by rules (e.g., cannot set brightness if Off). |
+| **Command**               | `IDeviceCommand`, `*Command`                                                             | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
+| **Strategy (Thermostat)** | `IThermostatStrategyProvider`, HeatModeStrategy`, `CoolModeStrategy`, `AutoModeStrategy` | Encapsulates thermostat mode-specific behavior, allowing the simulation loop to remain independent of mode logic. |
+| **Repository**            | `IDeviceRepository`, `DeviceRepository`                                                  | Provides an abstraction over EF Core and SQLite, ensuring the domain and services remain independent of persistence details. |
+| **Observer**              | `DeviceEventBroker`, `IDeviceEventStream`, `IDeviceEventPublisher`                       | Implements a pub/sub mechanism for real-time updates; SSE clients subscribe to device state changes. |
+| **Command**               | `IDeviceCommand`, `*Command`                                                             | Encapsulates actions as objects, enabling consistent execution and tracking of command history. |
+| **Composite**             | `CompositeCommand`, `DeviceScene`                                                        | Allows a collection of commands (a Scene) to be treated as a single command, enabling complex automation sequences. |
+| **Strategy (LLM)**        | `IChatToolHandler`, `*ToolHandler`                                                       | Enables dynamic selection of LLM tool processing logic based on the capability requested by the language model. |
 
 ---
 

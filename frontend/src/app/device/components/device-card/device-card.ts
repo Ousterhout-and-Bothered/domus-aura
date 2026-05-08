@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ConfirmationService, MessageService} from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { Router } from '@angular/router';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
+import { EditDeviceDialog } from '../edit-device-dialog/edit-device-dialog';
 
 import { DeviceType } from '../../models/device';
 import {
@@ -28,18 +32,34 @@ import { DoorLock } from '../door-lock/door-lock';
 @Component({
   selector: 'aura-device-card',
   standalone: true,
-  imports: [ThermostatGauge, FanSpinning, LightBulb, DoorLock, ButtonModule],
+  imports: [ThermostatGauge, FanSpinning, LightBulb, DoorLock, ButtonModule, MenuModule, EditDeviceDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="device-card-host">
       <button
         type="button"
-        class="device-card-remove"
-        [attr.aria-label]="'Remove ' + device().name"
-        (click)="onRequestRemove($event)"
+        class="device-card-kebab"
+        [attr.aria-label]="'Actions for ' + device().name"
+        (click)="kebabMenu.toggle($event)"
       >
-        <i class="pi pi-times"></i>
+        <i class="pi pi-ellipsis-v"></i>
       </button>
+
+      <p-menu
+        #kebabMenu
+        [model]="menuItems()"
+        [popup]="true"
+        appendTo="body"
+        styleClass="device-card-menu"
+      />
+
+      <aura-edit-device-dialog
+        [visible]="editOpen()"
+        (visibleChange)="editOpen.set($event)"
+        [device]="device()"
+        [existingLocations]="existingLocations()"
+        (deviceUpdated)="onDeviceUpdated($event)"
+      />
 
       @switch (device().type) {
         @case (DeviceType.Thermostat) {
@@ -104,11 +124,37 @@ import { DoorLock } from '../door-lock/door-lock';
   styleUrl: './device-card.scss',
 })
 export class DeviceCard {
+  readonly device = input.required<AnyDevice>();
+  readonly existingLocations = input<string[]>([]);
+
   private readonly deviceApi = inject(DeviceApiService);
   private readonly messages = inject(MessageService);
   private readonly confirms = inject(ConfirmationService);
+  private readonly router = inject(Router);
 
-  readonly device = input.required<AnyDevice>();
+  readonly editOpen = signal(false);
+
+  readonly menuItems = computed<MenuItem[]>(() => [
+    {
+      label: 'Edit',
+      icon: 'pi pi-pencil',
+      command: () => this.editOpen.set(true),
+    },
+    {
+      label: 'View history',
+      icon: 'pi pi-clock',
+      command: () => this.onViewHistory(),
+    },
+    {
+      separator: true,
+    },
+    {
+      label: 'Delete',
+      icon: 'pi pi-trash',
+      styleClass: 'menu-item-danger',
+      command: () => this.onRequestRemoveFromMenu(),
+    },
+  ]);
 
   readonly deviceUpdated = output<AnyDevice>();
 
@@ -289,12 +335,14 @@ export class DeviceCard {
     });
   }
 
+
   /* ─────────────── Removal ─────────────── */
 
-  onRequestRemove(event: MouseEvent): void {
-    // target the confirm popup at the × button so the popover anchors visibly
+  // Triggered from the kebab menus Delete item. The confirm popup anchors
+  // at the host element since we don't have the original click target.
+  onRequestRemoveFromMenu(): void {
     this.confirms.confirm({
-      target: event.currentTarget as HTMLElement,
+      target: document.activeElement as HTMLElement,
       header: 'Remove device',
       message: `Remove "${this.device().name}"? This cannot be undone.`,
       icon: 'pi pi-exclamation-triangle',
@@ -327,6 +375,20 @@ export class DeviceCard {
           life: 4000,
         });
       },
+    });
+  }
+
+  /* ─────────────── Edit ─────────────── */
+
+  onDeviceUpdated(updated: AnyDevice): void {
+    this.deviceUpdated.emit(updated);
+  }
+
+  /* ─────────────── View history ─────────────── */
+
+  onViewHistory(): void {
+    this.router.navigate(['/history'], {
+      queryParams: { deviceId: this.device().id },
     });
   }
 

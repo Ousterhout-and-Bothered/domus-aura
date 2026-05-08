@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests"
+    "test": "vitest run"
   },
   "prettier": {
     "printWidth": 100,
@@ -38,12 +38,18 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^2.5.0",
+    "@analogjs/vitest-angular": "^2.5.0",
+    "@angular-devkit/build-angular": "^21.2.10",
     "@angular/build": "^21.0.1",
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
     "@angular/platform-browser-dynamic": "^21.2.7",
-    "jsdom": "^27.1.0",
+    "@noble/hashes": "^1.4.0",
+    "@testing-library/angular": "^19.2.1",
+    "@testing-library/dom": "^10.4.1",
+    "jsdom": "^29.1.1",
     "typescript": "~5.9.2",
-    "vitest": "^4.0.8"
+    "vitest": "^4.1.5"
   }
 }

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using SmartHome.Infrastructure.Device.Repository;
@@ -24,12 +23,12 @@ using SmartHome.Domain.Simulation;
 using SmartHome.Domain.Device.Events;
 using SmartHome.Api.Middleware;
 using SmartHome.Api.Validation;
-using SmartHome.Api.Services.Chat;
-using SmartHome.Api.Services.Chat.Tools;
+using SmartHome.Api.Services.Chat.Mcp;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+
 
 // Entry point for configuring and running the SmartHome API application,
 // including service registration, middleware pipeline, and application startup logic.
@@ -109,13 +108,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
-
 // SQLite setup — resolves relative paths and ensures directory exists
 var connectionString = ResolveSqliteConnectionString(builder);
 
@@ -134,65 +126,23 @@ builder.Services.AddScoped<SceneDbSeeder>();
 builder.Services.AddScoped<IDeviceFactory, DeviceFactory>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceCommandFactory, DeviceCommandFactory>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetPowerCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetBrightnessCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetColorCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetSpeedCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetModeCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, SetDesiredTemperatureCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, LockCommandBuilder>();
+builder.Services.AddScoped<IDeviceCommandBuilder, UnlockCommandBuilder>();
 builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
 
 // LLM Chat Service
 builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
-
-// Chat Tool Handlers
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Light,
-        "light",
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Light,
-        "light",
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Fan,
-        "fan",
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new PoweredDeviceToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        DeviceType.Fan,
-        "fan",
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new DoorLockToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new DoorLockToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatTempToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatPowerToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        true));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new ThermostatPowerToolHandler(
-        sp.GetRequiredService<IDeviceService>(),
-        false));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new LightBrightnessToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new LightColorToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
-builder.Services.AddScoped<IChatToolHandler>(sp =>
-    new FanSpeedToolHandler(
-        sp.GetRequiredService<IDeviceService>()));
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
 
 // Device builders (factory registration)
 builder.Services.AddScoped<IDeviceBuilder, LightBuilder>();
@@ -232,12 +182,18 @@ if (app.Environment.IsDevelopment())
 
 // Middleware Pipeline
 app.UseExceptionHandler();
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    KnownIPNetworks = { },
-    KnownProxies = { }
-});
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto
+};
+
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 app.UseCors();
 if (app.Environment.IsDevelopment())
 {
@@ -262,6 +218,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapControllers();
+
+app.MapMcp("/mcp").RequireAuthorization();
 
 await app.RunAsync();
 

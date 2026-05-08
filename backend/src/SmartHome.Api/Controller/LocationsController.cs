@@ -29,6 +29,7 @@ public sealed class LocationsController(ISimulationService simulationService) : 
     [ProducesResponseType(typeof(SetAmbientTemperatureResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SetAmbientTemperatureResponse>> SetAmbientTemperature(
         string location,
         [FromBody] SetAmbientTemperatureRequest request,
@@ -50,7 +51,7 @@ public sealed class LocationsController(ISimulationService simulationService) : 
 /// The ambient temperature in degrees Fahrenheit. (Must be an integer).
 /// <example>72</example>
 /// </param>
-public sealed record SetAmbientTemperatureRequest(object? Temperature)
+public sealed record SetAmbientTemperatureRequest(int? Temperature)
 {
     /// <summary>
     /// Helper method to extract the integer value from the Temperature property.

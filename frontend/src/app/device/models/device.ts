@@ -77,14 +77,58 @@ export interface RegisterDeviceRequest {
 }
 
 /**
+ * Body for PATCH /api/devices/{id}.
+ * Matches Contracts/Devices/UpdateDeviceRequest.cs.
+ *
+ * Both fields are sent on every request; the server detects which
+ * fields actually changed and logs only the deltas to command history.
+ * If neither field changes, the call is a no-op (returns the unchanged
+ * device, no audit entry written).
+ */
+export interface UpdateDeviceRequest {
+  name: string;
+  location: string;
+}
+
+/**
  * One row from GET /api/devices/{id}/history.
  * Matches Domain/Device/CommandHistory.cs.
  */
 export interface CommandHistory {
   id: string;
   deviceId: string;
-  action: string;
+  operation: string;
   timestamp: string; // ISO 8601 UTC
+}
+
+/**
+ * Filters for GET /api/devices/history. All optional.
+ *
+ * `from` and `to` are inclusive ISO 8601 UTC bounds.
+ * `location` matches the device's current location.
+ */
+export interface HistoryFilters {
+  page?: number;
+  pageSize?: number;
+  location?: string;
+  deviceId?: string;
+  from?: string;
+  to?: string;
+}
+
+/**
+ * Generic paged response envelope.
+ * Matches Common/PagedResults.cs.
+ *
+ * `page` is 1-indexed. `total` is the unfiltered-by-page count
+ * across all pages; client computes total pages as
+ * Math.ceil(total / pageSize).
+ */
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 /**

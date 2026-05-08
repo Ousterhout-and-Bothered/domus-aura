@@ -40,6 +40,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(SceneResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SceneResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
         // Service throws ResourceNotFoundException if missing, which the
@@ -58,6 +59,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [HttpPost]
     [ProducesResponseType(typeof(SceneResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SceneResponse>> Create(
         [FromBody] SceneRequest request,
         CancellationToken cancellationToken)
@@ -84,6 +86,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [ProducesResponseType(typeof(SceneResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SceneResponse>> Update(
         Guid id,
         [FromBody] SceneRequest request,
@@ -105,6 +108,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         // Service throws ResourceNotFoundException if missing, which the
@@ -126,6 +130,7 @@ public sealed class ScenesController(ISceneService sceneService) : ControllerBas
     [HttpPost("{id:guid}/execute")]
     [ProducesResponseType(typeof(SceneExecutionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<SceneExecutionResponse>> Execute(
         Guid id,
         CancellationToken cancellationToken)

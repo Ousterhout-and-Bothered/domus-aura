@@ -1,0 +1,26 @@
+meta {
+  name: Set Simulation Speed
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Set simulation speed to 5."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

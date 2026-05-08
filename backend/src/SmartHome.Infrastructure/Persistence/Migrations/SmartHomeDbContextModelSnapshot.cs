@@ -23,8 +23,9 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("TEXT COLLATE NOCASE");
 
                     b.Property<string>("Operation")
                         .IsRequired()
