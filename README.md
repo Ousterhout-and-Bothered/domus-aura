@@ -323,7 +323,8 @@ The architecture video covers:
 
 [Domus Aura CI/CD Pipeline Breakdown](https://www.loom.com/share/0a8c5f83f18442c69c88eb477cf67a37)
 
-This video covers the GitHub Actions pipeline, including linting, build, tests, Docker image creation, and deployment if enabled. 
+This video covers the GitHub Actions pipeline, including linting, build, tests, Docker image creation, and deployment if enabled.  
+
 As for the sheer length of this video: _"With great features comes great documentation."_ (Sorry in advance)
 
 ---
