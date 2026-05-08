@@ -8,6 +8,8 @@
 
 services:
   backend:
+    image: 608752952798.dkr.ecr.us-east-1.amazonaws.com/domus-aura-api:latest
+    build: !reset null
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
@@ -22,12 +24,10 @@ services:
     ports: !reset []
 
   frontend:
-    build:
-      context: frontend
-      args:
-        BUILD_CONFIG: production
+    image: 608752952798.dkr.ecr.us-east-1.amazonaws.com/domus-aura-frontend:latest
+    build: !reset null
     restart: unless-stopped
-    ports: !reset [ ]
+    ports: !reset []
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -82,9 +82,7 @@ services:
       - frontend
       - keycloak
     restart: unless-stopped
-Authentication__Authority=https://auth:
-  domus-aura:
-    com/realms/smarthome:
+
 volumes:
   keycloak-db-data:
   caddy-data:
