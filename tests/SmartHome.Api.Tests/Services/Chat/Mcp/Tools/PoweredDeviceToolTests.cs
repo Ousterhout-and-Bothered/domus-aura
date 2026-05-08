@@ -13,11 +13,11 @@ public class PoweredDeviceToolTests
     public PoweredDeviceToolTests()
     {
         _deviceServiceMock = new Mock<IDeviceService>();
-        _tool = new PoweredDeviceTool(_deviceServiceMock.Object, DeviceType.Light, "light");
+        _tool = new PoweredDeviceTool(_deviceServiceMock.Object);
     }
 
     [Fact]
-    public async Task TurnOnAsync_TurnsOnDevice_WhenDeviceIsOff()
+    public async Task TurnOnLightsAsync_TurnsOnDevice_WhenDeviceIsOff()
     {
         // Arrange
         var location = "Kitchen";
@@ -28,7 +28,7 @@ public class PoweredDeviceToolTests
             .ReturnsAsync(new List<Device> { light });
 
         // Act
-        var result = await _tool.TurnOnAsync(location);
+        var result = await _tool.TurnOnLightsAsync(location);
 
         // Assert
         Assert.Contains("Turned on 1 light in Kitchen", result);
@@ -36,7 +36,7 @@ public class PoweredDeviceToolTests
     }
 
     [Fact]
-    public async Task TurnOffAsync_ReportsAlreadyOff_WhenDeviceIsOff()
+    public async Task TurnOffLightsAsync_ReportsAlreadyOff_WhenDeviceIsOff()
     {
         // Arrange
         var location = "Kitchen";
@@ -47,7 +47,7 @@ public class PoweredDeviceToolTests
             .ReturnsAsync(new List<Device> { light });
 
         // Act
-        var result = await _tool.TurnOffAsync(location);
+        var result = await _tool.TurnOffLightsAsync(location);
 
         // Assert
         Assert.Contains("The light in Kitchen was already off", result);
