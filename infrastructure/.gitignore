@@ -17,3 +17,8 @@ crash.*.log
 # CLI configuration
 .terraformrc
 terraform.rc
+
+# Saved plan files
+*.tfplan
+*.tfplan.binary
+tfplan*
