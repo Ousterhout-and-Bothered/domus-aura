@@ -438,6 +438,36 @@ Domus Aura is designed mobile-first and adapts cleanly across phone, tablet, and
 
 ---
 
+## Component Library and Styling
+
+The UI is built on **PrimeNG** for all standard interactive elements: cards,
+dialogs, form inputs, dropdowns, datepickers, sliders, color pickers, buttons,
+and toasts — combined with **PrimeFlex** for layout utilities and **PrimeIcons**
+for iconography. Every form, dialog, and data-display surface in the application
+is a PrimeNG component.
+
+The custom SCSS in this repository covers three things and three things only:
+
+1. **A theme layer** — design tokens for the Domus Aura brand (colors, typography,
+   spacing) defined as CSS custom properties in `src/styles.scss`, with parallel
+   light and dark mode definitions. PrimeNG's CSS variables are mapped to these
+   tokens so the entire component library inherits the theme.
+
+2. **A mobile-first dialog override** — a single `.aura-dialog` class that
+   transforms PrimeNG's centered modal into a full-screen iOS-style sheet on
+   phones (with safe-area insets for the home indicator) and reverts to a
+   floating dialog at the `md` breakpoint and above.
+
+3. **Domain-specific SVG visualizations** — the thermostat radial gauge, the
+   fan blade, and the light bulb. These are device-specific affordances, not
+   reimplementations of standard UI primitives.
+
+No standard UI element is hand-rolled. Buttons are `p-button`. Form fields are
+`p-inputtext`, `p-select`, `p-datepicker`. Dialogs are `p-dialog` styled through
+the `aura-dialog` wrapper class.
+
+---
+
 ## Device Categories
 
 Devices fall into two categories:
