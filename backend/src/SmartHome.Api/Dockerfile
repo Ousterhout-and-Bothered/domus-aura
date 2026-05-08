@@ -21,7 +21,6 @@ RUN dotnet publish "SmartHome.Api.csproj" -c Release -o /app/publish /p:UseAppHo
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
 # Create a non-root user for security
 RUN useradd -m -s /bin/bash appuser && chown -R appuser /app
