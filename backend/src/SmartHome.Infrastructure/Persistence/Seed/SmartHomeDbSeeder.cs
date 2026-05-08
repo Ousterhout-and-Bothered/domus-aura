@@ -31,11 +31,11 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
         Guid.Parse("44444444-4444-4444-4444-444444444444");
 
     /// <summary>Predefined identifier for the kitchen overhead light.</summary>
-    private static readonly Guid KitchenOverheadId =
+    private static readonly Guid KitchenLightId =
         Guid.Parse("55555555-5555-5555-5555-555555555555");
 
     /// <summary>Predefined identifier for the living room overhead light.</summary>
-    private static readonly Guid LivingRoomOverheadId =
+    private static readonly Guid LivingRoomLightId =
         Guid.Parse("66666666-6666-6666-6666-666666666666");
 
     /// <summary>Predefined identifier for the hallway light.</summary>
@@ -87,16 +87,16 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
         bedroomFan.TurnOff();
 
         // Lights
-        var kitchenOverhead = new Light(KitchenOverheadId, "Kitchen Overhead", "Kitchen");
-        kitchenOverhead.TurnOn();
+        var kitchenLight = new Light(KitchenLightId, "Kitchen Overhead", "Kitchen");
+        kitchenLight.TurnOn();
         // Set custom brightness and color
-        kitchenOverhead.SetBrightness(75);
-        kitchenOverhead.SetColor("#FF8800");
+        kitchenLight.SetBrightness(75);
+        kitchenLight.SetColor("#FF8800");
 
-        var livingRoomOverhead = new Light(LivingRoomOverheadId, "Living Room Overhead", "Living Room");
-        livingRoomOverhead.TurnOn();
-        livingRoomOverhead.SetBrightness(40);
-        livingRoomOverhead.SetColor("#FFF4CC");
+        var livingRoomLight = new Light(LivingRoomLightId, "Living Room Overhead", "Living Room");
+        livingRoomLight.TurnOn();
+        livingRoomLight.SetBrightness(40);
+        livingRoomLight.SetColor("#FFF4CC");
 
         var hallwayLight = new Light(HallwayLightId, "Hallway Light", "Hallway");
         hallwayLight.TurnOn();
@@ -143,8 +143,8 @@ public sealed class SmartHomeDbSeeder(IDeviceRepository repository)
             backDoor,
             livingRoomFan,
             bedroomFan,
-            kitchenOverhead,
-            livingRoomOverhead,
+            kitchenLight,
+            livingRoomLight,
             hallwayLight,
             porchLight,
             livingRoomThermostat,

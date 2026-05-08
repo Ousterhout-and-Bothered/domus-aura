@@ -65,25 +65,6 @@ The application should start with the frontend, backend API, Keycloak identity p
 
 ---
 
-## Access the Application (Local)
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:4200 |
-| Backend API | http://localhost:5137 |
-| API Docs | http://localhost:5137/scalar/v1 |
-| Keycloak | http://localhost:8080 |
-
----
-
-## Hosted Deployment (AWS)
-
-
-| Service | URL                               |
-|---|-----------------------------------|
-| Frontend | https://domus-aura.com            |
----
-
 ## Test Credentials
 
 ### Keycloak Admin
@@ -106,6 +87,17 @@ password: TheAnswerIs42!
 
 The application is fully containerized using Docker Compose.
 
+### Access URLs
+
+Once the containers are running, the application is available at:
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:4200 |
+| Backend API | http://localhost:5137 |
+| API Docs | http://localhost:5137/scalar/v1 |
+| Keycloak | http://localhost:8080 |
+
 ### Services
 
 The following services are started automatically:
@@ -119,6 +111,23 @@ The following services are started automatically:
 
 - Application data is stored in the `/data` directory
 - Device state and history persist across restarts
+- The SQLite database file is stored at:
+
+```text
+data/smarthome.db
+```
+
+Before running the application with Docker for the first time, ensure the local data directory exists:
+
+```bash
+mkdir -p data
+```
+
+If you encounter SQLite permission issues on Linux/macOS, run:
+
+```bash
+chmod 775 data
+```
 
 ### Authentication
 
@@ -154,6 +163,15 @@ OpenAI__ApiKey=your_api_key_here
 ```
 
 The application can still run without this key, but LLM-based commands will not work unless the key is provided.
+
+---
+
+## Hosted Deployment (AWS)
+
+
+| Service | URL                               |
+|---|-----------------------------------|
+| Frontend | https://domus-aura.com            |
 
 ---
 
