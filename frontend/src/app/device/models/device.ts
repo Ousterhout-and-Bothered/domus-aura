@@ -99,6 +99,9 @@ export interface CommandHistory {
   deviceId: string;
   operation: string;
   timestamp: string; // ISO 8601 UTC
+  deviceName: string;
+  deviceLocation: string;
+  deviceType: string;
 }
 
 /**

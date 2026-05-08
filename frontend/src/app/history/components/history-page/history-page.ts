@@ -170,19 +170,13 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
                 {{ entry.timestamp | date: 'MMM d, y · HH:mm:ss' }}
               </td>
               <td class="col-device">
-                @let dev = deviceById().get(entry.deviceId);
                 <div class="device-cell">
-                  @if (dev) {
-                    <span class="device-name">{{ dev.name }}</span>
-                    <span class="device-type">({{ dev.type }})</span>
-                  } @else {
-                    <span class="device-name muted">Removed device</span>
-                    <span class="device-type">{{ entry.deviceId | slice: 0 : 8 }}…</span>
-                  }
+                  <span class="device-name">{{ entry.deviceName }}</span>
+                  <span class="device-type">({{ entry.deviceType }})</span>
                 </div>
               </td>
               <td class="col-location">
-                {{ deviceById().get(entry.deviceId)?.location ?? '—' }}
+                {{ entry.deviceLocation }}
               </td>
               <td class="col-operation">
                 <div class="op-cell">
