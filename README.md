@@ -878,4 +878,4 @@ Example error response:
 
 ## And A Very Special Thanks...
 
-...to Professor Adkisson for pushing us to be more ambitious, for refusing to let "good enough" be the goal, and for treating us like engineers long before we'd earned it. This may be our last class with you; but, we are walking out as better developers than we were when we first walked in. Our modules may be deep, but our gratitude is deeper. 
+...to Professor Adkisson for pushing us to be more ambitious, for refusing to let "good enough" be the goal, and for treating us like engineers long before we'd earned it. This may be our last class with you, but we are walking out as better developers than we were when we first walked in. Our modules may be deep, but our gratitude is deeper. 
