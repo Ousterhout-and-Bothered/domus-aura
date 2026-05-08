@@ -75,7 +75,7 @@ public sealed class DoorLock : Device, ILockable
     {
         // Bypass transition rules on reset — state machine would otherwise
         // reject "Locked -> Locked" or any other identity transition.
-        LockState = DoorLockState.Unlocked;
+        LockState = DoorLockState.Locked;
         _stateMachine = BuildMachine(LockState);
     }
 
