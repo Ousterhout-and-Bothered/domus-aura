@@ -219,7 +219,7 @@ using (var scope = app.Services.CreateScope())
 
 app.MapControllers();
 
-app.MapMcp("/mcp").RequireAuthorization();
+app.MapMcp("/mcp");
 
 await app.RunAsync();
 
