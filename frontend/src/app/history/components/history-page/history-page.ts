@@ -331,9 +331,16 @@ export class HistoryPage implements OnInit {
       this.patchUrl({ from: null, to: null, page: 1 });
       return;
     }
+
+    const from = new Date(value[0]);
+    from.setHours(0, 0, 0, 0);
+
+    const to = new Date(value[1]);
+    to.setHours(23, 59, 59, 999);
+
     this.patchUrl({
-      from: value[0].toISOString(),
-      to: value[1].toISOString(),
+      from: from.toISOString(),
+      to: to.toISOString(),
       page: 1,
     });
   }
@@ -412,10 +419,14 @@ export class HistoryPage implements OnInit {
 
     const range = this.dateRange();
     if (range && range.length === 2 && range[0] && range[1]) {
-      filters.from = range[0].toISOString();
-      filters.to = range[1].toISOString();
+      const from = new Date(range[0]);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(range[1]);
+      to.setHours(23, 59, 59, 999);
+      filters.from = from.toISOString();
+      filters.to = to.toISOString();
     }
-
+    
     this.loading.set(true);
     this.errorMessage.set(null);
 
