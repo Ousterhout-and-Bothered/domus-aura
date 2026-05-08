@@ -5,50 +5,50 @@ using ModelContextProtocol.Server;
 namespace SmartHome.Api.Services.Chat.Mcp.Tools;
 
 /// <summary>
-/// Provides MCP tools for turning powered devices on or off by location or across all matching devices.
+/// Provides MCP tools for turning powered devices (lights, fans) on or off by location.
 /// </summary>
 /// <param name="deviceService">The service used to retrieve devices and execute power commands.</param>
-/// <param name="deviceType">The type of powered device targeted by this handler.</param>
-/// <param name="deviceLabel">The readable device label used in tool names and responses.</param>
 [McpServerToolType]
-public sealed class PoweredDeviceTool(
-    IDeviceService deviceService,
-    DeviceType deviceType,
-    string deviceLabel)
+public sealed class PoweredDeviceTool(IDeviceService deviceService)
 {
-    /// <summary>
-    /// Turns on powered devices.
-    /// </summary>
-    [McpServerTool(Name = "turn_on_devices")]
-    [Description("Turn on devices of a specific type in a location, or use 'all'.")]
-    public Task<string> TurnOnAsync(
-        [Description("Room name like Living Room, or all.")]
+    [McpServerTool(Name = "turn_on_lights")]
+    [Description("Turn on lights in a location, or use 'all' to turn on lights everywhere.")]
+    public Task<string> TurnOnLightsAsync(
+        [Description("Room name like Living Room, or 'all'.")]
         string location,
         CancellationToken cancellationToken = default)
-    {
-        return HandleAsync(location, true, cancellationToken);
-    }
+        => HandleAsync(DeviceType.Light, "light", location, true, cancellationToken);
 
-    /// <summary>
-    /// Turns off powered devices.
-    /// </summary>
-    [McpServerTool(Name = "turn_off_devices")]
-    [Description("Turn off devices of a specific type in a location, or use 'all'.")]
-    public Task<string> TurnOffAsync(
-        [Description("Room name like Living Room, or all.")]
+    [McpServerTool(Name = "turn_off_lights")]
+    [Description("Turn off lights in a location, or use 'all' to turn off lights everywhere.")]
+    public Task<string> TurnOffLightsAsync(
+        [Description("Room name like Living Room, or 'all'.")]
         string location,
         CancellationToken cancellationToken = default)
-    {
-        return HandleAsync(location, false, cancellationToken);
-    }
+        => HandleAsync(DeviceType.Light, "light", location, false, cancellationToken);
 
-    /// <summary>
-    /// Executes the powered device tool logic.
-    /// </summary>
+    [McpServerTool(Name = "turn_on_fans")]
+    [Description("Turn on fans in a location, or use 'all' to turn on fans everywhere.")]
+    public Task<string> TurnOnFansAsync(
+        [Description("Room name like Living Room, or 'all'.")]
+        string location,
+        CancellationToken cancellationToken = default)
+        => HandleAsync(DeviceType.Fan, "fan", location, true, cancellationToken);
+
+    [McpServerTool(Name = "turn_off_fans")]
+    [Description("Turn off fans in a location, or use 'all' to turn off fans everywhere.")]
+    public Task<string> TurnOffFansAsync(
+        [Description("Room name like Living Room, or 'all'.")]
+        string location,
+        CancellationToken cancellationToken = default)
+        => HandleAsync(DeviceType.Fan, "fan", location, false, cancellationToken);
+
     private async Task<string> HandleAsync(
+        DeviceType deviceType,
+        string deviceLabel,
         string location,
         bool turnOn,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(location))
         {
@@ -91,13 +91,15 @@ public sealed class PoweredDeviceTool(
             changed++;
         }
 
-        return BuildResponse(location, changed, alreadyCorrect, turnOn);
+        return BuildResponse(deviceLabel, location, changed, alreadyCorrect, turnOn);
     }
 
-    /// <summary>
-    /// Builds a user-facing response summarizing the powered device operation.
-    /// </summary>
-    private string BuildResponse(string location, int changed, int alreadyCorrect, bool turnOn)
+    private static string BuildResponse(
+        string deviceLabel,
+        string location,
+        int changed,
+        int alreadyCorrect,
+        bool turnOn)
     {
         var all = ChatToolHelpers.IsAll(location);
         var action = turnOn ? "Turned on" : "Turned off";
