@@ -306,7 +306,7 @@ The demo video covers:
 
 ### Architecture Tour Video
 
-**Loom Link:** `[INSERT ARCHITECTURE TOUR LOOM LINK]`
+[Architecture Tour](https://www.loom.com/share/3de7a37434c642e384657991a70149c3)
 
 The architecture video covers:
 
@@ -325,7 +325,7 @@ The architecture video covers:
 
 This video covers the GitHub Actions pipeline, including linting, build, tests, Docker image creation, and deployment if enabled.  
 
-As for the sheer length of this video: _"With great features comes great documentation."_ (Sorry in advance)
+As for the sheer length of these videos: _"With great features comes great documentation."_ (Sorry in advance)
 
 ---
 
