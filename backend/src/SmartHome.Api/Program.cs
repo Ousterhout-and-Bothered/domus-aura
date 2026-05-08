@@ -141,7 +141,7 @@ builder.Services.AddScoped<ISceneService, SceneService>();
 builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(options => options.Stateless = true)
     .WithToolsFromAssembly();
 
 // Device builders (factory registration)
