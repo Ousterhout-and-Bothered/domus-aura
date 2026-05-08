@@ -21,12 +21,8 @@ services:
       - AllowedOrigins__0=https://domus-aura.com
       - AllowedOrigins__1=https://www.domus-aura.com
       - OpenAI__ApiKey=${OPENAI_API_KEY}
-<<<<<<< Updated upstream
-      - OpenAI__McpServerUrl=https://api.domus-aura.com/mcp
-=======
->>>>>>> Stashed changes
     restart: unless-stopped
-    ports: !reset []
+    ports: !reset [ ]
 
   frontend:
     image: 608752952798.dkr.ecr.us-east-1.amazonaws.com/domus-aura-frontend:latest
