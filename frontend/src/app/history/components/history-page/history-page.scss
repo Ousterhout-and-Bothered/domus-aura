@@ -202,6 +202,7 @@
   &[data-category='metadata']    { background: rgba(99, 102, 241, 0.15);  color: rgb(129, 140, 248); }
   &[data-category='power']       { background: rgba(34, 197, 94, 0.15);   color: rgb(74, 222, 128); }
   &[data-category='lock']        { background: rgba(239, 68, 68, 0.15);   color: rgb(248, 113, 113); }
+  &[data-category='unlock']      { background: rgba(29, 158, 117, 0.18);  color: rgb(93, 202, 165); }
   &[data-category='dimmer']      { background: rgba(250, 204, 21, 0.15);  color: rgb(250, 204, 21); }
   &[data-category='color']       { background: rgba(236, 72, 153, 0.15);  color: rgb(244, 114, 182); }
   &[data-category='speed']       { background: rgba(14, 165, 233, 0.15);  color: rgb(56, 189, 248); }
@@ -209,6 +210,9 @@
   &[data-category='temperature'] { background: rgba(249, 115, 22, 0.15);  color: rgb(251, 146, 60); }
   &[data-category='scene']       { background: rgba(20, 184, 166, 0.15);  color: rgb(45, 212, 191); }
   &[data-category='other']       { background: var(--aura-surface-muted); color: var(--aura-text-muted); }
+  &[data-category='power-off']   { background: rgba(239, 68, 68, 0.15);   color: rgb(248, 113, 113); }
+  &[data-category='mode-cool']   { background: rgba(56, 189, 248, 0.18);  color: rgb(125, 211, 252); }
+  &[data-category='mode-heat']   { background: rgba(239, 68, 80, 0.15);   color: rgb(250, 113, 113); }
 }
 
 .op-text {

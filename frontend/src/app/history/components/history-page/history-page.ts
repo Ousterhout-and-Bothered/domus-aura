@@ -22,7 +22,7 @@ import { MessageModule } from 'primeng/message';
 import { DeviceApiService } from '../../../device/services/device-api.service';
 import { AnyDevice } from '../../../device/models/device-types';
 import { CommandHistory, HistoryFilters, PagedResult } from '../../../device/models/device';
-import { classifyOperation, humanizeOperation } from '../../utils/operation-classifier';
+import { classifyOperation, humanizeOperation, parseRemovedDeviceMeta, RemovedDeviceMeta } from '../../utils/operation-classifier';
 
 /**
  * The /history route. A filterable, paginated audit feed of every command
@@ -96,7 +96,7 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
             optionValue="value"
             [showClear]="true"
             appendTo="body"
-            styleClass="filter-control"
+            class="filter-control"
           />
         </div>
 
@@ -111,8 +111,7 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
             [showButtonBar]="true"
             placeholder="Any time"
             appendTo="body"
-            styleClass="filter-control"
-          />
+            styleClass="filter-control"></p-datepicker>
         </div>
 
         @if (hasActiveFilters()) {
@@ -128,11 +127,11 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
 
       @if (loading()) {
         <div class="history-loading">
-          <p-progressspinner [style]="{ width: '2rem', height: '2rem' }" strokeWidth="4" />
+          <p-progressspinner [style]="{ width: '2rem', height: '2rem' }" strokeWidth="4"/>
         </div>
       } @else if (errorMessage(); as msg) {
-        <p-message severity="error" [text]="msg" styleClass="history-error" />
-        <p-button label="Try again" icon="pi pi-refresh" (onClick)="reload()" />
+        <p-message severity="error" [text]="msg" styleClass="history-error"/>
+        <p-button label="Try again" icon="pi pi-refresh" (onClick)="reload()"/>
       } @else if (page()?.items?.length === 0) {
         <p class="history-empty">
           @if (hasActiveFilters()) {
@@ -171,10 +170,14 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
               </td>
               <td class="col-device">
                 @let dev = deviceById().get(entry.deviceId);
+                @let removed = removedDeviceById().get(entry.deviceId);
                 <div class="device-cell">
                   @if (dev) {
                     <span class="device-name">{{ dev.name }}</span>
                     <span class="device-type">({{ dev.type }})</span>
+                  } @else if (removed) {
+                    <span class="device-name muted">{{ removed.name }}</span>
+                    <span class="device-type muted">({{ removed.type }}, removed)</span>
                   } @else {
                     <span class="device-name muted">Removed device</span>
                     <span class="device-type">{{ entry.deviceId | slice: 0 : 8 }}…</span>
@@ -182,14 +185,14 @@ import { classifyOperation, humanizeOperation } from '../../utils/operation-clas
                 </div>
               </td>
               <td class="col-location">
-                {{ deviceById().get(entry.deviceId)?.location ?? '—' }}
+                {{ deviceById().get(entry.deviceId)?.location ?? removedDeviceById().get(entry.deviceId)?.location ?? '—' }}
               </td>
               <td class="col-operation">
                 <div class="op-cell">
                   <span class="op-badge" [attr.data-category]="classify(entry.operation).category">
                     <i class="pi {{ classify(entry.operation).icon }}"></i>
                   </span>
-                  <span class="op-text">{{ humanize(entry.operation) }}</span>
+                  <span class="op-text">{{ humanize(entry.operation, dev?.name ?? removed?.name) }}</span>
                 </div>
               </td>
             </tr>
@@ -247,6 +250,22 @@ export class HistoryPage implements OnInit {
   readonly deviceById = computed(() => {
     const map = new Map<string, AnyDevice>();
     for (const d of this.devices()) map.set(d.id, d);
+    return map;
+  });
+
+  /**
+   * Tombstone lookup: deviceId → metadata reconstructed from "Removed:"
+   * audit entries on the current page. Lets orphaned rows (rows whose
+   * device has been deleted) still display the name the device had at
+   * deletion time, instead of all collapsing to "Removed device".
+   */
+  readonly removedDeviceById = computed(() => {
+    const map = new Map<string, RemovedDeviceMeta>();
+    const items = this.page()?.items ?? [];
+    for (const entry of items) {
+      const meta = parseRemovedDeviceMeta(entry.operation);
+      if (meta) map.set(entry.deviceId, meta);
+    }
     return map;
   });
 

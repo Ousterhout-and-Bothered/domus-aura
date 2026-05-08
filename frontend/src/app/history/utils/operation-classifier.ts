@@ -12,13 +12,18 @@
 export type OperationCategory =
   | 'metadata'
   | 'power'
+  | 'power-off'
   | 'lock'
+  | 'unlock'
   | 'dimmer'
   | 'color'
   | 'speed'
   | 'mode'
+  | 'mode-cool'
+  | 'mode-heat'
   | 'temperature'
   | 'scene'
+  | 'removal'
   | 'other';
 
 export interface OperationClassification {
@@ -29,13 +34,18 @@ export interface OperationClassification {
 const CATEGORY_ICONS: Record<OperationCategory, string> = {
   metadata: 'pi-pencil',
   power: 'pi-power-off',
+  'power-off': 'pi-power-off',
   lock: 'pi-lock',
+  unlock: 'pi-lock-open',
   dimmer: 'pi-sun',
   color: 'pi-palette',
   speed: 'pi-forward',
   mode: 'pi-sliders-h',
+  'mode-cool': 'pi-asterisk',
+  'mode-heat': 'pi-sun',
   temperature: 'pi-chart-line',
   scene: 'pi-play',
+  removal: 'pi-trash',
   other: 'pi-circle',
 };
 
@@ -54,12 +64,22 @@ export function classifyOperation(operation: string): OperationClassification {
     return { category: 'metadata', icon: CATEGORY_ICONS.metadata };
   }
 
-  if (op.startsWith('SetPower')) {
-    return {category: 'power', icon: CATEGORY_ICONS.power};
+  if (op.startsWith('Removed:')) {
+    return { category: 'removal', icon: CATEGORY_ICONS.removal };
   }
 
-  if (op.startsWith('Lock') || op.startsWith('Unlock')) {
-    return {category: 'lock', icon: CATEGORY_ICONS.lock};
+  if (op.startsWith('SetPower')) {
+    const isOff = /^SetPower\s*:\s*Off\s*$/i.test(op);
+    const category: OperationCategory = isOff ? 'power-off' : 'power';
+    return { category, icon: CATEGORY_ICONS[category] };
+  }
+
+  if (/^unlock\b/i.test(op)) {
+    return { category: 'unlock', icon: CATEGORY_ICONS.unlock };
+  }
+
+  if (/^lock\b/i.test(op)) {
+    return { category: 'lock', icon: CATEGORY_ICONS.lock };
   }
 
   if (op.startsWith('SetBrightness')) {
@@ -74,8 +94,14 @@ export function classifyOperation(operation: string): OperationClassification {
     return {category: 'speed', icon: CATEGORY_ICONS.speed};
   }
 
+  // SetMode picks state-specific colors and icons for Cool and Heat;
+// Auto and any unrecognized values fall back to the generic mode look.
   if (op.startsWith('SetMode')) {
-    return {category: 'mode', icon: CATEGORY_ICONS.mode};
+    const value = op.match(/^SetMode\s*:\s*(\S+)\s*$/i)?.[1]?.toLowerCase();
+    let category: OperationCategory = 'mode';
+    if (value === 'cool') category = 'mode-cool';
+    else if (value === 'heat') category = 'mode-heat';
+    return { category, icon: CATEGORY_ICONS[category] };
   }
 
   if (op.startsWith('SetDesiredTemperature')) {
@@ -97,7 +123,7 @@ export function classifyOperation(operation: string): OperationClassification {
  * so the scene context is preserved without leaking the parenthesized
  * audit-log syntax.
  */
-export function humanizeOperation(operation: string): string {
+export function humanizeOperation(operation: string, deviceName?: string): string {
   const op = operation.trim();
 
   // Scene cleanup: terse, just describe what happened.
@@ -111,12 +137,12 @@ export function humanizeOperation(operation: string): string {
   const baseOp = sceneMatch ? sceneMatch[1] : op;
   const sceneName = sceneMatch ? sceneMatch[2] : null;
 
-  const humanized = humanizeBaseOperation(baseOp);
+  const humanized = humanizeBaseOperation(baseOp, deviceName);
 
   return sceneName ? `${humanized} (from "${sceneName}")` : humanized;
 }
 
-function humanizeBaseOperation(op: string): string {
+function humanizeBaseOperation(op: string, deviceName?: string): string {
   // Updated: name '...' → '...', location '...' → '...'
   // Pass through unchanged — the format is already readable.
   if (op.startsWith('Updated:')) {
@@ -128,9 +154,14 @@ function humanizeBaseOperation(op: string): string {
     return op;  // Already readable, pass through.
   }
 
-  // Lock / Unlock — present tense, no value.
-  if (op === 'Lock') return 'Locked';
-  if (op === 'Unlock') return 'Unlocked';
+// Use the device's actual name when we have it ("Unlocked the Dungeon Lock"),
+// fall back to a generic noun for orphan rows where the device is gone.
+  if (/^lock\s*:?\s*$/i.test(op)) {
+    return deviceName ? `Locked the ${deviceName}` : 'Locked the door';
+  }
+  if (/^unlock\s*:?\s*$/i.test(op)) {
+    return deviceName ? `Unlocked the ${deviceName}` : 'Unlocked the door';
+  }
 
   // SetPower: On / Off (or just SetPower for scene-driven commands)
   const power = op.match(/^SetPower(?::\s*(.+))?$/);
@@ -171,4 +202,26 @@ function humanizeBaseOperation(op: string): string {
 
   // Unrecognized — pass through as-is rather than swallow the data.
   return op;
+}
+
+export interface RemovedDeviceMeta {
+  name: string;
+  type: string;
+  location: string;
+}
+
+/**
+ * Extracts device metadata from a "Removed:" audit-log operation string.
+ *
+ * The Removed operation embeds name, type, and location at deletion time
+ * (e.g. "Removed: Fan 'Bedroom Fan' from 'Bedroom'") so this metadata
+ * survives the delete and can be displayed on orphaned history rows.
+ *
+ * Returns null if the operation isn't a removal or doesn't match the
+ * expected shape — callers should fall back to a generic placeholder.
+ */
+export function parseRemovedDeviceMeta(operation: string): RemovedDeviceMeta | null {
+  const match = operation.trim().match(/^Removed:\s+(\S+)\s+'([^']+)'\s+from\s+'([^']+)'$/);
+  if (!match) return null;
+  return { type: match[1], name: match[2], location: match[3] };
 }
