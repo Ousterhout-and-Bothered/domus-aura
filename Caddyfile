@@ -10,9 +10,16 @@ domus-aura.com, www.domus-aura.com {
 }
 
 api.domus-aura.com {
-    rewrite * /api{uri}
-    reverse_proxy backend:8080
     encode zstd gzip
+
+    handle /mcp* {
+        reverse_proxy backend:8080
+    }
+
+    handle {
+        rewrite * /api{uri}
+        reverse_proxy backend:8080
+    }
 }
 
 auth.domus-aura.com {
