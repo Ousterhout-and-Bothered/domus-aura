@@ -11,7 +11,6 @@ namespace SmartHome.Api.Controller;
 /// <param name="llmChatService">The service used to process chat messages and generate responses.</param>
 [ApiController]
 [Route("api/chat")]
-[Authorize]
 [Produces("application/json")]
 public sealed class ChatController(
     ILlmChatService llmChatService) : ControllerBase
