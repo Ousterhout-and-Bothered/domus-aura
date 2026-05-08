@@ -35,9 +35,9 @@ Domus Aura simulates a smart home environment where users can:
 | Authentication    | Keycloak (JWT)                                          |
 | Real-time Updates | Server-Sent Events                                      |
 | API Testing       | Bruno                                                   |
-| CI/CD             | GitHub Actions → AWS ECR → EC2 (Docker Compose + Caddy) |
-| Infrastructure    | Terraform (one-time provisioning), AWS ECR + EC2 + S3   |
-| LLM Integration   | OpenAI API + Model Context Protocol (MCP)               |
+| CI/CD             | GitHub Actions → AWS ECR → EC2 (Docker Compose and Caddy) |
+| Infrastructure    | Terraform (one-time provisioning), AWS ECR, EC2, and S3   |
+| LLM Integration   | OpenAI API and Model Context Protocol (MCP)               |
 
 ---
 
@@ -168,7 +168,7 @@ git push
    ├── frontend job  ── npm ci → lint → build → test
    │
    └── (only on main, requires both jobs green)
-       build-and-push ── AWS auth → ECR login → docker build/push (api + frontend)
+       build-and-push ── AWS auth → ECR login → docker build/push (api and frontend)
        deploy         ── scp compose files → ssh to EC2 → docker compose pull → up -d
 ```
 
@@ -179,13 +179,13 @@ git push
 | CI runner              | GitHub Actions (`ubuntu-latest`)                                                                            |
 | Backend tooling        | .NET 10 SDK via `actions/setup-dotnet@v4`, NuGet cache via `actions/cache@v4`                               |
 | Frontend tooling       | Node 22 via `actions/setup-node@v4` (built-in npm cache)                                                    |
-| Container registry     | Amazon ECR (private repos in `us-east-1`, lifecycle policy: 5 tagged + 1-day untagged)                      |
+| Container registry     | Amazon ECR (private repos in `us-east-1`, lifecycle policy: 5 tagged and 1-day untagged)                      |
 | Image tagging          | `:latest` and `:${{ github.sha }}` for traceability                                                         |
 | Transport              | `appleboy/scp-action` for compose files, `appleboy/ssh-action` for the deploy script                        |
 | Production host        | Ubuntu 22 EC2 instance (IAM instance profile for ECR pull, no static keys on host)                          |
-| Orchestration          | Docker Compose merging `docker-compose.yml` + `docker-compose.prod.yml`                                     |
+| Orchestration          | Docker Compose merging `docker-compose.yml` and `docker-compose.prod.yml`                                     |
 | Reverse proxy          | Caddy 2-alpine (auto-Let's-Encrypt for `domus-aura.com`, `api.domus-aura.com`, `auth.domus-aura.com`)       |
-| Identity               | Keycloak 26 + Postgres 16-alpine                                                                            |
+| Identity               | Keycloak 26 and Postgres 16-alpine                                                                            |
 | Persistence            | SQLite on a bind-mounted host volume (`/opt/domus-aura/data`); Caddy and Keycloak use Docker volumes        |
 | Infrastructure-as-code | Terraform (ECR repos, IAM users/policies, EC2 instance profile); state in S3 with DynamoDB locking          |
 
@@ -195,12 +195,12 @@ Provisioning is one-time and lives outside the CI/CD pipeline in the `infrastruc
 
 ```text
 infrastructure/
-├── ec2.tf            # EC2 instance + IAM instance profile (pull-only ECR access)
-├── ecr.tf            # ECR repos + lifecycle policies (5 tagged, 1-day untagged)
-├── iam.tf            # github-actions-deployer user + scoped push-only policy
+├── ec2.tf            # EC2 instance and IAM instance profile (pull-only ECR access)
+├── ecr.tf            # ECR repos and lifecycle policies (5 tagged, 1-day untagged)
+├── iam.tf            # github-actions-deployer user and scoped push-only policy
 ├── outputs.tf
-├── providers.tf      # AWS provider + region pinning
-├── versions.tf       # Terraform + provider version constraints
+├── providers.tf      # AWS provider and region pinning
+├── versions.tf       # Terraform and provider version constraints
 └── .terraform.lock.hcl
 ```
 
@@ -267,20 +267,20 @@ npm test
 
 ## Bruno API Collection
 
-The Bruno collection lives inside the backend solution at:
+The Bruno collection lives at the project root:
 
 ```text
-backend/src/SmartHome/
+/bruno
 ```
 
 To use it:
 
 1. Install Bruno from https://www.usebruno.com
-2. Open `backend/src/SmartHome/` as a Bruno collection
-3. Run requests against the backend API:
+2. Open `bruno/SmartHome` as a Bruno collection
+3. Select the Local environment (top right). It is pre-configured to:
 
 ```text
-http://localhost:5137/api
+http://localhost:5137
 ```
 
 The collection includes requests for device CRUD, device commands, simulation controls, scenes, authentication, and error cases.
@@ -345,7 +345,7 @@ domus-aura/
 │       ├── SmartHome.Api/              # ASP.NET controllers, DI wiring, validators, MCP tools, Dockerfile
 │       │   ├── Controller/
 │       │   ├── Services/
-│       │   │   └── Chat/Mcp/           # OpenAI integration + per-device MCP tool definitions
+│       │   │   └── Chat/Mcp/           # OpenAI integration and per-device MCP tool definitions
 │       │   ├── Validation/             # FluentValidation rules for inbound DTOs
 │       │   ├── Mapping/                # Domain → DTO mapping
 │       │   ├── Middleware/             # Cross-cutting HTTP middleware (e.g., problem-details)
@@ -370,7 +370,7 @@ domus-aura/
 │       │   │   ├── Service/            # DeviceService (application service)
 │       │   │   └── Events/             # DeviceEventBroker (Channel<T>-based pub/sub)
 │       │   ├── Scene/                  # SceneRepository
-│       │   └── Simulation/             # Simulation hosted service + clock
+│       │   └── Simulation/             # Simulation background service + clock
 │       └── SmartHome/                  # Bruno API collection
 ├── frontend/                           # Angular SPA (PrimeNG, SCSS)
 │   └── src/app/
@@ -654,7 +654,7 @@ Each device aggregate owns a generic `StateMachine<TState>` configured at constr
 | **Key types**      | `IThermostatModeStrategy`, `HeatModeStrategy`, `CoolModeStrategy`, `AutoModeStrategy`, `IThermostatStrategyProvider`, `ThermostatStrategyProvider` |
 | **Where it lives** | `SmartHome.Domain/Device/Thermostat/`                                                                                        |
 
-Each mode encapsulates its own decision logic ("should I heat? should I cool? should I idle?"). The thermostat's tick loop selects the active strategy via a provider keyed on `ThermostatMode`, so the simulation loop never branches on mode — it just asks the current strategy what to do. Adding a new mode (e.g., `EcoModeStrategy`) requires no changes to the thermostat itself, the tick loop, or any existing strategy.
+Each mode encapsulates its own decision logic ("should I heat? should I cool? should I idle?"). The thermostat tick loop selects the active strategy through a provider keyed on ThermostatMode, so the simulation loop never branches on mode. It simply asks the current strategy what to do. Adding a new mode, such as EcoModeStrategy, requires no changes to the thermostat itself, the tick loop, or any existing strategy.
 
 #### Command
 
@@ -663,7 +663,7 @@ Each mode encapsulates its own decision logic ("should I heat? should I cool? sh
 | **Key types**      | `IDeviceCommand`, `DeviceCommandBase`, `SetPowerCommand`, `SetBrightnessCommand`, `SetColorCommand`, `SetSpeedCommand`, `SetModeCommand`, `SetDesiredTemperatureCommand`, `LockCommand`, `UnlockCommand` |
 | **Where it lives** | `SmartHome.Domain/Device/Commands/`                                                                                                                                                                              |
 
-Every device action is encapsulated as a self-contained command object that knows its target, its operation, and how to execute and report a result. This is what makes scenes, the LLM integration, and the REST API all share a single execution path: each is just a different way of constructing and submitting commands. It also gives the audit log a uniform shape — every history entry corresponds to a command's lifecycle.
+Every device action is encapsulated as a self contained command object that knows its target, its operation, and how to execute and report a result. This is what makes scenes, the LLM integration, and the REST API all share a single execution path because each is simply a different way of constructing and submitting commands. It also gives the audit log a uniform shape since every history entry corresponds to a command lifecycle.
 
 #### Observer (real-time updates)
 
@@ -676,7 +676,7 @@ Application services publish a `DeviceChangedEvent` after every successful state
 
 ### Creational Patterns
 
-#### Factory + Builder (device construction)
+#### Factory and Builder (device construction)
 
 |                    |                                                                                                                  |
 |--------------------|------------------------------------------------------------------------------------------------------------------|
