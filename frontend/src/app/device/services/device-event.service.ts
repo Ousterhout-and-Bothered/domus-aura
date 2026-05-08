@@ -42,6 +42,13 @@ export class DeviceEventService implements OnDestroy {
 
     this.source.addEventListener('deviceChanged', (e) => {
       const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
+      console.log('[SSE] deviceChanged:', data.deviceId, data.changeType);
+      this.zone.run(() => this._events$.next(data));
+    });
+
+    this.source.addEventListener('deviceChanged', (e) => {
+      const data = JSON.parse((e as MessageEvent).data) as DeviceChangedEvent;
+      console.log('[SSE] deviceChanged FULL:', JSON.stringify(data));
       this.zone.run(() => this._events$.next(data));
     });
 

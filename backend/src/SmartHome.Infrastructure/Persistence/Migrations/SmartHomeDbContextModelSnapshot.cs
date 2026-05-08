@@ -27,18 +27,6 @@ namespace SmartHome.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT COLLATE NOCASE");
 
-                    b.Property<string>("DeviceLocation")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DeviceName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DeviceType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Operation")
                         .IsRequired()
                         .HasColumnType("TEXT");

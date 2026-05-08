@@ -5,7 +5,6 @@ using SmartHome.Domain.Device.Repository;
 using SmartHome.Infrastructure.Persistence;
 using ThermostatDevice = SmartHome.Domain.Device.Thermostat.Thermostat;
 using SmartHome.Domain.Common;
-using SmartHome.Domain.Common.Exceptions;
 
 namespace SmartHome.Infrastructure.Device.Repository;
 
@@ -79,7 +78,6 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
     /// Deletes the device with the specified identifier.
     /// </summary>
     /// <param name="id">The unique identifier for the device to delete.</param>
-    /// <param name="cancellationToken">Token used to cancel the delete operation.</param>
     /// <returns>True when a matching device was found and deleted; otherwise false.</returns>
     public async Task<bool> RemoveByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -119,27 +117,9 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
     }
 
     /// <inheritdoc />
-    /// <inheritdoc />
-    public async Task LogActionAsync(
-        Guid deviceId,
-        string operation,
-        CancellationToken cancellationToken = default)
+    public async Task LogActionAsync(Guid deviceId, string operation, CancellationToken cancellationToken = default)
     {
-        var device = await GetByIdReadOnlyAsync(deviceId, cancellationToken);
-
-        if (device is null)
-        {
-            throw new ResourceNotFoundException(
-                $"Device with id {deviceId} not found.");
-        }
-
-        var entry = new CommandHistory(
-            device.Id,
-            device.Name,
-            device.Location,
-            device.Type.ToString(),
-            operation);
-
+        var entry = new CommandHistory(deviceId, operation);
         await dbContext.DeviceHistory.AddAsync(entry, cancellationToken);
     }
 
@@ -170,7 +150,7 @@ public sealed class DeviceRepository(SmartHomeDbContext dbContext) : EfRepositor
         if (!string.IsNullOrWhiteSpace(location))
         {
             // Resolve the location filter via a subquery on Devices rather than
-            // a join. The subquery is materialized once by EF Core, and the
+            // a join. The subquery is materialized once by EF Core and the
             // resulting set of device IDs is compared inline.
             var deviceIdsAtLocation = dbContext.Devices
                 .AsNoTracking()
