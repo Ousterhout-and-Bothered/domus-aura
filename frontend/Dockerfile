@@ -1,7 +1,7 @@
 # Stage 1: Build
 FROM node:22-alpine AS build
 WORKDIR /src
-ARG BUILD_CONFIG=production
+ARG BUILD_CONFIG=docker
 
 # Restore dependencies as a separate layer
 COPY package*.json ./

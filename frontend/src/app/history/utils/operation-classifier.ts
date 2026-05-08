@@ -51,25 +51,26 @@ const CATEGORY_ICONS: Record<OperationCategory, string> = {
 
 export function classifyOperation(operation: string): OperationClassification {
   const op = operation.trim();
+  const opLower = op.toLowerCase();
 
-  if (op.includes('(scene:') || op.startsWith('Scene cleanup')) {
-    return {category: 'scene', icon: CATEGORY_ICONS.scene};
+  if (opLower.includes('(scene:') || opLower.startsWith('scene cleanup')) {
+    return { category: 'scene', icon: CATEGORY_ICONS.scene };
   }
 
-  if (op.startsWith('Registered:')) {
+  if (opLower.startsWith('registered:')) {
     return { category: 'metadata', icon: 'pi-plus-circle' };
   }
 
-  if (op.startsWith('Updated:')) {
+  if (opLower.startsWith('updated:')) {
     return { category: 'metadata', icon: CATEGORY_ICONS.metadata };
   }
 
-  if (op.startsWith('Removed:')) {
+  if (opLower.startsWith('removed:')) {
     return { category: 'removal', icon: CATEGORY_ICONS.removal };
   }
 
-  if (op.startsWith('SetPower')) {
-    const isOff = /^SetPower\s*:\s*Off\s*$/i.test(op);
+  if (opLower.startsWith('setpower')) {
+    const isOff = /^setpower\s*:\s*off\s*$/i.test(op);
     const category: OperationCategory = isOff ? 'power-off' : 'power';
     return { category, icon: CATEGORY_ICONS[category] };
   }
@@ -82,33 +83,31 @@ export function classifyOperation(operation: string): OperationClassification {
     return { category: 'lock', icon: CATEGORY_ICONS.lock };
   }
 
-  if (op.startsWith('SetBrightness')) {
-    return {category: 'dimmer', icon: CATEGORY_ICONS.dimmer};
+  if (opLower.startsWith('setbrightness')) {
+    return { category: 'dimmer', icon: CATEGORY_ICONS.dimmer };
   }
 
-  if (op.startsWith('SetColor')) {
-    return {category: 'color', icon: CATEGORY_ICONS.color};
+  if (opLower.startsWith('setcolor')) {
+    return { category: 'color', icon: CATEGORY_ICONS.color };
   }
 
-  if (op.startsWith('SetSpeed')) {
-    return {category: 'speed', icon: CATEGORY_ICONS.speed};
+  if (opLower.startsWith('setspeed')) {
+    return { category: 'speed', icon: CATEGORY_ICONS.speed };
   }
 
-  // SetMode picks state-specific colors and icons for Cool and Heat;
-// Auto and any unrecognized values fall back to the generic mode look.
-  if (op.startsWith('SetMode')) {
-    const value = op.match(/^SetMode\s*:\s*(\S+)\s*$/i)?.[1]?.toLowerCase();
+  if (opLower.startsWith('setmode')) {
+    const value = op.match(/^setmode\s*:\s*(\S+)\s*$/i)?.[1]?.toLowerCase();
     let category: OperationCategory = 'mode';
     if (value === 'cool') category = 'mode-cool';
     else if (value === 'heat') category = 'mode-heat';
     return { category, icon: CATEGORY_ICONS[category] };
   }
 
-  if (op.startsWith('SetDesiredTemperature')) {
-    return {category: 'temperature', icon: CATEGORY_ICONS.temperature};
+  if (opLower.startsWith('setdesiredtemperature')) {
+    return { category: 'temperature', icon: CATEGORY_ICONS.temperature };
   }
 
-  return {category: 'other', icon: CATEGORY_ICONS.other};
+  return { category: 'other', icon: CATEGORY_ICONS.other };
 }
 
 /**
@@ -126,14 +125,11 @@ export function classifyOperation(operation: string): OperationClassification {
 export function humanizeOperation(operation: string, deviceName?: string): string {
   const op = operation.trim();
 
-  // Scene cleanup: terse, just describe what happened.
-  if (op.startsWith('Scene cleanup:')) {
+  if (/^scene cleanup:/i.test(op)) {
     return 'Cleaned up scene references';
   }
 
-  // Detect and strip scene suffix so we humanize the base operation,
-  // then re-attach the scene name afterward.
-  const sceneMatch = op.match(/^(.+?) \(scene: (.+)\)$/);
+  const sceneMatch = op.match(/^(.+?) \(scene: (.+)\)$/i);
   const baseOp = sceneMatch ? sceneMatch[1] : op;
   const sceneName = sceneMatch ? sceneMatch[2] : null;
 
@@ -143,19 +139,14 @@ export function humanizeOperation(operation: string, deviceName?: string): strin
 }
 
 function humanizeBaseOperation(op: string, deviceName?: string): string {
-  // Updated: name '...' → '...', location '...' → '...'
-  // Pass through unchanged — the format is already readable.
-  if (op.startsWith('Updated:')) {
+  if (/^updated:/i.test(op)) {
     return op;
   }
 
-  // Registered: Light at 'Kitchen' — the device's lifecycle birth event.
-  if (op.startsWith('Registered:')) {
-    return op;  // Already readable, pass through.
+  if (/^registered:/i.test(op)) {
+    return op;
   }
 
-// Use the device's actual name when we have it ("Unlocked the Dungeon Lock"),
-// fall back to a generic noun for orphan rows where the device is gone.
   if (/^lock\s*:?\s*$/i.test(op)) {
     return deviceName ? `Locked the ${deviceName}` : 'Locked the door';
   }
@@ -163,44 +154,37 @@ function humanizeBaseOperation(op: string, deviceName?: string): string {
     return deviceName ? `Unlocked the ${deviceName}` : 'Unlocked the door';
   }
 
-  // SetPower: On / Off (or just SetPower for scene-driven commands)
-  const power = op.match(/^SetPower(?::\s*(.+))?$/);
+  const power = op.match(/^setpower(?::\s*(.+))?$/i);
   if (power) {
     if (!power[1]) return 'Toggled power';
     return power[1].toLowerCase() === 'on' ? 'Turned on' : 'Turned off';
   }
 
-  // SetBrightness: 80 (or just SetBrightness)
-  const brightness = op.match(/^SetBrightness(?::\s*(.+))?$/);
+  const brightness = op.match(/^setbrightness(?::\s*(.+))?$/i);
   if (brightness) {
     return brightness[1] ? `Set brightness to ${brightness[1]}%` : 'Adjusted brightness';
   }
 
-  // SetColor: #FF8800 (or just SetColor)
-  const color = op.match(/^SetColor(?::\s*(.+))?$/);
+  const color = op.match(/^setcolor(?::\s*(.+))?$/i);
   if (color) {
     return color[1] ? `Set color to ${color[1].toUpperCase()}` : 'Changed color';
   }
 
-  // SetSpeed: Medium (or just SetSpeed)
-  const speed = op.match(/^SetSpeed(?::\s*(.+))?$/);
+  const speed = op.match(/^setspeed(?::\s*(.+))?$/i);
   if (speed) {
     return speed[1] ? `Set speed to ${speed[1]}` : 'Adjusted speed';
   }
 
-  // SetMode: Cool (or just SetMode)
-  const mode = op.match(/^SetMode(?::\s*(.+))?$/);
+  const mode = op.match(/^setmode(?::\s*(.+))?$/i);
   if (mode) {
     return mode[1] ? `Set mode to ${mode[1]}` : 'Changed mode';
   }
 
-  // SetDesiredTemperature: 72 (or just SetDesiredTemperature)
-  const temp = op.match(/^SetDesiredTemperature(?::\s*(.+))?$/);
+  const temp = op.match(/^setdesiredtemperature(?::\s*(.+))?$/i);
   if (temp) {
     return temp[1] ? `Set temperature to ${temp[1]}°F` : 'Adjusted temperature';
   }
 
-  // Unrecognized — pass through as-is rather than swallow the data.
   return op;
 }
 
