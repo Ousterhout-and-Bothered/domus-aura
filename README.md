@@ -326,7 +326,7 @@ The collection includes requests for device CRUD, device commands, simulation co
 
 ### Application Demo Video
 
-**Loom Link:** `[INSERT APPLICATION DEMO LOOM LINK]`
+[Domus-Aura: The Demo Strikes Back](https://www.loom.com/share/846a3e88dd84403e86c3fa143e99e9fa)
 
 The demo video covers:
 
@@ -337,7 +337,7 @@ The demo video covers:
 - Removing an existing device
 - Thermostat environment simulation
 - Device command history or activity feed
-- Extra credit features
+- Extra credit features including LLM, Scenes, Server-Sent Events, and JWT Authentication.
 
 ### Architecture Tour Video
 
