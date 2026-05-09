@@ -13,6 +13,7 @@ services:
       - Authentication__ValidIssuer=http://localhost:8080/realms/smarthome
       - Authentication__RequireHttpsMetadata=false
       - OpenAI__ApiKey=${OPENAI_API_KEY}
+      - OpenAI__Mode=Local
     volumes:
       - ./data:/app/data
     depends_on:

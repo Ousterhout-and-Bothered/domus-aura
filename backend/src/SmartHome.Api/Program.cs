@@ -138,7 +138,16 @@ builder.Services.AddScoped<ISceneResolver, SceneResolver>();
 builder.Services.AddScoped<ISceneService, SceneService>();
 
 // LLM Chat Service
-builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
+var llmMode = builder.Configuration["OpenAI:Mode"] ?? "Local";
+
+if (string.Equals(llmMode, "Mcp", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddHttpClient<ILlmChatService, OpenAiChatService>();
+}
+else
+{
+    builder.Services.AddHttpClient<ILlmChatService, OpenAiLocalChatService>();
+}
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(options => options.Stateless = true)

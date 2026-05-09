@@ -22,6 +22,7 @@ services:
       - AllowedOrigins__1=https://www.domus-aura.com
       - OpenAI__ApiKey=${OPENAI_API_KEY}
       - OpenAI__McpServerUrl=https://api.domus-aura.com/mcp
+      - OpenAI__Mode=Mcp
     restart: unless-stopped
     ports: !reset [ ]
 
