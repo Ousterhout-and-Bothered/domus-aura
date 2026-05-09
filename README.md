@@ -214,21 +214,56 @@ Long-lived AWS access keys for the deployer IAM user and the EC2 SSH key are sto
 
 ## Optional LLM Natural Language Control
 
-Domus Aura supports controlling devices through natural language ("turn off the bedroom lights," "set the thermostat to 70," "lock all the doors"). The integration is built on the **Model Context Protocol (MCP)**: the backend exposes each device capability as an MCP tool, and an OpenAI model calls those tools to fulfill the user's request. This means the LLM never touches the database or the device state machines directly and every action flows through the same validated service path the dashboard uses.
+Domus Aura supports controlling devices through natural language ("turn off
+the bedroom lights," "set the thermostat to 70," "lock all the doors"). The
+integration uses an OpenAI model with tool-calling — the backend exposes each
+device capability as a tool, and the model invokes the right tools to fulfill
+the user's request. Every action flows through the same validated service path
+the dashboard uses, so commands appear in device history with full audit fidelity.
 
 ### On the deployed site
 
-**The LLM is fully wired up at [https://domus-aura.com](https://domus-aura.com).** Any logged-in user can open the chat drawer and start issuing commands: no key setup required, no configuration to perform. The OpenAI API key is provisioned server-side as part of the production environment, so the feature works the moment you sign in with the demo credentials above.
+The chat is fully wired up at https://domus-aura.com. Sign in with the demo
+credentials above and open the chat drawer — no setup required.
 
 ### Running it locally
 
-When running locally with `docker compose up`, the chat feature requires you to supply your own OpenAI API key (the deployed key is not committed to the repo). Add it to a `.env` file at the repo root:
-
-```text
-OPENAI_API_KEY=sk-...
+1. Copy `.env.example` to `.env`:
+```bash
+   cp .env.example .env
 ```
+2. Add your OpenAI API key to `.env`:
+```text
+   OPENAI_API_KEY=sk-...
+```
+3. Start the application:
+```bash
+   docker compose up
+```
+4. Open http://localhost:4200, sign in, and use the chat drawer.
 
-The application still runs without this key! Every other feature works normally, but the chat drawer will return a configuration error if used.
+### Two implementations, one interface
+
+The chat feature has two implementations of `ILlmChatService`, selected at
+startup by the `OpenAI__Mode` environment variable:
+
+- **Local mode** (`OpenAiLocalChatService`) — used by `docker compose up`.
+  Calls OpenAI's chat-completions API with function-calling. Tool execution
+  happens in-process: OpenAI returns a function call, the backend invokes
+  the matching tool method via reflection, the result is sent back. No
+  inbound network traffic from OpenAI is required.
+
+- **MCP mode** (`OpenAiChatService`) — used in production. Calls OpenAI's
+  Responses API with the Model Context Protocol. OpenAI invokes tools by
+  calling the backend's MCP endpoint directly, which requires the backend
+  to be publicly reachable.
+
+This split is a textbook Strategy pattern. Both implementations expose the
+same set of tools and produce the same observable behavior. The decision is
+purely environmental (and mostly because we though we broke it and panicked.): 
+production benefits from MCP's orchestration offload;
+local development can't expose `localhost` to OpenAI's servers, so it executes
+the loop in-process instead.
 
 ### How it works
 
